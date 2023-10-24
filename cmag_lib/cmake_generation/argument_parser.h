@@ -16,7 +16,7 @@ public:
     auto isValid() const { return valid; }
 
 private:
-    const char* parseKeyValueArgument(const char *prefix, int &argIndex, const std::string &currentArg, const char *nextArg);
+    const char *parseKeyValueArgument(const char *prefix, int &argIndex, const std::string &currentArg, const char *nextArg);
 
     bool valid = true;
     std::vector<std::string> extraArgs = {};

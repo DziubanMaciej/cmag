@@ -1,5 +1,5 @@
-#include "cmag_lib/cmake_generation/ArgumentParser.h"
-#include "cmag_lib/cmake_generation/CMakeListsShimmer.h"
+#include "cmag_lib/cmake_generation/argument_parser.h"
+#include "cmag_lib/cmake_generation/cmake_lists_shimmer.h"
 #include "cmag_lib/utils/error.h"
 #include "cmag_lib/utils/subprocess.h"
 

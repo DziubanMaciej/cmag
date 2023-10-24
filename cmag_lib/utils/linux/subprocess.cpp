@@ -1,9 +1,6 @@
 #include "cmag_lib/utils/error.h"
 #include "cmag_lib/utils/subprocess.h"
 
-#include <fcntl.h>
-// #include <sstream>
-
 #include <cstring>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -21,7 +18,7 @@ SubprocessResult runSubprocess(int, const char **argv) {
 
     if (forkResult == 0) {
         // Child
-        char *const *argvCasted = const_cast<char*const*>(argv); // we can mess with const correctness, since we're calling exec anyway.
+        char *const *argvCasted = const_cast<char *const *>(argv); // we can mess with const correctness, since we're calling exec anyway.
         FATAL_ERROR_ON_FAILED_SYSCALL(execvp(argv[0], argvCasted));
         FATAL_ERROR("Unreachable code");
     } else {

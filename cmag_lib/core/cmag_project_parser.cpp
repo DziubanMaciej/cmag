@@ -1,6 +1,6 @@
-#include "cmag_project.h"
 #include "cmag_project_parser.h"
 
+#include "cmag_lib/core/cmag_project.h"
 #include "cmag_lib/utils/error.h"
 
 NLOHMANN_JSON_SERIALIZE_ENUM(CmagTargetType,

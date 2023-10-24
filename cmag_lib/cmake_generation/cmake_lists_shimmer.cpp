@@ -1,4 +1,4 @@
-#include "CMakeListsShimmer.h"
+#include "cmake_lists_shimmer.h"
 
 #include "cmag_lib/cmake_generation/postamble.h"
 #include "cmag_lib/utils/error.h"

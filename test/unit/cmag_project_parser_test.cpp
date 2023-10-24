@@ -155,7 +155,6 @@ TEST(CmagProjectParserTest, givenVariousTargetTypesTheParseThemCorrectly) {
     }
 }
 
-
 TEST(CmagProjectParserTest, givenTargetWithInvalidTypeThenReturnError) {
     const char *json = R"DELIMETER(
     {

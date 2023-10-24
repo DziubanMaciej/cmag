@@ -1,4 +1,4 @@
-#include "cmag_lib/cmake_generation/ArgumentParser.h"
+#include "cmag_lib/cmake_generation/argument_parser.h"
 
 #include <gtest/gtest.h>
 
