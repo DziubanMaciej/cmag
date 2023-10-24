@@ -1,9 +1,8 @@
 #pragma once
 
-#include <filesystem>
-#include <string>
+#include "cmag_lib/utils/filesystem.h"
 
-namespace fs = std::filesystem; // TODO move to some shared header
+#include <string>
 
 enum class ShimResult {
     Success,

@@ -8,7 +8,7 @@ static const char *keyValueArgs[] = {
     // TODO specify rest of them. See cmake -h
 };
 
-ArgumentParser::ArgumentParser(int argc, const char **argv) {
+ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(argv) {
     int argIndex = 2; // skip our process name and cmake process name
 
     for (; argIndex < argc; argIndex++) {
@@ -86,4 +86,16 @@ const char *ArgumentParser::parseKeyValueArgument(const char *prefix, int &argIn
     }
 
     return nullptr;
+}
+std::vector<const char *> ArgumentParser::constructArgsForCmake() const {
+    std::vector<const char *> result = {};
+    result.reserve(argc - 1 + extraArgs.size());
+    for (int i = 1; i < argc; i++) {
+        result.push_back(argv[i]);
+    }
+    for (const auto &extraArg : extraArgs) {
+        result.push_back(extraArg.c_str());
+    }
+    result.push_back(nullptr);
+    return result;
 }

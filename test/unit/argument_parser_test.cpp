@@ -153,3 +153,37 @@ TEST(ArgumentParserTest, givenUndefinedGraphvizOptionWithEqualsSignThenArguments
     ArgumentParser parser{argc, argv};
     EXPECT_FALSE(parser.isValid());
 }
+
+TEST(ArgumentParserTest, givenNoExtraArgsWhenConstructingArgsForCMakeThenReturnArgumentsVerbatim) {
+    const char *argv[] = {"cmag", "cmake", "..", "--graphviz=a.graph", "-B", "bbb"};
+    const int argc = sizeof(argv) / sizeof(argv[0]);
+    ArgumentParser parser{argc, argv};
+    EXPECT_TRUE(parser.isValid());
+    EXPECT_TRUE(parser.getExtraArgs().empty());
+
+    auto cmakeArgs = parser.constructArgsForCmake();
+    EXPECT_EQ(6u, cmakeArgs.size());
+    EXPECT_STREQ("cmake", cmakeArgs[0]);
+    EXPECT_STREQ("..", cmakeArgs[1]);
+    EXPECT_STREQ("--graphviz=a.graph", cmakeArgs[2]);
+    EXPECT_STREQ("-B", cmakeArgs[3]);
+    EXPECT_STREQ("bbb", cmakeArgs[4]);
+    EXPECT_EQ(nullptr, cmakeArgs[5]);
+}
+
+TEST(ArgumentParserTest, givenExtraArgsWhenConstructingArgsForCMakeThenReturnAppendThemAtTheEnd) {
+    const char *argv[] = {"cmag", "cmake", "..", "-B", "bbb"};
+    const int argc = sizeof(argv) / sizeof(argv[0]);
+    ArgumentParser parser{argc, argv};
+    EXPECT_TRUE(parser.isValid());
+    EXPECT_EQ(1u, parser.getExtraArgs().size());
+
+    auto cmakeArgs = parser.constructArgsForCmake();
+    EXPECT_EQ(6u, cmakeArgs.size());
+    EXPECT_STREQ("cmake", cmakeArgs[0]);
+    EXPECT_STREQ("..", cmakeArgs[1]);
+    EXPECT_STREQ("-B", cmakeArgs[2]);
+    EXPECT_STREQ("bbb", cmakeArgs[3]);
+    EXPECT_STREQ("--graphviz=bbb/graph.dot", cmakeArgs[4]);
+    EXPECT_EQ(nullptr, cmakeArgs[5]);
+}

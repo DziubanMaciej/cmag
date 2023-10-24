@@ -1,9 +1,8 @@
 #pragma once
 
-#include <filesystem>
-#include <vector>
+#include "cmag_lib/utils/filesystem.h"
 
-namespace fs = std::filesystem; // TODO move to some shared header
+#include <vector>
 
 class ArgumentParser {
 public:
@@ -15,8 +14,13 @@ public:
     const auto &getExtraArgs() const { return extraArgs; }
     auto isValid() const { return valid; }
 
+    std::vector<const char*> constructArgsForCmake() const;
+
 private:
     const char *parseKeyValueArgument(const char *prefix, int &argIndex, const std::string &currentArg, const char *nextArg);
+
+    int argc = {};
+    const char **argv = {};
 
     bool valid = true;
     std::vector<std::string> extraArgs = {};

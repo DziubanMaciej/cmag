@@ -33,4 +33,6 @@ inline void dumpLog(std::ostream &out, Arg &&arg, Args &&...args) {
 #define DEBUG_ERROR_IF(condition, ...)
 #endif
 
+#define LOG_ERROR(...) dumpLog(std::cerr, "ERROR: ", __VA_ARGS__)
+
 #define UNREACHABLE_CODE FATAL_ERROR("Unreachable code")
