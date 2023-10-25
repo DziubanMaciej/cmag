@@ -5,6 +5,10 @@
 int main(int argc, const char **argv) {
     // Parse arguments
     ArgumentParser argParser{argc, argv};
+    if (!argParser.isValid()) {
+        printf("<help message>\n");
+        return 1;
+    }
     const fs::path &sourcePath = argParser.getSourcePath();
     if (sourcePath.empty()) {
         LOG_ERROR("empty source dir.");

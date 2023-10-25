@@ -9,6 +9,11 @@ static const char *keyValueArgs[] = {
 };
 
 ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(argv) {
+    if (argc == 1) {
+        valid = false;
+        return;
+    }
+
     int argIndex = 2; // skip our process name and cmake process name
 
     for (; argIndex < argc; argIndex++) {

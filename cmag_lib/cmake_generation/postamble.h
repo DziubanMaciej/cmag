@@ -1,5 +1,5 @@
 const char *postamble = R"DELIMETER(
-cmake_minimum_required(VERSION 3.8.0)
+cmake_minimum_required(VERSION 3.9.0)
 
 function (get_all_targets OUT_VARIABLE DIR)
     # Call for this directory
@@ -20,34 +20,119 @@ macro(json_append_line OUT_VARIABLE LINE INDENT)
     string(APPEND ${OUT_VARIABLE} "${INDENT}${LINE}\n")
 endmacro()
 
-macro(json_append_key_value OUT_VARIABLE KEY VALUE INDENT)
-    json_append_line(${OUT_VARIABLE} "\"${KEY}\" = \"${VALUE}\"" ${INDENT})
+macro(json_append_brace_close OUT_VARIABLE INDENT IS_LAST)
+    set(LINE "}")
+    if(NOT ${IS_LAST})
+        set(LINE "${LINE},")
+    endif()
+    string(APPEND ${OUT_VARIABLE} "${INDENT}${LINE}\n")
 endmacro()
 
-macro(json_append_target_property OUT_VARIABLE TGT PROPERTY INDENT)
+macro(json_append_key_value OUT_VARIABLE KEY VALUE INDENT IS_LAST)
+    json_append_key_value_unquoted(${OUT_VARIABLE} ${KEY} "\"${VALUE}\"" ${INDENT} ${IS_LAST})
+endmacro()
+
+macro(json_append_key_value_unquoted OUT_VARIABLE KEY VALUE INDENT IS_LAST)
+    set(LINE "\"${KEY}\": ${VALUE}")
+    if(NOT ${IS_LAST})
+        set(LINE "${LINE},")
+    endif()
+    json_append_line(${OUT_VARIABLE} ${LINE} ${INDENT})
+endmacro()
+
+macro(json_append_target_property OUT_VARIABLE TGT PROPERTY INDENT IS_LAST)
+    json_append_target_named_property(${OUT_VARIABLE} ${TGT} ${PROPERTY} ${PROPERTY} ${INDENT} ${IS_LAST})
+endmacro()
+
+macro(json_append_target_named_property OUT_VARIABLE TGT NAME PROPERTY INDENT IS_LAST)
     set(VALUE "$<TARGET_PROPERTY:${TGT},${PROPERTY}>")
     if("${PROPERTY}" STREQUAL "LINK_LIBRARIES")
         set(VALUE "$<GENEX_EVAL:${VALUE}>")
     endif()
-    json_append_key_value(${OUT_VARIABLE} "${PROPERTY}" "${VALUE}" ${INDENT})
+    json_append_key_value(${OUT_VARIABLE} "${NAME}" "${VALUE}" ${INDENT} ${IS_LAST})
 endmacro()
 
-macro(json_append_target OUT_VARIABLE TGT INDENT INDENT_INCREMENT)
+function(json_append_target OUT_VARIABLE TGT INDENT INDENT_INCREMENT IS_LAST)
     set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
-    json_append_line(${OUT_VARIABLE} "{" ${INDENT})
-    json_append_key_value(${OUT_VARIABLE} name ${TGT} ${INNER_INDENT})
-    json_append_target_property(${OUT_VARIABLE} ${TGT} INCLUDE_DIRECTORIES ${INNER_INDENT})
-    json_append_target_property(${OUT_VARIABLE} ${TGT} LINK_LIBRARIES ${INNER_INDENT})
-    json_append_target_property(${OUT_VARIABLE} ${TGT} COMPILE_DEFINITIONS ${INNER_INDENT})
-    json_append_target_property(${OUT_VARIABLE} ${TGT} MANUALLY_ADDED_DEPENDENCIES ${INNER_INDENT})
-    json_append_line(${OUT_VARIABLE} "}" ${INDENT})
-endmacro()
+    set(INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
 
-get_all_targets(ALL_TARGETS ${CMAKE_CURRENT_SOURCE_DIR})
-foreach (TGT ${ALL_TARGETS})
-    json_append_target(JSON ${TGT} "  " "  ")
-endforeach ()
-message("${JSON}")
-file(GENERATE OUTPUT output$<CONFIG>.txt CONTENT "${JSON}")
+    json_append_line(${OUT_VARIABLE} "{" ${INDENT})
+    json_append_key_value(${OUT_VARIABLE} name ${TGT} ${INNER_INDENT} FALSE)
+    json_append_target_named_property(${OUT_VARIABLE} ${TGT} type TYPE ${INNER_INDENT} FALSE)
+
+    json_append_line(${OUT_VARIABLE} "\"properties\": {" ${INNER_INDENT})
+    json_append_target_property(${OUT_VARIABLE} ${TGT} INCLUDE_DIRECTORIES ${INNER_INNER_INDENT} FALSE)
+    json_append_target_property(${OUT_VARIABLE} ${TGT} LINK_LIBRARIES ${INNER_INNER_INDENT} FALSE)
+    json_append_target_property(${OUT_VARIABLE} ${TGT} COMPILE_DEFINITIONS ${INNER_INNER_INDENT} FALSE)
+    json_append_target_property(${OUT_VARIABLE} ${TGT} MANUALLY_ADDED_DEPENDENCIES ${INNER_INNER_INDENT} TRUE)
+    json_append_brace_close(${OUT_VARIABLE} ${INNER_INDENT} TRUE)
+
+    json_append_brace_close(${OUT_VARIABLE} ${INDENT} ${IS_LAST})
+    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
+endfunction()
+
+function(json_append_globals OUT_VARIABLE INDENT INDENT_INCREMENT)
+    set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
+    set(INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
+
+    json_append_line(${OUT_VARIABLE} "{" ${INDENT})
+    json_append_key_value_unquoted(${OUT_VARIABLE} darkMode true ${INNER_INDENT} TRUE)
+    json_append_line(${OUT_VARIABLE} "}" ${INDENT})
+
+    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
+endfunction()
+
+function(json_append_targets OUT_VARIABLE INDENT INDENT_INCREMENT)
+    set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
+
+    json_append_line(${OUT_VARIABLE} "[" ${INDENT})
+    get_all_targets(ALL_TARGETS ${CMAKE_CURRENT_SOURCE_DIR})
+
+    list(LENGTH ALL_TARGETS LAST_TARGET_INDEX)
+    math(EXPR LAST_TARGET_INDEX "${LAST_TARGET_INDEX} - 1")
+    set(COUNTER 0)
+    foreach(TGT IN LISTS ALL_TARGETS)
+        if(LAST_TARGET_INDEX EQUAL COUNTER)
+            set(IS_LAST TRUE)
+        else()
+            set(IS_LAST FALSE)
+        endif()
+        math(EXPR COUNTER "${COUNTER}+1")
+
+        json_append_target(${OUT_VARIABLE} ${TGT} ${INNER_INDENT} ${INDENT_INCREMENT} ${IS_LAST})
+    endforeach()
+
+    json_append_line(${OUT_VARIABLE} "]" ${INDENT})
+
+    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
+endfunction()
+
+# Get project name
+if ("${CMAG_PROJECT_NAME}d" STREQUAL "d")
+    set(CMAG_PROJECT_NAME ${CMAKE_PROJECT_NAME})
+endif()
+
+# Write global settings
+json_append_globals(GLOBALS_JSON "  " "  ")
+file(WRITE ${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-globals "${GLOBALS_JSON}")
+
+# Prepare json string with generator expressions for targets description
+json_append_targets(TARGETS_JSON "  " "  ")
+
+
+if(GENERATOR_IS_MULTI_CONFIG)
+    message(FATAL_ERROR "multi-generator not implemented")
+else()
+    set(CMAG_CONFIG ${CMAKE_BUILD_TYPE})
+
+    if ("${CMAG_CONFIG}d" STREQUAL "d")
+        set(CMAG_CONFIG Default)
+    endif()
+    message(STATUS "CMAG_CONFIG: ${CMAG_CONFIG}")
+
+    file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-configs CONTENT "[\"${CMAG_CONFIG}\"]\n")
+
+    file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}_${CMAG_CONFIG}.cmag-targets CONTENT "${TARGETS_JSON}")
+endif()
 
 )DELIMETER";

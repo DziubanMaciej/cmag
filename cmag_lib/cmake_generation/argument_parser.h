@@ -14,6 +14,7 @@ public:
     const auto &getExtraArgs() const { return extraArgs; }
     auto isValid() const { return valid; }
 
+    void printHelp() {} // TODO
     std::vector<const char*> constructArgsForCmake() const;
 
 private:
