@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10.0)
+cmake_minimum_required(VERSION 3.15.0)
 project(cmag)
 
 # Configure some global options
@@ -6,6 +6,7 @@ include(CMakeGlobalSetup.cmake)
 setup_binary_locations()
 setup_solution_folders()
 setup_multicore_compilation()
+setup_static_crt()
 
 # Import utils
 include(CMakeUtils.cmake)

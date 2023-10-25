@@ -66,7 +66,7 @@ PenaltyExcessCharacter: 1000000
 PenaltyReturnTypeOnItsOwnLine: 60
 PointerAlignment: Right
 ReflowComments:  true
-SortIncludes:    CaseSensitive
+SortIncludes:    true
 IncludeBlocks:   Regroup
 IncludeCategories:
   - Regex:           '^<.*>$'                                        # external libs
