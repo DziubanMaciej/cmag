@@ -1,5 +1,6 @@
 #include "cmag_lib/cmake_generation/argument_parser.h"
 #include "cmag_lib/cmake_generation/generate.h"
+#include "cmag_lib/core/generate_project.h"
 #include "cmag_lib/utils/error.h"
 
 int main(int argc, const char **argv) {
@@ -20,5 +21,14 @@ int main(int argc, const char **argv) {
     }
 
     // Call CMake and gather information about the build system
-    return generateCmake(argParser);
+    if (int result = generateCmake(argParser); result) {
+        return result;
+    }
+
+    // Merge information dumped by CMake generation to create .cmag-project file
+    if (int result = generateProject(argParser.getBuildPath(), "project"); result) {
+        return result;
+    }
+
+    return 0;
 }

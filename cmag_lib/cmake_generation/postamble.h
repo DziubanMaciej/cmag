@@ -131,7 +131,6 @@ function(json_append_configs OUT_VARIABLE CONFIGS INDENT INDENT_INCREMENT)
         endif()
         math(EXPR COUNTER "${COUNTER}+1")
 
-        message("A=${COUNTER} B=${LAST_CONFIG_INDEX} C=${IS_LAST}")
         json_append_line_comma(${OUT_VARIABLE} "\"${CONFIG}\"" ${INNER_INDENT} ${IS_LAST})
     endforeach()
 
