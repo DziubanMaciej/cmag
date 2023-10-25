@@ -25,7 +25,7 @@ ParseResult CmagJsonParser::parseConfigListFile(const char *json, std::vector<st
     }
 
     for (const nlohmann::json &configNode : node) {
-        if (!node.is_string()) {
+        if (!configNode.is_string()) {
             return ParseResult::InvalidNodeType;
         }
         outConfigs.push_back(configNode.get<std::string>());

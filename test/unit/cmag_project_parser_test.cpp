@@ -1,5 +1,5 @@
-#include "cmag_lib/core/cmag_project.h"
 #include "cmag_lib/core/cmag_json_parser.h"
+#include "cmag_lib/core/cmag_project.h"
 
 #include <gtest/gtest.h>
 
@@ -283,4 +283,67 @@ TEST(CmagProjectParseTest, givenTargetWithInvalidTypeThenReturnError) {
     )DELIMETER";
     CmagProject project{};
     ASSERT_EQ(ParseResult::InvalidValue, CmagJsonParser::parseProject(json, project));
+}
+
+TEST(CmagConfigListFileParseTest, givenEmptyConfigsListThenParseCorrectly) {
+    const char *json = R"DELIMETER(
+    []
+    )DELIMETER";
+    std::vector<std::string> configs{};
+    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseConfigListFile(json, configs));
+    ASSERT_EQ(0u, configs.size());
+}
+
+TEST(CmagConfigListFileParseTest, givenOneConfigThenParseCorrectly) {
+    const char *json = R"DELIMETER(
+    [ "Debug" ]
+    )DELIMETER";
+    std::vector<std::string> configs{};
+    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseConfigListFile(json, configs));
+    ASSERT_EQ(1u, configs.size());
+    EXPECT_STREQ("Debug", configs[0].c_str());
+}
+
+TEST(CmagConfigListFileParseTest, givenMultipleConfigsThenParseCorrectly) {
+    const char *json = R"DELIMETER(
+    [ "Debug", "Release", "CustomConf" ]
+    )DELIMETER";
+    std::vector<std::string> configs{};
+    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseConfigListFile(json, configs));
+    ASSERT_EQ(3u, configs.size());
+    EXPECT_STREQ("Debug", configs[0].c_str());
+    EXPECT_STREQ("Release", configs[1].c_str());
+    EXPECT_STREQ("CustomConf", configs[2].c_str());
+}
+
+TEST(CmagGlobalsFileParseTest, givenEmptyGlobalsThenParseCorrectly) {
+    const char *json = R"DELIMETER(
+    {}
+    )DELIMETER";
+    CmagGlobals globals{};
+    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseGlobalsFile(json, globals));
+    EXPECT_FALSE(globals.darkMode);
+}
+
+TEST(CmagGlobalsFileParseTest, givenDarkModeSpecifiedThenParseCorrectly) {
+    {
+        const char *json = R"DELIMETER(
+        {
+            "darkMode" : false
+        }
+        )DELIMETER";
+        CmagGlobals globals{};
+        ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseGlobalsFile(json, globals));
+        EXPECT_FALSE(globals.darkMode);
+    }
+    {
+        const char *json = R"DELIMETER(
+        {
+            "darkMode" : true
+        }
+        )DELIMETER";
+        CmagGlobals globals{};
+        ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseGlobalsFile(json, globals));
+        EXPECT_TRUE(globals.darkMode);
+    }
 }
