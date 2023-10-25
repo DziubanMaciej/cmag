@@ -15,25 +15,31 @@ enum class CmagTargetType {
     // TODO ExternalLibrary?
 };
 
+struct CmagGlobals {
+    bool darkMode = false;
+};
+
 struct CmagTarget {
-    using Property = std::pair<std::string, std::string>; // name, value
+    using Property = std::pair<std::string, std::string>; // propertyName, propertyValue
+    using Properties = std::pair<std::string, std::vector<Property>>; // configName, properties
 
     std::string name;
     CmagTargetType type;
-    std::vector<Property> properties;
+    std::vector<Properties> properties;
 };
 
 class CmagProject {
 public:
     CmagProject() = default;
 
-    void addTarget(CmagTarget &&target);
-    void setDarkMode(bool value) { darkMode = value; }
+    void addTarget(CmagTarget &&newTarget);
 
     const auto &getTargets() const { return targets; }
-    auto getDarkMode() const { return darkMode; }
+    auto &getGlobals() { return globals; }
 
 private:
-    bool darkMode = false;
+    void mergeTargets(CmagTarget &dst, CmagTarget &&src);
+
+    CmagGlobals globals;
     std::vector<CmagTarget> targets = {};
 };

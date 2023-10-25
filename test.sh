@@ -24,3 +24,6 @@ cat test/acceptance/with_subdirs/build/project_Default.cmag-targets
 
 echo "----------------------- Debug config:"
 cat test/acceptance/with_subdirs/build/project_Debug.cmag-targets
+
+echo "----------------------- Release config:"
+cat test/acceptance/with_subdirs/build/project_Release.cmag-targets

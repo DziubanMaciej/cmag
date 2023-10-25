@@ -3,46 +3,65 @@
 
 #include <gtest/gtest.h>
 
-TEST(CmagProjectParserTest, givenProjectWithNoTargetsThenParseCorrectly) {
+void compareTargetProperties(const CmagTarget::Properties &expected, const CmagTarget::Properties &actual) {
+    // Config name
+    EXPECT_STREQ(expected.first.c_str(), actual.first.c_str());
+
+    // Properties
+    ASSERT_EQ(expected.second.size(), actual.second.size());
+    for (size_t i = 0u; i < expected.second.size(); i++) {
+        EXPECT_STREQ(expected.second[i].first.c_str(), actual.second[i].first.c_str());
+        EXPECT_STREQ(expected.second[i].second.c_str(), actual.second[i].second.c_str());
+    }
+}
+
+TEST(CmagProjectParserTest, givenProjectWithNoTargetsAndNoGlobalsThenParseCorrectly) {
     const char *json = R"DELIMETER(
     {
-        "targets" : []
+        "globals": {},
+        "targetsDebug" : []
     }
     )DELIMETER";
     CmagProject project{};
     ASSERT_EQ(ParseResult::Success, CmagProjectParser::parseProject(json, project));
     ASSERT_EQ(0u, project.getTargets().size());
+    EXPECT_FALSE(project.getGlobals().darkMode);
 }
 
 TEST(CmagProjectParserTest, givenProjectWithDarkModeThenParseCorrectly) {
     {
         const char *json = R"DELIMETER(
         {
-            "darkMode": true,
-            "targets" : []
+            "globals": {
+                "darkMode": true
+            },
+            "targetsDebug" : []
         }
         )DELIMETER";
         CmagProject project{};
         ASSERT_EQ(ParseResult::Success, CmagProjectParser::parseProject(json, project));
-        EXPECT_TRUE(project.getDarkMode());
+        EXPECT_TRUE(project.getGlobals().darkMode);
     }
     {
         const char *json = R"DELIMETER(
         {
-            "darkMode": false,
-            "targets" : []
+            "globals": {
+                "darkMode": false
+            },
+            "targetsDebug" : []
         }
         )DELIMETER";
         CmagProject project{};
         ASSERT_EQ(ParseResult::Success, CmagProjectParser::parseProject(json, project));
-        EXPECT_FALSE(project.getDarkMode());
+        EXPECT_FALSE(project.getGlobals().darkMode);
     }
 }
 
 TEST(CmagProjectParserTest, givenTargetWithNoPropertiesThenParseCorrectly) {
     const char *json = R"DELIMETER(
     {
-        "targets" : [
+        "globals": {},
+        "targetsDebug" : [
             {
                 "name": "myTarget",
                 "type": "Executable",
@@ -57,13 +76,20 @@ TEST(CmagProjectParserTest, givenTargetWithNoPropertiesThenParseCorrectly) {
     const CmagTarget &target = project.getTargets()[0];
     EXPECT_STREQ("myTarget", target.name.c_str());
     EXPECT_EQ(CmagTargetType::Executable, target.type);
-    EXPECT_EQ(0u, target.properties.size());
+
+    CmagTarget::Properties expectedProperties = {
+        "Debug",
+        {},
+    };
+    ASSERT_EQ(1u, target.properties.size());
+    compareTargetProperties(expectedProperties, target.properties[0]);
 }
 
 TEST(CmagProjectParserTest, givenTargetWithPropertiesThenParseCorrectly) {
     const char *json = R"DELIMETER(
     {
-        "targets" : [
+        "globals": {},
+        "targetsDebug" : [
             {
                 "name": "myTarget",
                 "type": "Executable",
@@ -81,26 +107,93 @@ TEST(CmagProjectParserTest, givenTargetWithPropertiesThenParseCorrectly) {
     const CmagTarget &target = project.getTargets()[0];
     EXPECT_STREQ("myTarget", target.name.c_str());
     EXPECT_EQ(CmagTargetType::Executable, target.type);
+
+    CmagTarget::Properties expectedProperties = {
+        "Debug",
+        {
+            {"one", "1"},
+            {"two", "2"},
+        },
+    };
+    ASSERT_EQ(1u, target.properties.size());
+    compareTargetProperties(expectedProperties, target.properties[0]);
+}
+
+TEST(CmagProjectParserTest, givenTargetWithMultipleConfigsThenParseCorrectly) {
+    const char *json = R"DELIMETER(
+    {
+        "globals": {},
+        "targetsDebug" : [
+            {
+                "name": "myTarget",
+                "type": "Executable",
+                "properties": {
+                    "one": "1d",
+                    "two": "2d"
+                }
+            }
+        ],
+        "targetsRelease" : [
+            {
+                "name": "myTarget",
+                "type": "Executable",
+                "properties": {
+                    "one": "1r",
+                    "two": "2r"
+                }
+            }
+        ]
+    }
+    )DELIMETER";
+    CmagProject project{};
+    ASSERT_EQ(ParseResult::Success, CmagProjectParser::parseProject(json, project));
+    ASSERT_EQ(1u, project.getTargets().size());
+    const CmagTarget &target = project.getTargets()[0];
+    EXPECT_STREQ("myTarget", target.name.c_str());
+    EXPECT_EQ(CmagTargetType::Executable, target.type);
     ASSERT_EQ(2u, target.properties.size());
-    EXPECT_STREQ("one", target.properties[0].first.c_str());
-    EXPECT_STREQ("1", target.properties[0].second.c_str());
-    EXPECT_STREQ("two", target.properties[1].first.c_str());
-    EXPECT_STREQ("2", target.properties[1].second.c_str());
+
+    ASSERT_EQ(2u, target.properties.size());
+    {
+        CmagTarget::Properties expectedProperties = {
+            "Debug",
+            {
+                {"one", "1d"},
+                {"two", "2d"},
+            },
+        };
+        compareTargetProperties(expectedProperties, target.properties[0]);
+    }
+    {
+        CmagTarget::Properties expectedProperties = {
+            "Release",
+            {
+                {"one", "1r"},
+                {"two", "2r"},
+            },
+        };
+        compareTargetProperties(expectedProperties, target.properties[1]);
+    }
 }
 
 TEST(CmagProjectParserTest, givenMultipleTargetsThenParseCorrectly) {
     const char *json = R"DELIMETER(
     {
-        "targets" : [
+        "globals": {},
+        "targetsDebug" : [
             {
                 "name": "myTarget1",
                 "type": "Executable",
-                "properties": {}
+                "properties": {
+                    "prop": "1"
+                }
             },
             {
                 "name": "myTarget2",
                 "type": "Executable",
-                "properties": {}
+                "properties": {
+                    "prop": "2"
+                }
             }
         ]
     }
@@ -109,15 +202,28 @@ TEST(CmagProjectParserTest, givenMultipleTargetsThenParseCorrectly) {
     ASSERT_EQ(ParseResult::Success, CmagProjectParser::parseProject(json, project));
     ASSERT_EQ(2u, project.getTargets().size());
 
-    const CmagTarget *target = &project.getTargets()[0];
-    EXPECT_STREQ("myTarget1", target->name.c_str());
-    EXPECT_EQ(CmagTargetType::Executable, target->type);
-    EXPECT_EQ(0u, target->properties.size());
-
-    target = &project.getTargets()[1];
-    EXPECT_STREQ("myTarget2", target->name.c_str());
-    EXPECT_EQ(CmagTargetType::Executable, target->type);
-    EXPECT_EQ(0u, target->properties.size());
+    {
+        const CmagTarget &target = project.getTargets()[0];
+        CmagTarget::Properties expectedProperties = {
+            "Debug",
+            {
+                {"prop", "1"},
+            },
+        };
+        ASSERT_EQ(1u, target.properties.size());
+        compareTargetProperties(expectedProperties, target.properties[0]);
+    }
+    {
+        const CmagTarget &target = project.getTargets()[1];
+        CmagTarget::Properties expectedProperties = {
+            "Debug",
+            {
+                {"prop", "2"},
+            },
+        };
+        ASSERT_EQ(1u, target.properties.size());
+        compareTargetProperties(expectedProperties, target.properties[0]);
+    }
 }
 
 TEST(CmagProjectParserTest, givenVariousTargetTypesTheParseThemCorrectly) {
@@ -133,7 +239,8 @@ TEST(CmagProjectParserTest, givenVariousTargetTypesTheParseThemCorrectly) {
     for (auto [type, typeString] : cases) {
         const char *jsonFormat = R"DELIMETER(
         {
-            "targets" : [
+            "globals": {},
+            "targetsDebug" : [
                 {
                     "name": "myTarget",
                     "type": "%s",
@@ -151,14 +258,21 @@ TEST(CmagProjectParserTest, givenVariousTargetTypesTheParseThemCorrectly) {
         const CmagTarget &target = project.getTargets()[0];
         EXPECT_STREQ("myTarget", target.name.c_str());
         EXPECT_EQ(type, target.type);
-        EXPECT_EQ(0u, target.properties.size());
+
+        CmagTarget::Properties expectedProperties = {
+            "Debug",
+            {},
+        };
+        ASSERT_EQ(1u, target.properties.size());
+        compareTargetProperties(expectedProperties, target.properties[0]);
     }
 }
 
 TEST(CmagProjectParserTest, givenTargetWithInvalidTypeThenReturnError) {
     const char *json = R"DELIMETER(
     {
-        "targets" : [
+        "globals": {},
+        "targetsDebug" : [
             {
                 "name": "myTarget",
                 "type": "exe",

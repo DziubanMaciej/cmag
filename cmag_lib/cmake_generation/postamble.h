@@ -92,7 +92,7 @@ function(json_append_targets OUT_VARIABLE CONFIG INDENT INDENT_INCREMENT)
     json_append_line(${OUT_VARIABLE} "{" ${INDENT})
 
     json_append_key_value(${OUT_VARIABLE} "config" "${CONFIG}" ${INNER_INDENT} FALSE)
-    json_append_line(${OUT_VARIABLE} "\"properties\": [" ${INNER_INDENT})
+    json_append_line(${OUT_VARIABLE} "\"targets\": [" ${INNER_INDENT})
     get_all_targets(ALL_TARGETS ${CMAKE_CURRENT_SOURCE_DIR})
 
     list(LENGTH ALL_TARGETS LAST_TARGET_INDEX)
