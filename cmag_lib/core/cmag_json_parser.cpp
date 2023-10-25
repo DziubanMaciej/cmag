@@ -1,4 +1,4 @@
-#include "cmag_project_parser.h"
+#include "cmag_json_parser.h"
 
 #include "cmag_lib/core/cmag_project.h"
 #include "cmag_lib/utils/error.h"
@@ -14,7 +14,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(CmagTargetType,
                                  {CmagTargetType::Executable, "Executable"},
                              })
 
-ParseResult CmagProjectParser::parseConfigListFile(const char *json, std::vector<std::string> &outConfigs) {
+ParseResult CmagJsonParser::parseConfigListFile(const char *json, std::vector<std::string> &outConfigs) {
     const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);
     if (node.is_discarded()) {
         return ParseResult::Malformed;
@@ -34,7 +34,7 @@ ParseResult CmagProjectParser::parseConfigListFile(const char *json, std::vector
     return ParseResult::Success;
 }
 
-ParseResult CmagProjectParser::parseGlobalsFile(const char *json, CmagGlobals &outGlobals) {
+ParseResult CmagJsonParser::parseGlobalsFile(const char *json, CmagGlobals &outGlobals) {
     const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);
     if (node.is_discarded()) {
         return ParseResult::Malformed;
@@ -49,7 +49,7 @@ ParseResult CmagProjectParser::parseGlobalsFile(const char *json, CmagGlobals &o
     return ParseResult::Success;
 }
 
-ParseResult CmagProjectParser::parseTargetsFile(const char *json, CmagProject &outProject) {
+ParseResult CmagJsonParser::parseTargetsFile(const char *json, CmagProject &outProject) {
     const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);
     if (node.is_discarded()) {
         return ParseResult::Malformed;
@@ -73,7 +73,7 @@ ParseResult CmagProjectParser::parseTargetsFile(const char *json, CmagProject &o
     }
 }
 
-ParseResult CmagProjectParser::parseProject(const char *json, CmagProject &outProject) {
+ParseResult CmagJsonParser::parseProject(const char *json, CmagProject &outProject) {
     const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);
     if (node.is_discarded()) {
         return ParseResult::Malformed;
@@ -104,13 +104,13 @@ ParseResult CmagProjectParser::parseProject(const char *json, CmagProject &outPr
     return ParseResult::Success;
 }
 
-void CmagProjectParser::parseGlobalValues(const nlohmann::json &node, CmagGlobals &outGlobals) {
+void CmagJsonParser::parseGlobalValues(const nlohmann::json &node, CmagGlobals &outGlobals) {
     FATAL_ERROR_IF(!node.is_object(), "node should be an object"); // This should already be checked, hence assertion.
 
     parseObjectField(node, "darkMode", outGlobals.darkMode); // optional, ignore result
 }
 
-ParseResult CmagProjectParser::parseTargets(const nlohmann::json &node, const std::string &config, CmagProject &outProject) {
+ParseResult CmagJsonParser::parseTargets(const nlohmann::json &node, const std::string &config, CmagProject &outProject) {
     if (!node.is_array()) {
         return ParseResult::InvalidNodeType;
     }
@@ -127,7 +127,7 @@ ParseResult CmagProjectParser::parseTargets(const nlohmann::json &node, const st
     return ParseResult::Success;
 }
 
-ParseResult CmagProjectParser::parseTarget(const nlohmann::json &node, const std::string &config, CmagTarget &outTarget) {
+ParseResult CmagJsonParser::parseTarget(const nlohmann::json &node, const std::string &config, CmagTarget &outTarget) {
     if (!node.is_object()) {
         return ParseResult::InvalidNodeType;
     }
@@ -159,7 +159,7 @@ ParseResult CmagProjectParser::parseTarget(const nlohmann::json &node, const std
     return result;
 }
 
-ParseResult CmagProjectParser::parseTargetProperties(const nlohmann::json &node, const std::string &config, CmagTarget &outTarget) {
+ParseResult CmagJsonParser::parseTargetProperties(const nlohmann::json &node, const std::string &config, CmagTarget &outTarget) {
     if (!node.is_object()) {
         return ParseResult::InvalidNodeType;
     }
@@ -187,7 +187,7 @@ ParseResult CmagProjectParser::parseTargetProperties(const nlohmann::json &node,
 }
 
 template <typename DstT>
-ParseResult CmagProjectParser::parseObjectField(const nlohmann::json &node, const char *name, DstT &dst) {
+ParseResult CmagJsonParser::parseObjectField(const nlohmann::json &node, const char *name, DstT &dst) {
     if (auto it = node.find(name); it != node.end()) {
         dst = it->get<DstT>();
         return ParseResult::Success;

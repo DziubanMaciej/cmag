@@ -15,7 +15,7 @@ enum class ParseResult {
     MissingField,
 };
 
-class CmagProjectParser {
+class CmagJsonParser {
 public:
     static ParseResult parseProject(const char *json, CmagProject &outProject);
 
