@@ -1,4 +1,5 @@
 #include "cmag_lib/core/cmag_json_parser.h"
+#include "cmag_lib/core/cmag_json_writer.h"
 #include "cmag_lib/core/cmag_project.h"
 #include "cmag_lib/utils/error.h"
 #include "cmag_lib/utils/filesystem.h"
@@ -69,6 +70,22 @@ int readTargets(const fs::path &buildDir, std::string_view projectName, const st
     return 0;
 }
 
+int writeProject(const fs::path &buildDir, std::string_view projectName, const CmagProject &project) {
+    std::string fileName = std::string(projectName) + ".cmag-project";
+    std::ofstream outFile{buildDir / fileName, std::ios::out};
+    if (!outFile) {
+        LOG_ERROR("failed to open ", fileName);
+        return 1;
+    }
+    CmagJsonWriter::writeProject(project, outFile);
+    if (!outFile) {
+        LOG_ERROR("failed to write to ", fileName);
+        return 1;
+    }
+
+    return 0;
+}
+
 int generateProject(const fs::path &buildDir, std::string_view projectName) {
     std::vector<std::string> configs = {};
     if (int result = readConfigs(buildDir, projectName, configs); result) {
@@ -89,6 +106,10 @@ int generateProject(const fs::path &buildDir, std::string_view projectName) {
     project.getGlobals() = globals;
     for (CmagTarget &target : targets) {
         project.addTarget(std::move(target));
+    }
+
+    if (int result = writeProject(buildDir, projectName, project); result) {
+        return result;
     }
 
     return 0;

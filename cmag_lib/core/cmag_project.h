@@ -28,18 +28,24 @@ struct CmagTarget {
     std::vector<Properties> properties;
 };
 
+using CmagConfigs = std::vector<std::string>;
+
 class CmagProject {
 public:
     CmagProject() = default;
 
     void addTarget(CmagTarget &&newTarget);
 
+    const auto &getConfigs() const { return configs; }
     const auto &getTargets() const { return targets; }
+    const auto &getGlobals() const { return globals; }
     auto &getGlobals() { return globals; }
 
 private:
     void mergeTargets(CmagTarget &dst, CmagTarget &&src);
+    void addConfig(std::string_view config);
 
-    CmagGlobals globals;
+    CmagConfigs configs = {};
+    CmagGlobals globals = {};
     std::vector<CmagTarget> targets = {};
 };
