@@ -85,10 +85,14 @@ function(json_append_globals OUT_VARIABLE INDENT INDENT_INCREMENT)
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
 endfunction()
 
-function(json_append_targets OUT_VARIABLE INDENT INDENT_INCREMENT)
+function(json_append_targets OUT_VARIABLE CONFIG INDENT INDENT_INCREMENT)
     set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
+    set(INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
 
-    json_append_line(${OUT_VARIABLE} "[" ${INDENT})
+    json_append_line(${OUT_VARIABLE} "{" ${INDENT})
+
+    json_append_key_value(${OUT_VARIABLE} "config" "${CONFIG}" ${INNER_INDENT} FALSE)
+    json_append_line(${OUT_VARIABLE} "\"properties\": [" ${INNER_INDENT})
     get_all_targets(ALL_TARGETS ${CMAKE_CURRENT_SOURCE_DIR})
 
     list(LENGTH ALL_TARGETS LAST_TARGET_INDEX)
@@ -102,10 +106,11 @@ function(json_append_targets OUT_VARIABLE INDENT INDENT_INCREMENT)
         endif()
         math(EXPR COUNTER "${COUNTER}+1")
 
-        json_append_target(${OUT_VARIABLE} ${TGT} ${INNER_INDENT} ${INDENT_INCREMENT} ${IS_LAST})
+        json_append_target(${OUT_VARIABLE} ${TGT} ${INNER_INNER_INDENT} ${INDENT_INCREMENT} ${IS_LAST})
     endforeach()
 
-    json_append_line(${OUT_VARIABLE} "]" ${INDENT})
+    json_append_line(${OUT_VARIABLE} "]" ${INNER_INDENT})
+    json_append_line(${OUT_VARIABLE} "}" ${INDENT})
 
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
 endfunction()
@@ -140,23 +145,22 @@ if ("${CMAG_PROJECT_NAME}d" STREQUAL "d")
     set(CMAG_PROJECT_NAME ${CMAKE_PROJECT_NAME})
 endif()
 
-# Prepare json string with generator expressions for targets description
-json_append_targets(TARGETS_JSON "  " "  ")
-
+# Handle single-config and multi-config generators differently.
 get_property(CMAG_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(CMAG_IS_MULTI_CONFIG)
     set(CMAG_CONFIGS "${CMAKE_CONFIGURATION_TYPES}")
-    file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}_$<CONFIG>.cmag-targets CONTENT "${TARGETS_JSON}")
+    set(CMAG_CONFIG "$<CONFIG>")
 else()
     # Work out current config. It can be unspecified, in which cas we'll name it as "Default".
+    # Note that $<CONFIG> generator expression doesn't work if build type isn't explicitly
+    # specified, so we have use this placeholder.
     set(CMAG_CONFIG ${CMAKE_BUILD_TYPE})
     if ("${CMAG_CONFIG}d" STREQUAL "d")
         set(CMAG_CONFIG Default)
     endif()
-    message(STATUS "CMAG_CONFIG: ${CMAG_CONFIG}")
 
     set(CMAG_CONFIGS "${CMAG_CONFIG}")
-    file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}_${CMAG_CONFIG}.cmag-targets CONTENT "${TARGETS_JSON}")
+    set(CMAG_CONFIG "${CMAG_CONFIG}")
 endif()
 
 # Write configs list
@@ -166,6 +170,10 @@ file(WRITE ${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-configs "${CONFIGS_JSON
 # Write global settings
 json_append_globals(GLOBALS_JSON "  " "  ")
 file(WRITE ${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-globals "${GLOBALS_JSON}")
+
+# Write per-config targets
+json_append_targets(TARGETS_JSON "${CMAG_CONFIG}" "  " "  ")
+file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}_${CMAG_CONFIG}.cmag-targets CONTENT "${TARGETS_JSON}")
 
 # -----------------------------CMAG POSTAMBLE END---------------------------------------------
 )DELIMETER";
