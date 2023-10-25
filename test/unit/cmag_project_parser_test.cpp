@@ -64,7 +64,7 @@ TEST(CmagProjectParseTest, givenTargetWithNoPropertiesThenParseCorrectly) {
         "targetsDebug" : [
             {
                 "name": "myTarget",
-                "type": "Executable",
+                "type": "EXECUTABLE",
                 "properties": {}
             }
         ]
@@ -92,7 +92,7 @@ TEST(CmagProjectParseTest, givenTargetWithPropertiesThenParseCorrectly) {
         "targetsDebug" : [
             {
                 "name": "myTarget",
-                "type": "Executable",
+                "type": "EXECUTABLE",
                 "properties": {
                     "one": "1",
                     "two": "2"
@@ -126,7 +126,7 @@ TEST(CmagProjectParseTest, givenTargetWithMultipleConfigsThenParseCorrectly) {
         "targetsDebug" : [
             {
                 "name": "myTarget",
-                "type": "Executable",
+                "type": "EXECUTABLE",
                 "properties": {
                     "one": "1d",
                     "two": "2d"
@@ -136,7 +136,7 @@ TEST(CmagProjectParseTest, givenTargetWithMultipleConfigsThenParseCorrectly) {
         "targetsRelease" : [
             {
                 "name": "myTarget",
-                "type": "Executable",
+                "type": "EXECUTABLE",
                 "properties": {
                     "one": "1r",
                     "two": "2r"
@@ -183,14 +183,14 @@ TEST(CmagProjectParseTest, givenMultipleTargetsThenParseCorrectly) {
         "targetsDebug" : [
             {
                 "name": "myTarget1",
-                "type": "Executable",
+                "type": "EXECUTABLE",
                 "properties": {
                     "prop": "1"
                 }
             },
             {
                 "name": "myTarget2",
-                "type": "Executable",
+                "type": "EXECUTABLE",
                 "properties": {
                     "prop": "2"
                 }
@@ -228,12 +228,12 @@ TEST(CmagProjectParseTest, givenMultipleTargetsThenParseCorrectly) {
 
 TEST(CmagProjectParseTest, givenVariousTargetTypesTheParseThemCorrectly) {
     std::pair<CmagTargetType, const char *> cases[] = {
-        {CmagTargetType::StaticLibrary, "StaticLibrary"},
-        {CmagTargetType::ModuleLibrary, "ModuleLibrary"},
-        {CmagTargetType::SharedLibrary, "SharedLibrary"},
-        {CmagTargetType::ObjectLibrary, "ObjectLibrary"},
-        {CmagTargetType::InterfaceLibrary, "InterfaceLibrary"},
-        {CmagTargetType::Executable, "Executable"},
+        {CmagTargetType::StaticLibrary, "STATIC_LIBRARY"},
+        {CmagTargetType::ModuleLibrary, "MODULE_LIBRARY"},
+        {CmagTargetType::SharedLibrary, "SHARED_LIBRARY"},
+        {CmagTargetType::ObjectLibrary, "OBJECT_LIBRARY"},
+        {CmagTargetType::InterfaceLibrary, "INTERFACE_LIBRARY"},
+        {CmagTargetType::Executable, "EXECUTABLE"},
     };
 
     for (auto [type, typeString] : cases) {
@@ -367,7 +367,7 @@ TEST(CmagTargetsFileParseTest, givenTargetWithNoPropertesThenParseCorrectly) {
         "targets": [
             {
                 "name": "myTarget",
-                "type": "Executable",
+                "type": "EXECUTABLE",
                 "properties": { }
             }
         ]
@@ -396,7 +396,7 @@ TEST(CmagTargetsFileParseTest, givenTargetWithPropertesThenParseCorrectly) {
         "targets": [
             {
                 "name": "myTarget",
-                "type": "Executable",
+                "type": "EXECUTABLE",
                 "properties": {
                     "one": "1",
                     "two": "2"
@@ -431,7 +431,7 @@ TEST(CmagTargetsFileParseTest, givenMultipleTargetsThenParseCorrectly) {
         "targets": [
             {
                 "name": "myTarget1",
-                "type": "Executable",
+                "type": "EXECUTABLE",
                 "properties": {
                     "one": "1",
                     "two": "2"
@@ -439,7 +439,7 @@ TEST(CmagTargetsFileParseTest, givenMultipleTargetsThenParseCorrectly) {
             },
             {
                 "name": "myTarget2",
-                "type": "Executable",
+                "type": "EXECUTABLE",
                 "properties": {
                     "three": "3",
                     "zfour": "4"
