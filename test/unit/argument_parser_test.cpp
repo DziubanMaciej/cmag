@@ -87,9 +87,12 @@ TEST(ArgumentParserTest, givenNoGraphvizOptionThenInsertOurOwn) {
     const int argc = sizeof(argv) / sizeof(argv[0]);
     ArgumentParser parser{argc, argv};
     EXPECT_TRUE(parser.isValid());
-    EXPECT_STREQ("./graph.dot", parser.getGraphvizPath().string().c_str());
-    ASSERT_EQ(1u, parser.getExtraArgs().size());
-    EXPECT_STREQ("--graphviz=./graph.dot", parser.getExtraArgs()[0].c_str());
+
+    fs::path expectedGraphvizPath = "./graph.dot";
+    EXPECT_EQ(expectedGraphvizPath, parser.getGraphvizPath());
+    ASSERT_EQ(2u, parser.getExtraArgs().size());
+    EXPECT_STREQ("--graphviz", parser.getExtraArgs()[0].c_str());
+    EXPECT_EQ(expectedGraphvizPath, parser.getExtraArgs()[1]);
 }
 
 TEST(ArgumentParserTest, givenNoGraphvizOptionAndExplicitBuildPathThenInsertOurOwnGraphvizPathRelativeToBuildPath) {
@@ -97,9 +100,12 @@ TEST(ArgumentParserTest, givenNoGraphvizOptionAndExplicitBuildPathThenInsertOurO
     const int argc = sizeof(argv) / sizeof(argv[0]);
     ArgumentParser parser{argc, argv};
     EXPECT_TRUE(parser.isValid());
-    EXPECT_STREQ("myBuild/graph.dot", parser.getGraphvizPath().string().c_str());
-    ASSERT_EQ(1u, parser.getExtraArgs().size());
-    EXPECT_STREQ("--graphviz=myBuild/graph.dot", parser.getExtraArgs()[0].c_str());
+
+    fs::path expectedGraphvizPath = "myBuild/graph.dot";
+    EXPECT_EQ(expectedGraphvizPath, parser.getGraphvizPath());
+    ASSERT_EQ(2u, parser.getExtraArgs().size());
+    EXPECT_STREQ("--graphviz", parser.getExtraArgs()[0].c_str());
+    EXPECT_EQ(expectedGraphvizPath, parser.getExtraArgs()[1]);
 }
 
 TEST(ArgumentParserTest, givenGraphvizOptionThenParseIt) {
@@ -135,9 +141,12 @@ TEST(ArgumentParserTest, givenOptionStartingWithGraphvizThenIgnoreItAndParseNext
     ArgumentParser parser{argc, argv};
     EXPECT_TRUE(parser.isValid());
     EXPECT_STREQ("..", parser.getSourcePath().string().c_str());
-    EXPECT_STREQ("./graph.dot", parser.getGraphvizPath().string().c_str());
-    ASSERT_EQ(1u, parser.getExtraArgs().size());
-    EXPECT_STREQ("--graphviz=./graph.dot", parser.getExtraArgs()[0].c_str());
+
+    fs::path expectedGraphvizPath = "./graph.dot";
+    EXPECT_EQ(expectedGraphvizPath, parser.getGraphvizPath());
+    ASSERT_EQ(2u, parser.getExtraArgs().size());
+    EXPECT_STREQ("--graphviz", parser.getExtraArgs()[0].c_str());
+    EXPECT_EQ(expectedGraphvizPath, parser.getExtraArgs()[1]);
 }
 
 TEST(ArgumentParserTest, givenUndefinedGraphvizOptionThenArgumentsAreInvalid) {
@@ -176,14 +185,15 @@ TEST(ArgumentParserTest, givenExtraArgsWhenConstructingArgsForCMakeThenReturnApp
     const int argc = sizeof(argv) / sizeof(argv[0]);
     ArgumentParser parser{argc, argv};
     EXPECT_TRUE(parser.isValid());
-    EXPECT_EQ(1u, parser.getExtraArgs().size());
+    EXPECT_EQ(2u, parser.getExtraArgs().size());
 
     auto cmakeArgs = parser.constructArgsForCmake();
-    EXPECT_EQ(6u, cmakeArgs.size());
+    EXPECT_EQ(7u, cmakeArgs.size());
     EXPECT_STREQ("cmake", cmakeArgs[0]);
     EXPECT_STREQ("..", cmakeArgs[1]);
     EXPECT_STREQ("-B", cmakeArgs[2]);
     EXPECT_STREQ("bbb", cmakeArgs[3]);
-    EXPECT_STREQ("--graphviz=bbb/graph.dot", cmakeArgs[4]);
-    EXPECT_EQ(nullptr, cmakeArgs[5]);
+    EXPECT_STREQ("--graphviz", cmakeArgs[4]);
+    EXPECT_EQ(fs::path("bbb/graph.dot"), cmakeArgs[5]);
+    EXPECT_EQ(nullptr, cmakeArgs[6]);
 }

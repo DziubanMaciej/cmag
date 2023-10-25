@@ -57,7 +57,8 @@ ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(a
     }
     if (graphvizPath.empty()) {
         graphvizPath = buildPath / "graph.dot";
-        extraArgs.emplace_back(std::string{"--graphviz="} + graphvizPath.string());
+        extraArgs.emplace_back("--graphviz");
+        extraArgs.emplace_back(graphvizPath.string());
     }
 }
 
