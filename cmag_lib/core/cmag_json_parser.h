@@ -21,11 +21,11 @@ public:
 
     static ParseResult parseConfigListFile(const char *json, std::vector<std::string> &outConfigs);
     static ParseResult parseGlobalsFile(const char *json, CmagGlobals &outGlobals);
-    static ParseResult parseTargetsFile(const char *json, CmagProject &outProject);
+    static ParseResult parseTargetsFile(const char *json, std::vector<CmagTarget> &outTargets);
 
 private:
     static void parseGlobalValues(const nlohmann::json &node, CmagGlobals &outGlobals);
-    static ParseResult parseTargets(const nlohmann::json &node, const std::string &config, CmagProject &outProject);
+    static ParseResult parseTargets(const nlohmann::json &node, const std::string &config, std::vector<CmagTarget> &outTargets);
     static ParseResult parseTarget(const nlohmann::json &node, const std::string &config, CmagTarget &outTarget);
     static ParseResult parseTargetProperties(const nlohmann::json &node, const std::string &config, CmagTarget &outTarget);
 

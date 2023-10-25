@@ -347,3 +347,139 @@ TEST(CmagGlobalsFileParseTest, givenDarkModeSpecifiedThenParseCorrectly) {
         EXPECT_TRUE(globals.darkMode);
     }
 }
+
+TEST(CmagTargetsFileParseTest, givenNoTargetsThenParseCorrectly) {
+    const char *json = R"DELIMETER(
+    {
+        "config": "Debug",
+        "targets": []
+    }
+    )DELIMETER";
+    std::vector<CmagTarget> targets{};
+    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseTargetsFile(json, targets));
+    ASSERT_EQ(0u, targets.size());
+}
+
+TEST(CmagTargetsFileParseTest, givenTargetWithNoPropertesThenParseCorrectly) {
+    const char *json = R"DELIMETER(
+    {
+        "config": "Debug",
+        "targets": [
+            {
+                "name": "myTarget",
+                "type": "Executable",
+                "properties": { }
+            }
+        ]
+    }
+    )DELIMETER";
+    std::vector<CmagTarget> targets{};
+    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseTargetsFile(json, targets));
+    ASSERT_EQ(1u, targets.size());
+
+    const CmagTarget &target = targets[0];
+    EXPECT_STREQ("myTarget", target.name.c_str());
+    EXPECT_EQ(CmagTargetType::Executable, target.type);
+
+    CmagTarget::Properties expectedProperties = {
+        "Debug",
+        {},
+    };
+    ASSERT_EQ(1u, target.properties.size());
+    compareTargetProperties(expectedProperties, target.properties[0]);
+}
+
+TEST(CmagTargetsFileParseTest, givenTargetWithPropertesThenParseCorrectly) {
+    const char *json = R"DELIMETER(
+    {
+        "config": "Debug",
+        "targets": [
+            {
+                "name": "myTarget",
+                "type": "Executable",
+                "properties": {
+                    "one": "1",
+                    "two": "2"
+                }
+            }
+        ]
+    }
+    )DELIMETER";
+    std::vector<CmagTarget> targets{};
+    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseTargetsFile(json, targets));
+    ASSERT_EQ(1u, targets.size());
+
+    const CmagTarget &target = targets[0];
+    EXPECT_STREQ("myTarget", target.name.c_str());
+    EXPECT_EQ(CmagTargetType::Executable, target.type);
+
+    CmagTarget::Properties expectedProperties = {
+        "Debug",
+        {
+            {"one", "1"},
+            {"two", "2"},
+        },
+    };
+    ASSERT_EQ(1u, target.properties.size());
+    compareTargetProperties(expectedProperties, target.properties[0]);
+}
+
+TEST(CmagTargetsFileParseTest, givenMultipleTargetsThenParseCorrectly) {
+    const char *json = R"DELIMETER(
+    {
+        "config": "Debug",
+        "targets": [
+            {
+                "name": "myTarget1",
+                "type": "Executable",
+                "properties": {
+                    "one": "1",
+                    "two": "2"
+                }
+            },
+            {
+                "name": "myTarget2",
+                "type": "Executable",
+                "properties": {
+                    "three": "3",
+                    "zfour": "4"
+                }
+            }
+        ]
+    }
+    )DELIMETER";
+    std::vector<CmagTarget> targets{};
+    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseTargetsFile(json, targets));
+    ASSERT_EQ(2u, targets.size());
+
+    {
+        const CmagTarget &target = targets[0];
+        EXPECT_STREQ("myTarget1", target.name.c_str());
+        EXPECT_EQ(CmagTargetType::Executable, target.type);
+
+        CmagTarget::Properties expectedProperties = {
+            "Debug",
+            {
+                {"one", "1"},
+                {"two", "2"},
+            },
+        };
+        ASSERT_EQ(1u, target.properties.size());
+        compareTargetProperties(expectedProperties, target.properties[0]);
+    }
+    {
+        const CmagTarget &target = targets[1];
+        EXPECT_STREQ("myTarget2", target.name.c_str());
+        EXPECT_EQ(CmagTargetType::Executable, target.type);
+
+        CmagTarget::Properties expectedProperties = {
+            "Debug",
+            {
+                {"three", "3"},
+                {"zfour", "4"}, // nlohmann's json library sorts alphabetically by key. We don't care in normal code, but for tests we have to maintain order
+            },
+        };
+        ASSERT_EQ(1u, target.properties.size());
+        compareTargetProperties(expectedProperties, target.properties[0]);
+    }
+}

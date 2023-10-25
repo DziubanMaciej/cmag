@@ -49,7 +49,7 @@ ParseResult CmagJsonParser::parseGlobalsFile(const char *json, CmagGlobals &outG
     return ParseResult::Success;
 }
 
-ParseResult CmagJsonParser::parseTargetsFile(const char *json, CmagProject &outProject) {
+ParseResult CmagJsonParser::parseTargetsFile(const char *json, std::vector<CmagTarget> &outTargets) {
     const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);
     if (node.is_discarded()) {
         return ParseResult::Malformed;
@@ -67,7 +67,7 @@ ParseResult CmagJsonParser::parseTargetsFile(const char *json, CmagProject &outP
 
     // Read all targets and their properties for current config
     if (auto targetsNode = node.find("targets"); targetsNode != node.end()) {
-        return parseTargets(*targetsNode, config, outProject);
+        return parseTargets(*targetsNode, config, outTargets);
     } else {
         return ParseResult::MissingField;
     }
@@ -89,14 +89,17 @@ ParseResult CmagJsonParser::parseProject(const char *json, CmagProject &outProje
         return ParseResult::MissingField;
     }
 
-
     for (auto targetsNode = node.begin(); targetsNode != node.end(); targetsNode++) {
         const std::string &name = targetsNode.key();
         if (name.find("targets") != std::string::npos && name.size() > strlen("targets")) {
             std::string config = name.c_str() + strlen("targets");
-            ParseResult result = parseTargets(*targetsNode, config, outProject);
+            std::vector<CmagTarget> targets{};
+            ParseResult result = parseTargets(*targetsNode, config, targets);
             if (result != ParseResult::Success) {
                 return result;
+            }
+            for (CmagTarget &target : targets) {
+                outProject.addTarget(std::move(target));
             }
         }
     }
@@ -110,7 +113,7 @@ void CmagJsonParser::parseGlobalValues(const nlohmann::json &node, CmagGlobals &
     parseObjectField(node, "darkMode", outGlobals.darkMode); // optional, ignore result
 }
 
-ParseResult CmagJsonParser::parseTargets(const nlohmann::json &node, const std::string &config, CmagProject &outProject) {
+ParseResult CmagJsonParser::parseTargets(const nlohmann::json &node, const std::string &config, std::vector<CmagTarget> &outTargets) {
     if (!node.is_array()) {
         return ParseResult::InvalidNodeType;
     }
@@ -121,7 +124,7 @@ ParseResult CmagJsonParser::parseTargets(const nlohmann::json &node, const std::
         if (result != ParseResult::Success) {
             return result;
         }
-        outProject.addTarget(std::move(target));
+        outTargets.push_back(std::move(target));
     }
 
     return ParseResult::Success;
