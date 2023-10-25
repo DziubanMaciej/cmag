@@ -20,7 +20,7 @@ struct CmagGlobals {
 };
 
 struct CmagTarget {
-    using Property = std::pair<std::string, std::string>; // propertyName, propertyValue
+    using Property = std::pair<std::string, std::string>;             // propertyName, propertyValue
     using Properties = std::pair<std::string, std::vector<Property>>; // configName, properties
 
     std::string name;
