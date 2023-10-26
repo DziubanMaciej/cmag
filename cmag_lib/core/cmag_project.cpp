@@ -27,13 +27,15 @@ bool CmagProject::mergeTargets(CmagTarget &dst, CmagTarget &&src) {
     }
 
     for (CmagTargetConfig &srcConfig : src.configs) {
-        auto propertiesIt = std::find_if(configs.begin(), configs.end(), [&srcConfig](const auto &config) {
-            return config == srcConfig.name;
+        auto propertiesIt = std::find_if(dst.configs.begin(), dst.configs.end(), [&srcConfig](const auto &dstConfig) {
+            return dstConfig.name == srcConfig.name;
         });
-        if (propertiesIt != configs.end()) {
+        if (propertiesIt != dst.configs.end()) {
             return false;
         }
+    }
 
+    for (CmagTargetConfig &srcConfig : src.configs) {
         dst.configs.push_back(std::move(srcConfig));
     }
 
