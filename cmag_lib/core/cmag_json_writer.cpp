@@ -52,7 +52,7 @@ nlohmann::json CmagJsonWriter::createConfigsNode(const std::vector<CmagTarget::P
 
 nlohmann::json CmagJsonWriter::createConfigNode(const std::vector<CmagTarget::Property> &config) {
     nlohmann::json node = nlohmann::json::object();
-    for (const CmagTarget::Property property : config) {
+    for (const CmagTarget::Property &property : config) {
         node[property.first] = property.second;
     }
     return node;
