@@ -25,8 +25,13 @@ public:
 
 private:
     static void parseGlobalValues(const nlohmann::json &node, CmagGlobals &outGlobals);
-    static ParseResult parseTargets(const nlohmann::json &node, const std::string &config, std::vector<CmagTarget> &outTargets);
-    static ParseResult parseTarget(const nlohmann::json &node, const std::string &config, CmagTarget &outTarget);
+
+    static ParseResult parseTargets(const nlohmann::json &node, std::vector<CmagTarget> &outTargets);
+    static ParseResult parseTarget(const nlohmann::json &node, CmagTarget &outTarget);
+
+    static ParseResult parseConfigs(const nlohmann::json &node, CmagTarget &outTarget);
+    static ParseResult parseConfig(const nlohmann::json &node, std::string_view configName, CmagTarget &outTarget);
+
     static ParseResult parseTargetProperties(const nlohmann::json &node, const std::string &config, CmagTarget &outTarget);
 
     template <typename DstT>

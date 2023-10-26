@@ -55,19 +55,21 @@ macro(json_append_target_named_property OUT_VARIABLE TGT NAME PROPERTY INDENT IS
     json_append_key_value(${OUT_VARIABLE} "${NAME}" "${VALUE}" ${INDENT} ${IS_LAST})
 endmacro()
 
-function(json_append_target OUT_VARIABLE TGT INDENT INDENT_INCREMENT IS_LAST)
+function(json_append_target OUT_VARIABLE TGT CONFIG INDENT INDENT_INCREMENT IS_LAST)
     set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
     set(INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
+    set(INNER_INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
 
-    json_append_line(${OUT_VARIABLE} "{" ${INDENT})
-    json_append_key_value(${OUT_VARIABLE} name ${TGT} ${INNER_INDENT} FALSE)
+    json_append_line(${OUT_VARIABLE} "\"${TGT}\": {" ${INDENT})
     json_append_target_named_property(${OUT_VARIABLE} ${TGT} type TYPE ${INNER_INDENT} FALSE)
 
-    json_append_line(${OUT_VARIABLE} "\"properties\": {" ${INNER_INDENT})
-    json_append_target_property(${OUT_VARIABLE} ${TGT} INCLUDE_DIRECTORIES ${INNER_INNER_INDENT} FALSE)
-    json_append_target_property(${OUT_VARIABLE} ${TGT} LINK_LIBRARIES ${INNER_INNER_INDENT} FALSE)
-    json_append_target_property(${OUT_VARIABLE} ${TGT} COMPILE_DEFINITIONS ${INNER_INNER_INDENT} FALSE)
-    json_append_target_property(${OUT_VARIABLE} ${TGT} MANUALLY_ADDED_DEPENDENCIES ${INNER_INNER_INDENT} TRUE)
+    json_append_line(${OUT_VARIABLE} "\"configs\": {" ${INNER_INDENT})
+    json_append_line(${OUT_VARIABLE} "\"${CONFIG}\": {" ${INNER_INNER_INDENT})
+    json_append_target_property(${OUT_VARIABLE} ${TGT} INCLUDE_DIRECTORIES ${INNER_INNER_INNER_INDENT} FALSE)
+    json_append_target_property(${OUT_VARIABLE} ${TGT} LINK_LIBRARIES ${INNER_INNER_INNER_INDENT} FALSE)
+    json_append_target_property(${OUT_VARIABLE} ${TGT} COMPILE_DEFINITIONS ${INNER_INNER_INNER_INDENT} FALSE)
+    json_append_target_property(${OUT_VARIABLE} ${TGT} MANUALLY_ADDED_DEPENDENCIES ${INNER_INNER_INNER_INDENT} TRUE)
+    json_append_line_comma(${OUT_VARIABLE} "}" ${INNER_INNER_INDENT} TRUE)
     json_append_line_comma(${OUT_VARIABLE} "}" ${INNER_INDENT} TRUE)
 
     json_append_line_comma(${OUT_VARIABLE} "}" ${INDENT} ${IS_LAST})
@@ -87,12 +89,9 @@ endfunction()
 
 function(json_append_targets OUT_VARIABLE CONFIG INDENT INDENT_INCREMENT)
     set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
-    set(INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
 
     json_append_line(${OUT_VARIABLE} "{" ${INDENT})
 
-    json_append_key_value(${OUT_VARIABLE} "config" "${CONFIG}" ${INNER_INDENT} FALSE)
-    json_append_line(${OUT_VARIABLE} "\"targets\": [" ${INNER_INDENT})
     get_all_targets(ALL_TARGETS ${CMAKE_CURRENT_SOURCE_DIR})
 
     list(LENGTH ALL_TARGETS LAST_TARGET_INDEX)
@@ -106,10 +105,9 @@ function(json_append_targets OUT_VARIABLE CONFIG INDENT INDENT_INCREMENT)
         endif()
         math(EXPR COUNTER "${COUNTER}+1")
 
-        json_append_target(${OUT_VARIABLE} ${TGT} ${INNER_INNER_INDENT} ${INDENT_INCREMENT} ${IS_LAST})
+        json_append_target(${OUT_VARIABLE} ${TGT} ${CONFIG} ${INNER_INDENT} ${INDENT_INCREMENT} ${IS_LAST})
     endforeach()
 
-    json_append_line(${OUT_VARIABLE} "]" ${INNER_INDENT})
     json_append_line(${OUT_VARIABLE} "}" ${INDENT})
 
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)

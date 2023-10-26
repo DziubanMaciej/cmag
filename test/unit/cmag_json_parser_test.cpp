@@ -19,7 +19,7 @@ TEST(CmagProjectParseTest, givenProjectWithNoTargetsAndNoGlobalsThenParseCorrect
     const char *json = R"DELIMETER(
     {
         "globals": {},
-        "targetsDebug" : []
+        "targets" : {}
     }
     )DELIMETER";
     CmagProject project{};
@@ -35,7 +35,7 @@ TEST(CmagProjectParseTest, givenProjectWithDarkModeThenParseCorrectly) {
             "globals": {
                 "darkMode": true
             },
-            "targetsDebug" : []
+            "targets" : {}
         }
         )DELIMETER";
         CmagProject project{};
@@ -48,7 +48,7 @@ TEST(CmagProjectParseTest, givenProjectWithDarkModeThenParseCorrectly) {
             "globals": {
                 "darkMode": false
             },
-            "targetsDebug" : []
+            "targets" : {}
         }
         )DELIMETER";
         CmagProject project{};
@@ -57,17 +57,34 @@ TEST(CmagProjectParseTest, givenProjectWithDarkModeThenParseCorrectly) {
     }
 }
 
+TEST(CmagProjectParseTest, givenTargetWithNoConfigsThenReturnError) {
+    const char *json = R"DELIMETER(
+    {
+        "globals": {},
+        "targets" : {
+            "myTarget" : {
+                "type": "EXECUTABLE",
+                "configs": {}
+            }
+        }
+    }
+    )DELIMETER";
+    CmagProject project{};
+    ASSERT_EQ(ParseResult::MissingField, CmagJsonParser::parseProject(json, project));
+}
+
 TEST(CmagProjectParseTest, givenTargetWithNoPropertiesThenParseCorrectly) {
     const char *json = R"DELIMETER(
     {
         "globals": {},
-        "targetsDebug" : [
-            {
-                "name": "myTarget",
+        "targets" : {
+            "myTarget" : {
                 "type": "EXECUTABLE",
-                "properties": {}
+                "configs": {
+                    "Debug": {}
+                }
             }
-        ]
+        }
     }
     )DELIMETER";
     CmagProject project{};
@@ -89,16 +106,17 @@ TEST(CmagProjectParseTest, givenTargetWithPropertiesThenParseCorrectly) {
     const char *json = R"DELIMETER(
     {
         "globals": {},
-        "targetsDebug" : [
-            {
-                "name": "myTarget",
+        "targets" : {
+            "myTarget" : {
                 "type": "EXECUTABLE",
-                "properties": {
-                    "one": "1",
-                    "two": "2"
+                "configs": {
+                    "Debug": {
+                        "one": "1",
+                        "two": "2"
+                    }
                 }
             }
-        ]
+        }
     }
     )DELIMETER";
     CmagProject project{};
@@ -123,26 +141,21 @@ TEST(CmagProjectParseTest, givenTargetWithMultipleConfigsThenParseCorrectly) {
     const char *json = R"DELIMETER(
     {
         "globals": {},
-        "targetsDebug" : [
-            {
-                "name": "myTarget",
+        "targets" : {
+            "myTarget" : {
                 "type": "EXECUTABLE",
-                "properties": {
-                    "one": "1d",
-                    "two": "2d"
+                "configs": {
+                    "Debug" : {
+                        "one": "1d",
+                        "two": "2d"
+                    },
+                    "Release" : {
+                        "one": "1r",
+                        "two": "2r"
+                    }
                 }
             }
-        ],
-        "targetsRelease" : [
-            {
-                "name": "myTarget",
-                "type": "EXECUTABLE",
-                "properties": {
-                    "one": "1r",
-                    "two": "2r"
-                }
-            }
-        ]
+        }
     }
     )DELIMETER";
     CmagProject project{};
@@ -180,22 +193,24 @@ TEST(CmagProjectParseTest, givenMultipleTargetsThenParseCorrectly) {
     const char *json = R"DELIMETER(
     {
         "globals": {},
-        "targetsDebug" : [
-            {
-                "name": "myTarget1",
+        "targets" : {
+            "myTarget1" : {
                 "type": "EXECUTABLE",
-                "properties": {
-                    "prop": "1"
+                "configs": {
+                    "Debug" : {
+                        "prop": "1"
+                    }
                 }
             },
-            {
-                "name": "myTarget2",
+            "myTarget2" : {
                 "type": "EXECUTABLE",
-                "properties": {
-                    "prop": "2"
+                "configs": {
+                    "Debug" : {
+                        "prop": "2"
+                    }
                 }
             }
-        ]
+        }
     }
     )DELIMETER";
     CmagProject project{};
@@ -240,13 +255,14 @@ TEST(CmagProjectParseTest, givenVariousTargetTypesTheParseThemCorrectly) {
         const char *jsonFormat = R"DELIMETER(
         {
             "globals": {},
-            "targetsDebug" : [
-                {
-                    "name": "myTarget",
+            "targets" : {
+                "myTarget" : {
                     "type": "%s",
-                    "properties": {}
+                    "configs": {
+                        "Debug" : {}
+                    }
                 }
-            ]
+            }
         }
         )DELIMETER";
         char json[4096];
@@ -272,13 +288,14 @@ TEST(CmagProjectParseTest, givenTargetWithInvalidTypeThenReturnError) {
     const char *json = R"DELIMETER(
     {
         "globals": {},
-        "targetsDebug" : [
-            {
-                "name": "myTarget",
+        "targets" : {
+            "myTarget" : {
                 "type": "exe",
-                "properties": {}
+                "configs": {
+                    "Debug" : {}
+                }
             }
-        ]
+        }
     }
     )DELIMETER";
     CmagProject project{};
@@ -351,8 +368,6 @@ TEST(CmagGlobalsFileParseTest, givenDarkModeSpecifiedThenParseCorrectly) {
 TEST(CmagTargetsFileParseTest, givenNoTargetsThenParseCorrectly) {
     const char *json = R"DELIMETER(
     {
-        "config": "Debug",
-        "targets": []
     }
     )DELIMETER";
     std::vector<CmagTarget> targets{};
@@ -360,17 +375,28 @@ TEST(CmagTargetsFileParseTest, givenNoTargetsThenParseCorrectly) {
     ASSERT_EQ(0u, targets.size());
 }
 
+TEST(CmagTargetsFileParseTest, givenTargetWithNoConfigsThenReturnError) {
+    const char *json = R"DELIMETER(
+    {
+        "myTarget" : {
+            "type": "EXECUTABLE",
+            "configs": { }
+        }
+    }
+    )DELIMETER";
+    std::vector<CmagTarget> targets{};
+    ASSERT_EQ(ParseResult::MissingField, CmagJsonParser::parseTargetsFile(json, targets));
+}
+
 TEST(CmagTargetsFileParseTest, givenTargetWithNoPropertesThenParseCorrectly) {
     const char *json = R"DELIMETER(
     {
-        "config": "Debug",
-        "targets": [
-            {
-                "name": "myTarget",
-                "type": "EXECUTABLE",
-                "properties": { }
+        "myTarget" : {
+            "type": "EXECUTABLE",
+            "configs": {
+                "Debug": {}
             }
-        ]
+        }
     }
     )DELIMETER";
     std::vector<CmagTarget> targets{};
@@ -392,17 +418,15 @@ TEST(CmagTargetsFileParseTest, givenTargetWithNoPropertesThenParseCorrectly) {
 TEST(CmagTargetsFileParseTest, givenTargetWithPropertesThenParseCorrectly) {
     const char *json = R"DELIMETER(
     {
-        "config": "Debug",
-        "targets": [
-            {
-                "name": "myTarget",
-                "type": "EXECUTABLE",
-                "properties": {
+        "myTarget": {
+            "type": "EXECUTABLE",
+            "configs": {
+                "Debug": {
                     "one": "1",
                     "two": "2"
                 }
             }
-        ]
+        }
     }
     )DELIMETER";
     std::vector<CmagTarget> targets{};
@@ -427,25 +451,24 @@ TEST(CmagTargetsFileParseTest, givenTargetWithPropertesThenParseCorrectly) {
 TEST(CmagTargetsFileParseTest, givenMultipleTargetsThenParseCorrectly) {
     const char *json = R"DELIMETER(
     {
-        "config": "Debug",
-        "targets": [
-            {
-                "name": "myTarget1",
-                "type": "EXECUTABLE",
-                "properties": {
+        "myTarget1" : {
+            "type": "EXECUTABLE",
+            "configs": {
+                "Debug": {
                     "one": "1",
                     "two": "2"
                 }
-            },
-            {
-                "name": "myTarget2",
-                "type": "EXECUTABLE",
-                "properties": {
+            }
+        },
+        "myTarget2" : {
+            "type": "EXECUTABLE",
+            "configs": {
+                "Debug": {
                     "three": "3",
                     "zfour": "4"
                 }
             }
-        ]
+        }
     }
     )DELIMETER";
     std::vector<CmagTarget> targets{};

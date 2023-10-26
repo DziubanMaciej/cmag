@@ -58,19 +58,7 @@ ParseResult CmagJsonParser::parseTargetsFile(const char *json, std::vector<CmagT
         return ParseResult::InvalidNodeType;
     }
 
-    // Read config of current targets file
-    std::string config{};
-    ParseResult result = parseObjectField(node, "config", config);
-    if (result != ParseResult::Success) {
-        return result;
-    }
-
-    // Read all targets and their properties for current config
-    if (auto targetsNode = node.find("targets"); targetsNode != node.end()) {
-        return parseTargets(*targetsNode, config, outTargets);
-    } else {
-        return ParseResult::MissingField;
-    }
+    return parseTargets(node, outTargets);
 }
 
 ParseResult CmagJsonParser::parseProject(const char *json, CmagProject &outProject) {
@@ -83,25 +71,23 @@ ParseResult CmagJsonParser::parseProject(const char *json, CmagProject &outProje
         return ParseResult::InvalidNodeType;
     }
 
-    if (auto globalsNode = node.find("globals"); globalsNode != node.end()) {
-        parseGlobalValues(*globalsNode, outProject.getGlobals());
+    if (auto globalsNodeIt = node.find("globals"); globalsNodeIt != node.end()) {
+        parseGlobalValues(*globalsNodeIt, outProject.getGlobals());
     } else {
         return ParseResult::MissingField;
     }
 
-    for (auto targetsNode = node.begin(); targetsNode != node.end(); targetsNode++) {
-        const std::string &name = targetsNode.key();
-        if (name.find("targets") != std::string::npos && name.size() > strlen("targets")) {
-            std::string config = name.c_str() + strlen("targets");
-            std::vector<CmagTarget> targets{};
-            ParseResult result = parseTargets(*targetsNode, config, targets);
-            if (result != ParseResult::Success) {
-                return result;
-            }
-            for (CmagTarget &target : targets) {
-                outProject.addTarget(std::move(target));
-            }
+    if (auto targetsNodeIt = node.find("targets"); targetsNodeIt != node.end()) {
+        std::vector<CmagTarget> targets{};
+        ParseResult result = parseTargets(*targetsNodeIt, targets);
+        if (result != ParseResult::Success) {
+            return result;
         }
+        for (CmagTarget &target : targets) {
+            outProject.addTarget(std::move(target));
+        }
+    } else {
+        return ParseResult::MissingField;
     }
 
     return ParseResult::Success;
@@ -113,34 +99,33 @@ void CmagJsonParser::parseGlobalValues(const nlohmann::json &node, CmagGlobals &
     parseObjectField(node, "darkMode", outGlobals.darkMode); // optional, ignore result
 }
 
-ParseResult CmagJsonParser::parseTargets(const nlohmann::json &node, const std::string &config, std::vector<CmagTarget> &outTargets) {
-    if (!node.is_array()) {
+ParseResult CmagJsonParser::parseTargets(const nlohmann::json &node, std::vector<CmagTarget> &outTargets) {
+    if (!node.is_object()) {
         return ParseResult::InvalidNodeType;
     }
 
-    for (const nlohmann::json &targetNode : node) {
+    for (auto targetNodeIt = node.begin(); targetNodeIt != node.end(); targetNodeIt++) {
         CmagTarget target{};
-        ParseResult result = parseTarget(targetNode, config, target);
+        target.name = targetNodeIt.key(); // TODO verify
+        ParseResult result = parseTarget(*targetNodeIt, target);
         if (result != ParseResult::Success) {
             return result;
         }
+
         outTargets.push_back(std::move(target));
     }
 
     return ParseResult::Success;
 }
 
-ParseResult CmagJsonParser::parseTarget(const nlohmann::json &node, const std::string &config, CmagTarget &outTarget) {
+ParseResult CmagJsonParser::parseTarget(const nlohmann::json &node, CmagTarget &outTarget) {
+    FATAL_ERROR_IF(outTarget.name == ""); // this should be checked earlier
+
     if (!node.is_object()) {
         return ParseResult::InvalidNodeType;
     }
 
     ParseResult result = ParseResult::Success;
-
-    result = parseObjectField(node, "name", outTarget.name);
-    if (result != ParseResult::Success) {
-        return result;
-    }
 
     result = parseObjectField(node, "type", outTarget.type);
     if (result != ParseResult::Success) {
@@ -150,31 +135,45 @@ ParseResult CmagJsonParser::parseTarget(const nlohmann::json &node, const std::s
         return ParseResult::InvalidValue;
     }
 
-    auto propertiesIt = node.find("properties");
-    if (propertiesIt == node.end()) {
+    if (auto configsNodeIt = node.find("configs"); configsNodeIt != node.end()) {
+        return parseConfigs(*configsNodeIt, outTarget);
+    } else {
         return ParseResult::MissingField;
     }
-    result = parseTargetProperties(*propertiesIt, config, outTarget);
-    if (result != ParseResult::Success) {
-        return result;
-    }
-
-    return result;
 }
 
-ParseResult CmagJsonParser::parseTargetProperties(const nlohmann::json &node, const std::string &config, CmagTarget &outTarget) {
+ParseResult CmagJsonParser::parseConfigs(const nlohmann::json &node, CmagTarget &outTarget) {
+    if (!node.is_object()) {
+        return ParseResult::InvalidNodeType;
+    }
+
+    if (node.empty()) {
+        return ParseResult::MissingField;
+    }
+
+    for (auto configIt = node.begin(); configIt != node.end(); configIt++) {
+        ParseResult result = parseConfig(*configIt, configIt.key(), outTarget);
+        if (result != ParseResult::Success) {
+            return result;
+        }
+    }
+
+    return ParseResult::Success;
+}
+
+ParseResult CmagJsonParser::parseConfig(const nlohmann::json &node, std::string_view configName, CmagTarget &outTarget) {
     if (!node.is_object()) {
         return ParseResult::InvalidNodeType;
     }
 
     // Find properties list for current config
     // TODO: turn this to CmagTarget method?
-    auto propertiesIt = std::find_if(outTarget.properties.begin(), outTarget.properties.end(), [&config](const auto &props) {
-        return config == props.first;
+    auto propertiesIt = std::find_if(outTarget.properties.begin(), outTarget.properties.end(), [configName](const auto &props) {
+        return configName == props.first;
     });
     CmagTarget::Properties *properties = nullptr;
     if (propertiesIt == outTarget.properties.end()) {
-        outTarget.properties.push_back({config, {}});
+        outTarget.properties.push_back({std::string(configName), {}});
         properties = &outTarget.properties.back();
     } else {
         properties = &*propertiesIt; // wtf, why is there no get()?
