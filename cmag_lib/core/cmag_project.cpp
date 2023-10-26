@@ -1,5 +1,7 @@
 #include "cmag_project.h"
 
+#include <algorithm>
+
 void CmagProject::addTarget(CmagTarget &&newTarget) {
     // Register target's config if we haven't seen it yet.
     for (const CmagTarget::Properties &properties : newTarget.properties) {
