@@ -74,7 +74,10 @@ ParseResult CmagJsonParser::parseProject(std::string_view json, CmagProject &out
             return result;
         }
         for (CmagTarget &target : targets) {
-            outProject.addTarget(std::move(target));
+            bool addResult = outProject.addTarget(std::move(target));
+            if (!addResult) {
+                return ParseResult::InvalidValue;
+            }
         }
     } else {
         return ParseResult::MissingField;

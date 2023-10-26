@@ -43,7 +43,7 @@ class CmagProject {
 public:
     CmagProject() = default;
 
-    void addTarget(CmagTarget &&newTarget);
+    bool addTarget(CmagTarget &&newTarget);
 
     const auto &getConfigs() const { return configs; }
     const auto &getTargets() const { return targets; }
@@ -51,7 +51,7 @@ public:
     auto &getGlobals() { return globals; }
 
 private:
-    void mergeTargets(CmagTarget &dst, CmagTarget &&src);
+    bool mergeTargets(CmagTarget &dst, CmagTarget &&src);
     void addConfig(std::string_view config);
 
     CmagConfigs configs = {};

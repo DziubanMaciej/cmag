@@ -85,6 +85,19 @@ int writeProject(const fs::path &buildDir, std::string_view projectName, const C
     return 0;
 }
 
+int createProject(CmagGlobals &&globals, std::vector<CmagTarget> &&targets, CmagProject &outProject) {
+    outProject.getGlobals() = std::move(globals);
+    for (CmagTarget &target : targets) {
+        bool addResult = outProject.addTarget(std::move(target));
+        if (!addResult) {
+            LOG_ERROR("failed to create project");
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 int generateProject(const fs::path &buildDir, std::string_view projectName) {
     std::vector<fs::path> targetsFiles = {};
     if (int result = readTargetFilesList(buildDir, projectName, targetsFiles); result) {
@@ -102,9 +115,8 @@ int generateProject(const fs::path &buildDir, std::string_view projectName) {
     }
 
     CmagProject project = {};
-    project.getGlobals() = globals;
-    for (CmagTarget &target : targets) {
-        project.addTarget(std::move(target));
+    if (int result = createProject(std::move(globals), std::move(targets), project); result) {
+        return result;
     }
 
     if (int result = writeProject(buildDir, projectName, project); result) {

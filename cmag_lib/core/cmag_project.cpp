@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-void CmagProject::addTarget(CmagTarget &&newTarget) {
+bool CmagProject::addTarget(CmagTarget &&newTarget) {
     // Register target's config if we haven't seen it yet.
     for (const CmagTargetConfig &config : newTarget.configs) {
         addConfig(config.name);
@@ -12,22 +12,32 @@ void CmagProject::addTarget(CmagTarget &&newTarget) {
     // merge them, because it is a definition of the target for a different config.
     for (CmagTarget &existingTarget : targets) {
         if (existingTarget.name == newTarget.name) {
-            mergeTargets(existingTarget, std::move(newTarget));
-            return;
+            return mergeTargets(existingTarget, std::move(newTarget));
         }
     }
 
     // If we hadn't found a matching existing target, we create new one.
     targets.push_back(std::move(newTarget));
+    return true;
 }
 
-void CmagProject::mergeTargets(CmagTarget &dst, CmagTarget &&src) {
-    // TODO check for config duplicates. What should happen then?
-    // TODO check for matching type. What should happen if they don't match?
+bool CmagProject::mergeTargets(CmagTarget &dst, CmagTarget &&src) {
+    if (dst.type != src.type) {
+        return false;
+    }
 
     for (CmagTargetConfig &srcConfig : src.configs) {
+        auto propertiesIt = std::find_if(configs.begin(), configs.end(), [&srcConfig](const auto &config) {
+            return config == srcConfig.name;
+        });
+        if (propertiesIt != configs.end()) {
+            return false;
+        }
+
         dst.configs.push_back(std::move(srcConfig));
     }
+
+    return true;
 }
 
 void CmagProject::addConfig(std::string_view config) {
