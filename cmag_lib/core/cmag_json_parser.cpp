@@ -14,7 +14,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(CmagTargetType,
                                  {CmagTargetType::Executable, "EXECUTABLE"},
                              })
 
-ParseResult CmagJsonParser::parseTargetsFilesListFile(const char *json, std::vector<fs::path> &outFiles) {
+ParseResult CmagJsonParser::parseTargetsFilesListFile(std::string_view json, std::vector<fs::path> &outFiles) {
     const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);
     if (node.is_discarded()) {
         return ParseResult::Malformed;
@@ -34,7 +34,7 @@ ParseResult CmagJsonParser::parseTargetsFilesListFile(const char *json, std::vec
     return ParseResult::Success;
 }
 
-ParseResult CmagJsonParser::parseGlobalsFile(const char *json, CmagGlobals &outGlobals) {
+ParseResult CmagJsonParser::parseGlobalsFile(std::string_view json, CmagGlobals &outGlobals) {
     const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);
     if (node.is_discarded()) {
         return ParseResult::Malformed;
@@ -49,7 +49,7 @@ ParseResult CmagJsonParser::parseGlobalsFile(const char *json, CmagGlobals &outG
     return ParseResult::Success;
 }
 
-ParseResult CmagJsonParser::parseTargetsFile(const char *json, std::vector<CmagTarget> &outTargets) {
+ParseResult CmagJsonParser::parseTargetsFile(std::string_view json, std::vector<CmagTarget> &outTargets) {
     const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);
     if (node.is_discarded()) {
         return ParseResult::Malformed;
@@ -61,7 +61,7 @@ ParseResult CmagJsonParser::parseTargetsFile(const char *json, std::vector<CmagT
     return parseTargets(node, outTargets);
 }
 
-ParseResult CmagJsonParser::parseProject(const char *json, CmagProject &outProject) {
+ParseResult CmagJsonParser::parseProject(std::string_view json, CmagProject &outProject) {
     const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);
     if (node.is_discarded()) {
         return ParseResult::Malformed;

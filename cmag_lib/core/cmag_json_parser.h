@@ -20,11 +20,11 @@ enum class ParseResult {
 
 class CmagJsonParser {
 public:
-    static ParseResult parseProject(const char *json, CmagProject &outProject);
+    static ParseResult parseProject(std::string_view json, CmagProject &outProject);
 
-    static ParseResult parseTargetsFilesListFile(const char *json, std::vector<fs::path> &outFiles);
-    static ParseResult parseGlobalsFile(const char *json, CmagGlobals &outGlobals);
-    static ParseResult parseTargetsFile(const char *json, std::vector<CmagTarget> &outTargets);
+    static ParseResult parseTargetsFilesListFile(std::string_view json, std::vector<fs::path> &outFiles);
+    static ParseResult parseGlobalsFile(std::string_view json, CmagGlobals &outGlobals);
+    static ParseResult parseTargetsFile(std::string_view json, std::vector<CmagTarget> &outTargets);
 
 private:
     static void parseGlobalValues(const nlohmann::json &node, CmagGlobals &outGlobals);
