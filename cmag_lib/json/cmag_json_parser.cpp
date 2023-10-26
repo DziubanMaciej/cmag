@@ -1,18 +1,8 @@
 #include "cmag_json_parser.h"
 
 #include "cmag_lib/core/cmag_project.h"
+#include "cmag_lib/json/enum_serialization.h"
 #include "cmag_lib/utils/error.h"
-
-NLOHMANN_JSON_SERIALIZE_ENUM(CmagTargetType,
-                             {
-                                 {CmagTargetType::Invalid, ""},
-                                 {CmagTargetType::StaticLibrary, "STATIC_LIBRARY"},
-                                 {CmagTargetType::ModuleLibrary, "MODULE_LIBRARY"},
-                                 {CmagTargetType::SharedLibrary, "SHARED_LIBRARY"},
-                                 {CmagTargetType::ObjectLibrary, "OBJECT_LIBRARY"},
-                                 {CmagTargetType::InterfaceLibrary, "INTERFACE_LIBRARY"},
-                                 {CmagTargetType::Executable, "EXECUTABLE"},
-                             })
 
 ParseResult CmagJsonParser::parseTargetsFilesListFile(std::string_view json, std::vector<fs::path> &outFiles) {
     const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);

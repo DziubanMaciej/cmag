@@ -1,5 +1,5 @@
-#include "cmag_lib/core/cmag_json_parser.h"
 #include "cmag_lib/core/cmag_project.h"
+#include "cmag_lib/json/cmag_json_parser.h"
 
 #include <gtest/gtest.h>
 

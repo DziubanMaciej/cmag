@@ -1,6 +1,6 @@
-#include "cmag_lib/core/cmag_json_parser.h"
-#include "cmag_lib/core/cmag_json_writer.h"
 #include "cmag_lib/core/cmag_project.h"
+#include "cmag_lib/json/cmag_json_parser.h"
+#include "cmag_lib/json/cmag_json_writer.h"
 #include "cmag_lib/utils/error.h"
 #include "cmag_lib/utils/filesystem.h"
 
