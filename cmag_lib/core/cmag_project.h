@@ -33,6 +33,8 @@ struct CmagTarget {
     std::string name;
     CmagTargetType type;
     std::vector<CmagTargetConfig> configs;
+
+    CmagTargetConfig &getOrCreateConfig(std::string_view configName);
 };
 
 using CmagConfigs = std::vector<std::string>;

@@ -35,3 +35,15 @@ void CmagProject::addConfig(std::string_view config) {
         configs.push_back(std::string(config));
     }
 }
+
+CmagTargetConfig &CmagTarget::getOrCreateConfig(std::string_view configName) {
+    auto propertiesIt = std::find_if(configs.begin(), configs.end(), [configName](const auto &config) {
+        return configName == config.name;
+    });
+    if (propertiesIt == configs.end()) {
+        configs.push_back({std::string(configName), {}});
+        return configs.back();
+    } else {
+        return *propertiesIt;
+    }
+}

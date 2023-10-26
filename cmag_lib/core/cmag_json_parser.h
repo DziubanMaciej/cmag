@@ -8,6 +8,7 @@
 class CmagProject;
 struct CmagTarget;
 struct CmagGlobals;
+struct CmagTargetConfig;
 
 enum class ParseResult {
     Success,
@@ -32,7 +33,7 @@ private:
     static ParseResult parseTarget(const nlohmann::json &node, CmagTarget &outTarget);
 
     static ParseResult parseConfigs(const nlohmann::json &node, CmagTarget &outTarget);
-    static ParseResult parseConfig(const nlohmann::json &node, std::string_view configName, CmagTarget &outTarget);
+    static ParseResult parseConfig(const nlohmann::json &node, CmagTargetConfig &outConfig);
 
     static ParseResult parseTargetProperties(const nlohmann::json &node, const std::string &config, CmagTarget &outTarget);
 
