@@ -10,8 +10,8 @@ void compareTargetProperties(const CmagTarget::Properties &expected, const CmagT
     // Properties
     ASSERT_EQ(expected.second.size(), actual.second.size());
     for (size_t i = 0u; i < expected.second.size(); i++) {
-        EXPECT_STREQ(expected.second[i].first.c_str(), actual.second[i].first.c_str());
-        EXPECT_STREQ(expected.second[i].second.c_str(), actual.second[i].second.c_str());
+        EXPECT_STREQ(expected.second[i].name.c_str(), actual.second[i].name.c_str());
+        EXPECT_STREQ(expected.second[i].value.c_str(), actual.second[i].value.c_str());
     }
 }
 

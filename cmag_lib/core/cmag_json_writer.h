@@ -18,5 +18,5 @@ private:
     static nlohmann::json createTargetsNode(const std::vector<CmagTarget> &targets);
     static nlohmann::json createTargetNode(const CmagTarget &target);
     static nlohmann::json createConfigsNode(const std::vector<CmagTarget::Properties> &configs);
-    static nlohmann::json createConfigNode(const std::vector<CmagTarget::Property> &config);
+    static nlohmann::json createConfigNode(const std::vector<CmagTargetProperty> &config);
 };

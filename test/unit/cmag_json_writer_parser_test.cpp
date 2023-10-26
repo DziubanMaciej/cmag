@@ -42,8 +42,8 @@ struct CmagWriterParserTest : ::testing::Test {
                 for (size_t k = 0; k < expPropertiesForConfig.second.size(); k++) {
                     const auto &expProperty = expPropertiesForConfig.second[k];
                     const auto &actProperty = actPropertiesForConfig.second[k];
-                    EXPECT_EQ(expProperty.first, actProperty.first);
-                    EXPECT_EQ(expProperty.second, actProperty.second);
+                    EXPECT_EQ(expProperty.name, actProperty.name);
+                    EXPECT_EQ(expProperty.value, actProperty.value);
                 }
             }
         }

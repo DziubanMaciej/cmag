@@ -50,10 +50,10 @@ nlohmann::json CmagJsonWriter::createConfigsNode(const std::vector<CmagTarget::P
     return node;
 }
 
-nlohmann::json CmagJsonWriter::createConfigNode(const std::vector<CmagTarget::Property> &config) {
+nlohmann::json CmagJsonWriter::createConfigNode(const std::vector<CmagTargetProperty> &config) {
     nlohmann::json node = nlohmann::json::object();
-    for (const CmagTarget::Property &property : config) {
-        node[property.first] = property.second;
+    for (const CmagTargetProperty &property : config) {
+        node[property.name] = property.value;
     }
     return node;
 }

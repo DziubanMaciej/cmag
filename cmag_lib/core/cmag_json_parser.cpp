@@ -181,7 +181,7 @@ ParseResult CmagJsonParser::parseConfig(const nlohmann::json &node, std::string_
 
     // Read properties from json and add them to current config's properties.
     for (auto it = node.begin(); it != node.end(); it++) {
-        CmagTarget::Property property = {it.key(), it.value()};
+        CmagTargetProperty property = {it.key(), it.value()};
         properties->second.push_back(std::move(property));
     }
 

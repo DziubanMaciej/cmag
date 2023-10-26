@@ -19,9 +19,13 @@ struct CmagGlobals {
     bool darkMode = false;
 };
 
+struct CmagTargetProperty {
+    std::string name;
+    std::string value;
+};
+
 struct CmagTarget {
-    using Property = std::pair<std::string, std::string>;             // propertyName, propertyValue
-    using Properties = std::pair<std::string, std::vector<Property>>; // configName, properties
+    using Properties = std::pair<std::string, std::vector<CmagTargetProperty>>; // configName, properties
 
     std::string name;
     CmagTargetType type;
