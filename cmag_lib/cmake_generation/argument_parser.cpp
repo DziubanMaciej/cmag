@@ -62,17 +62,15 @@ ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(a
     }
 }
 
-const char *ArgumentParser::parseKeyValueArgument(const char *prefix, int &argIndex, const std::string &currentArg, const char *nextArg) {
-    const auto prefixLen = strlen(prefix);
-
+const char *ArgumentParser::parseKeyValueArgument(std::string_view prefix, int &argIndex, std::string_view currentArg, const char *nextArg) {
     if (currentArg.find(prefix) != 0) {
         return nullptr;
     }
 
-    const char nextChar = currentArg.data()[prefixLen];
+    const char nextChar = currentArg.data()[prefix.length()];
     if (nextChar == '\0') {
         // Two args form, value is in next arg
-        if (nextArg) {
+        if (nextArg != nullptr) {
             argIndex++;
             return nextArg;
         } else {
@@ -83,8 +81,8 @@ const char *ArgumentParser::parseKeyValueArgument(const char *prefix, int &argIn
 
     if (nextChar == '=') {
         // Equal sign form, value is in current arg, after the equals sign
-        if (currentArg.length() > prefixLen + 1) {
-            return currentArg.c_str() + prefixLen + 1;
+        if (currentArg.length() > prefix.length() + 1) {
+            return currentArg.substr(prefix.length() + 1).data();
         } else {
             valid = false;
             return nullptr;

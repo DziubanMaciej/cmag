@@ -18,7 +18,7 @@ public:
     std::vector<const char *> constructArgsForCmake() const;
 
 private:
-    const char *parseKeyValueArgument(const char *prefix, int &argIndex, const std::string &currentArg, const char *nextArg);
+    const char *parseKeyValueArgument(std::string_view prefix, int &argIndex, std::string_view currentArg, const char *nextArg);
 
     int argc = {};
     const char **argv = {};
