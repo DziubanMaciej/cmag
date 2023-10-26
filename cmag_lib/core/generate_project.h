@@ -19,14 +19,15 @@ std::optional<std::string> readFile(const fs::path &path) {
     return buffer.str();
 }
 
-int readConfigs(const fs::path &buildDir, std::string_view projectName, std::vector<std::string> &outConfigs) {
-    std::string fileName = std::string(projectName) + ".cmag-configs";
+int readTargetFilesList(const fs::path &buildDir, std::string_view projectName, std::vector<fs::path> &outFiles) {
+    std::string fileName = std::string(projectName) + ".cmag-targets-list";
     auto fileContent = readFile(buildDir / fileName.c_str());
     if (!fileContent.has_value()) {
         LOG_ERROR("failed to read ", fileName);
         return 1;
     }
-    ParseResult parseResult = CmagJsonParser::parseConfigListFile(fileContent.value().c_str(), outConfigs);
+
+    ParseResult parseResult = CmagJsonParser::parseTargetsFilesListFile(fileContent.value().c_str(), outFiles);
     if (parseResult != ParseResult::Success) {
         LOG_ERROR("failed to parse ", fileName);
         return 1;
@@ -51,11 +52,9 @@ int readGlobals(const fs::path &buildDir, std::string_view projectName, CmagGlob
     return 0;
 }
 
-int readTargets(const fs::path &buildDir, std::string_view projectName, const std::vector<std::string> &configs, std::vector<CmagTarget> &outTargets) {
-    for (const std::string &config : configs) {
-        // TODO instead of generating the names, just store them in configs file (change its name).
-        std::string fileName = std::string(projectName) + "_" + config + ".cmag-targets";
-        auto fileContent = readFile(buildDir / fileName.c_str());
+int readTargets(const fs::path &buildDir, const std::vector<fs::path> &files, std::vector<CmagTarget> &outTargets) {
+    for (const fs::path &fileName : files) {
+        auto fileContent = readFile(buildDir / fileName);
         if (!fileContent.has_value()) {
             LOG_ERROR("failed to read ", fileName);
             return 1;
@@ -87,8 +86,8 @@ int writeProject(const fs::path &buildDir, std::string_view projectName, const C
 }
 
 int generateProject(const fs::path &buildDir, std::string_view projectName) {
-    std::vector<std::string> configs = {};
-    if (int result = readConfigs(buildDir, projectName, configs); result) {
+    std::vector<fs::path> targetsFiles = {};
+    if (int result = readTargetFilesList(buildDir, projectName, targetsFiles); result) {
         return result;
     }
 
@@ -98,7 +97,7 @@ int generateProject(const fs::path &buildDir, std::string_view projectName) {
     }
 
     std::vector<CmagTarget> targets = {};
-    if (int result = readTargets(buildDir, projectName, configs, targets); result) {
+    if (int result = readTargets(buildDir, targetsFiles, targets); result) {
         return result;
     }
 

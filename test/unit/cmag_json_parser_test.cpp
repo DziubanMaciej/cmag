@@ -302,35 +302,39 @@ TEST(CmagProjectParseTest, givenTargetWithInvalidTypeThenReturnError) {
     ASSERT_EQ(ParseResult::InvalidValue, CmagJsonParser::parseProject(json, project));
 }
 
-TEST(CmagConfigListFileParseTest, givenEmptyConfigsListThenParseCorrectly) {
+TEST(CmagTargetsFilesListFileParseTest, givenEmptyConfigsListThenParseCorrectly) {
     const char *json = R"DELIMETER(
     []
     )DELIMETER";
-    std::vector<std::string> configs{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseConfigListFile(json, configs));
-    ASSERT_EQ(0u, configs.size());
+    std::vector<fs::path> files{};
+    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseTargetsFilesListFile(json, files));
+    ASSERT_EQ(0u, files.size());
 }
 
-TEST(CmagConfigListFileParseTest, givenOneConfigThenParseCorrectly) {
+TEST(CmagTargetsFilesListFileParseTest, givenOneConfigThenParseCorrectly) {
     const char *json = R"DELIMETER(
-    [ "Debug" ]
+    [ "project_Debug.cmag-targets-list" ]
     )DELIMETER";
-    std::vector<std::string> configs{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseConfigListFile(json, configs));
-    ASSERT_EQ(1u, configs.size());
-    EXPECT_STREQ("Debug", configs[0].c_str());
+    std::vector<fs::path> files{};
+    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseTargetsFilesListFile(json, files));
+    ASSERT_EQ(1u, files.size());
+    EXPECT_EQ("project_Debug.cmag-targets-list", files[0]);
 }
 
-TEST(CmagConfigListFileParseTest, givenMultipleConfigsThenParseCorrectly) {
+TEST(CmagTargetsFilesListFileParseTest, givenMultipleConfigsThenParseCorrectly) {
     const char *json = R"DELIMETER(
-    [ "Debug", "Release", "CustomConf" ]
+    [
+        "project_Debug.cmag-targets-list",
+        "project_Release.cmag-targets-list",
+        "project_CustomConf.cmag-targets-list"
+    ]
     )DELIMETER";
-    std::vector<std::string> configs{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseConfigListFile(json, configs));
-    ASSERT_EQ(3u, configs.size());
-    EXPECT_STREQ("Debug", configs[0].c_str());
-    EXPECT_STREQ("Release", configs[1].c_str());
-    EXPECT_STREQ("CustomConf", configs[2].c_str());
+    std::vector<fs::path> files{};
+    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseTargetsFilesListFile(json, files));
+    ASSERT_EQ(3u, files.size());
+    EXPECT_EQ("project_Debug.cmag-targets-list", files[0]);
+    EXPECT_EQ("project_Release.cmag-targets-list", files[1]);
+    EXPECT_EQ("project_CustomConf.cmag-targets-list", files[2]);
 }
 
 TEST(CmagGlobalsFileParseTest, givenEmptyGlobalsThenParseCorrectly) {

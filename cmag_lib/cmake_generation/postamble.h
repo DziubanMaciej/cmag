@@ -129,7 +129,8 @@ function(json_append_configs OUT_VARIABLE CONFIGS INDENT INDENT_INCREMENT)
         endif()
         math(EXPR COUNTER "${COUNTER}+1")
 
-        json_append_line_comma(${OUT_VARIABLE} "\"${CONFIG}\"" ${INNER_INDENT} ${IS_LAST})
+        set(LINE "${CMAG_PROJECT_NAME}_${CONFIG}.cmag-targets")
+        json_append_line_comma(${OUT_VARIABLE} "\"${LINE}\"" ${INNER_INDENT} ${IS_LAST})
     endforeach()
 
     json_append_line(${OUT_VARIABLE} "]" ${INDENT})
@@ -162,7 +163,7 @@ endif()
 
 # Write configs list
 json_append_configs(CONFIGS_JSON "${CMAG_CONFIGS}" "  " "  ")
-file(WRITE ${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-configs "${CONFIGS_JSON}")
+file(WRITE ${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-targets-list "${CONFIGS_JSON}")
 
 # Write global settings
 json_append_globals(GLOBALS_JSON "  " "  ")

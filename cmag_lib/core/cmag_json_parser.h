@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cmag_lib/utils/filesystem.h"
+
 #include <nlohmann/json.hpp>
 #include <string>
 
@@ -19,7 +21,7 @@ class CmagJsonParser {
 public:
     static ParseResult parseProject(const char *json, CmagProject &outProject);
 
-    static ParseResult parseConfigListFile(const char *json, std::vector<std::string> &outConfigs);
+    static ParseResult parseTargetsFilesListFile(const char *json, std::vector<fs::path> &outFiles);
     static ParseResult parseGlobalsFile(const char *json, CmagGlobals &outGlobals);
     static ParseResult parseTargetsFile(const char *json, std::vector<CmagTarget> &outTargets);
 

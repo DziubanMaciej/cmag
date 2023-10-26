@@ -14,7 +14,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(CmagTargetType,
                                  {CmagTargetType::Executable, "EXECUTABLE"},
                              })
 
-ParseResult CmagJsonParser::parseConfigListFile(const char *json, std::vector<std::string> &outConfigs) {
+ParseResult CmagJsonParser::parseTargetsFilesListFile(const char *json, std::vector<fs::path> &outFiles) {
     const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);
     if (node.is_discarded()) {
         return ParseResult::Malformed;
@@ -28,7 +28,7 @@ ParseResult CmagJsonParser::parseConfigListFile(const char *json, std::vector<st
         if (!configNode.is_string()) {
             return ParseResult::InvalidNodeType;
         }
-        outConfigs.push_back(configNode.get<std::string>());
+        outFiles.push_back(configNode.get<fs::path>());
     }
 
     return ParseResult::Success;
