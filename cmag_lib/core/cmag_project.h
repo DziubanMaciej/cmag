@@ -24,12 +24,15 @@ struct CmagTargetProperty {
     std::string value;
 };
 
-struct CmagTarget {
-    using Properties = std::pair<std::string, std::vector<CmagTargetProperty>>; // configName, properties
+struct CmagTargetConfig {
+    std::string name;
+    std::vector<CmagTargetProperty> properties;
+};
 
+struct CmagTarget {
     std::string name;
     CmagTargetType type;
-    std::vector<Properties> properties;
+    std::vector<CmagTargetConfig> configs;
 };
 
 using CmagConfigs = std::vector<std::string>;

@@ -38,21 +38,21 @@ nlohmann::json CmagJsonWriter::createTargetsNode(const std::vector<CmagTarget> &
 nlohmann::json CmagJsonWriter::createTargetNode(const CmagTarget &target) {
     nlohmann::json node = nlohmann::json::object();
     node["type"] = target.type;
-    node["configs"] = createConfigsNode(target.properties);
+    node["configs"] = createConfigsNode(target.configs);
     return node;
 }
 
-nlohmann::json CmagJsonWriter::createConfigsNode(const std::vector<CmagTarget::Properties> &configs) {
+nlohmann::json CmagJsonWriter::createConfigsNode(const std::vector<CmagTargetConfig> &configs) {
     nlohmann::json node = nlohmann::json::object();
-    for (const CmagTarget::Properties &config : configs) {
-        node[config.first] = createConfigNode(config.second);
+    for (const CmagTargetConfig &config : configs) {
+        node[config.name] = createConfigNode(config);
     }
     return node;
 }
 
-nlohmann::json CmagJsonWriter::createConfigNode(const std::vector<CmagTargetProperty> &config) {
+nlohmann::json CmagJsonWriter::createConfigNode(const CmagTargetConfig &config) {
     nlohmann::json node = nlohmann::json::object();
-    for (const CmagTargetProperty &property : config) {
+    for (const CmagTargetProperty &property : config.properties) {
         node[property.name] = property.value;
     }
     return node;

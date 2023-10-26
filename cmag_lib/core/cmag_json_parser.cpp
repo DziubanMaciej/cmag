@@ -168,21 +168,21 @@ ParseResult CmagJsonParser::parseConfig(const nlohmann::json &node, std::string_
 
     // Find properties list for current config
     // TODO: turn this to CmagTarget method?
-    auto propertiesIt = std::find_if(outTarget.properties.begin(), outTarget.properties.end(), [configName](const auto &props) {
-        return configName == props.first;
+    auto propertiesIt = std::find_if(outTarget.configs.begin(), outTarget.configs.end(), [configName](const auto &config) {
+        return configName == config.name;
     });
-    CmagTarget::Properties *properties = nullptr;
-    if (propertiesIt == outTarget.properties.end()) {
-        outTarget.properties.push_back({std::string(configName), {}});
-        properties = &outTarget.properties.back();
+    CmagTargetConfig *config = nullptr;
+    if (propertiesIt == outTarget.configs.end()) {
+        outTarget.configs.push_back({std::string(configName), {}});
+        config = &outTarget.configs.back();
     } else {
-        properties = &*propertiesIt; // wtf, why is there no get()?
+        config = &*propertiesIt; // wtf, why is there no get()?
     }
 
     // Read properties from json and add them to current config's properties.
     for (auto it = node.begin(); it != node.end(); it++) {
         CmagTargetProperty property = {it.key(), it.value()};
-        properties->second.push_back(std::move(property));
+        config->properties.push_back(std::move(property));
     }
 
     return ParseResult::Success;

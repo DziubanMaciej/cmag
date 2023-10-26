@@ -32,16 +32,16 @@ struct CmagWriterParserTest : ::testing::Test {
             EXPECT_EQ(expTarget.name, actTarget.name);
             EXPECT_EQ(expTarget.type, actTarget.type);
 
-            ASSERT_EQ(expTarget.properties.size(), actTarget.properties.size());
-            for (size_t j = 0; j < expTarget.properties.size(); j++) {
-                const auto &expPropertiesForConfig = expTarget.properties[j];
-                const auto &actPropertiesForConfig = actTarget.properties[j];
+            ASSERT_EQ(expTarget.configs.size(), actTarget.configs.size());
+            for (size_t j = 0; j < expTarget.configs.size(); j++) {
+                const auto &expPropertiesForConfig = expTarget.configs[j];
+                const auto &actPropertiesForConfig = actTarget.configs[j];
 
-                EXPECT_EQ(expPropertiesForConfig.first, actPropertiesForConfig.first);
-                EXPECT_EQ(expPropertiesForConfig.second.size(), actPropertiesForConfig.second.size());
-                for (size_t k = 0; k < expPropertiesForConfig.second.size(); k++) {
-                    const auto &expProperty = expPropertiesForConfig.second[k];
-                    const auto &actProperty = actPropertiesForConfig.second[k];
+                EXPECT_EQ(expPropertiesForConfig.name, actPropertiesForConfig.name);
+                ASSERT_EQ(expPropertiesForConfig.properties.size(), actPropertiesForConfig.properties.size());
+                for (size_t k = 0; k < expPropertiesForConfig.properties.size(); k++) {
+                    const auto &expProperty = expPropertiesForConfig.properties[k];
+                    const auto &actProperty = actPropertiesForConfig.properties[k];
                     EXPECT_EQ(expProperty.name, actProperty.name);
                     EXPECT_EQ(expProperty.value, actProperty.value);
                 }

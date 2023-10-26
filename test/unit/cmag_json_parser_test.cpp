@@ -3,15 +3,15 @@
 
 #include <gtest/gtest.h>
 
-void compareTargetProperties(const CmagTarget::Properties &expected, const CmagTarget::Properties &actual) {
+void compareTargetProperties(const CmagTargetConfig &expected, const CmagTargetConfig &actual) {
     // Config name
-    EXPECT_STREQ(expected.first.c_str(), actual.first.c_str());
+    EXPECT_STREQ(expected.name.c_str(), actual.name.c_str());
 
     // Properties
-    ASSERT_EQ(expected.second.size(), actual.second.size());
-    for (size_t i = 0u; i < expected.second.size(); i++) {
-        EXPECT_STREQ(expected.second[i].name.c_str(), actual.second[i].name.c_str());
-        EXPECT_STREQ(expected.second[i].value.c_str(), actual.second[i].value.c_str());
+    ASSERT_EQ(expected.properties.size(), actual.properties.size());
+    for (size_t i = 0u; i < expected.properties.size(); i++) {
+        EXPECT_STREQ(expected.properties[i].name.c_str(), actual.properties[i].name.c_str());
+        EXPECT_STREQ(expected.properties[i].value.c_str(), actual.properties[i].value.c_str());
     }
 }
 
@@ -94,12 +94,12 @@ TEST(CmagProjectParseTest, givenTargetWithNoPropertiesThenParseCorrectly) {
     EXPECT_STREQ("myTarget", target.name.c_str());
     EXPECT_EQ(CmagTargetType::Executable, target.type);
 
-    CmagTarget::Properties expectedProperties = {
+    CmagTargetConfig expectedProperties = {
         "Debug",
         {},
     };
-    ASSERT_EQ(1u, target.properties.size());
-    compareTargetProperties(expectedProperties, target.properties[0]);
+    ASSERT_EQ(1u, target.configs.size());
+    compareTargetProperties(expectedProperties, target.configs[0]);
 }
 
 TEST(CmagProjectParseTest, givenTargetWithPropertiesThenParseCorrectly) {
@@ -126,15 +126,15 @@ TEST(CmagProjectParseTest, givenTargetWithPropertiesThenParseCorrectly) {
     EXPECT_STREQ("myTarget", target.name.c_str());
     EXPECT_EQ(CmagTargetType::Executable, target.type);
 
-    CmagTarget::Properties expectedProperties = {
+    CmagTargetConfig expectedProperties = {
         "Debug",
         {
             {"one", "1"},
             {"two", "2"},
         },
     };
-    ASSERT_EQ(1u, target.properties.size());
-    compareTargetProperties(expectedProperties, target.properties[0]);
+    ASSERT_EQ(1u, target.configs.size());
+    compareTargetProperties(expectedProperties, target.configs[0]);
 }
 
 TEST(CmagProjectParseTest, givenTargetWithMultipleConfigsThenParseCorrectly) {
@@ -164,28 +164,28 @@ TEST(CmagProjectParseTest, givenTargetWithMultipleConfigsThenParseCorrectly) {
     const CmagTarget &target = project.getTargets()[0];
     EXPECT_STREQ("myTarget", target.name.c_str());
     EXPECT_EQ(CmagTargetType::Executable, target.type);
-    ASSERT_EQ(2u, target.properties.size());
+    ASSERT_EQ(2u, target.configs.size());
 
-    ASSERT_EQ(2u, target.properties.size());
+    ASSERT_EQ(2u, target.configs.size());
     {
-        CmagTarget::Properties expectedProperties = {
+        CmagTargetConfig expectedProperties = {
             "Debug",
             {
                 {"one", "1d"},
                 {"two", "2d"},
             },
         };
-        compareTargetProperties(expectedProperties, target.properties[0]);
+        compareTargetProperties(expectedProperties, target.configs[0]);
     }
     {
-        CmagTarget::Properties expectedProperties = {
+        CmagTargetConfig expectedProperties = {
             "Release",
             {
                 {"one", "1r"},
                 {"two", "2r"},
             },
         };
-        compareTargetProperties(expectedProperties, target.properties[1]);
+        compareTargetProperties(expectedProperties, target.configs[1]);
     }
 }
 
@@ -219,25 +219,25 @@ TEST(CmagProjectParseTest, givenMultipleTargetsThenParseCorrectly) {
 
     {
         const CmagTarget &target = project.getTargets()[0];
-        CmagTarget::Properties expectedProperties = {
+        CmagTargetConfig expectedProperties = {
             "Debug",
             {
                 {"prop", "1"},
             },
         };
-        ASSERT_EQ(1u, target.properties.size());
-        compareTargetProperties(expectedProperties, target.properties[0]);
+        ASSERT_EQ(1u, target.configs.size());
+        compareTargetProperties(expectedProperties, target.configs[0]);
     }
     {
         const CmagTarget &target = project.getTargets()[1];
-        CmagTarget::Properties expectedProperties = {
+        CmagTargetConfig expectedProperties = {
             "Debug",
             {
                 {"prop", "2"},
             },
         };
-        ASSERT_EQ(1u, target.properties.size());
-        compareTargetProperties(expectedProperties, target.properties[0]);
+        ASSERT_EQ(1u, target.configs.size());
+        compareTargetProperties(expectedProperties, target.configs[0]);
     }
 }
 
@@ -275,12 +275,12 @@ TEST(CmagProjectParseTest, givenVariousTargetTypesTheParseThemCorrectly) {
         EXPECT_STREQ("myTarget", target.name.c_str());
         EXPECT_EQ(type, target.type);
 
-        CmagTarget::Properties expectedProperties = {
+        CmagTargetConfig expectedProperties = {
             "Debug",
             {},
         };
-        ASSERT_EQ(1u, target.properties.size());
-        compareTargetProperties(expectedProperties, target.properties[0]);
+        ASSERT_EQ(1u, target.configs.size());
+        compareTargetProperties(expectedProperties, target.configs[0]);
     }
 }
 
@@ -411,12 +411,12 @@ TEST(CmagTargetsFileParseTest, givenTargetWithNoPropertesThenParseCorrectly) {
     EXPECT_STREQ("myTarget", target.name.c_str());
     EXPECT_EQ(CmagTargetType::Executable, target.type);
 
-    CmagTarget::Properties expectedProperties = {
+    CmagTargetConfig expectedProperties = {
         "Debug",
         {},
     };
-    ASSERT_EQ(1u, target.properties.size());
-    compareTargetProperties(expectedProperties, target.properties[0]);
+    ASSERT_EQ(1u, target.configs.size());
+    compareTargetProperties(expectedProperties, target.configs[0]);
 }
 
 TEST(CmagTargetsFileParseTest, givenTargetWithPropertesThenParseCorrectly) {
@@ -441,15 +441,15 @@ TEST(CmagTargetsFileParseTest, givenTargetWithPropertesThenParseCorrectly) {
     EXPECT_STREQ("myTarget", target.name.c_str());
     EXPECT_EQ(CmagTargetType::Executable, target.type);
 
-    CmagTarget::Properties expectedProperties = {
+    CmagTargetConfig expectedProperties = {
         "Debug",
         {
             {"one", "1"},
             {"two", "2"},
         },
     };
-    ASSERT_EQ(1u, target.properties.size());
-    compareTargetProperties(expectedProperties, target.properties[0]);
+    ASSERT_EQ(1u, target.configs.size());
+    compareTargetProperties(expectedProperties, target.configs[0]);
 }
 
 TEST(CmagTargetsFileParseTest, givenMultipleTargetsThenParseCorrectly) {
@@ -484,29 +484,29 @@ TEST(CmagTargetsFileParseTest, givenMultipleTargetsThenParseCorrectly) {
         EXPECT_STREQ("myTarget1", target.name.c_str());
         EXPECT_EQ(CmagTargetType::Executable, target.type);
 
-        CmagTarget::Properties expectedProperties = {
+        CmagTargetConfig expectedProperties = {
             "Debug",
             {
                 {"one", "1"},
                 {"two", "2"},
             },
         };
-        ASSERT_EQ(1u, target.properties.size());
-        compareTargetProperties(expectedProperties, target.properties[0]);
+        ASSERT_EQ(1u, target.configs.size());
+        compareTargetProperties(expectedProperties, target.configs[0]);
     }
     {
         const CmagTarget &target = targets[1];
         EXPECT_STREQ("myTarget2", target.name.c_str());
         EXPECT_EQ(CmagTargetType::Executable, target.type);
 
-        CmagTarget::Properties expectedProperties = {
+        CmagTargetConfig expectedProperties = {
             "Debug",
             {
                 {"three", "3"},
                 {"zfour", "4"}, // nlohmann's json library sorts alphabetically by key. We don't care in normal code, but for tests we have to maintain order
             },
         };
-        ASSERT_EQ(1u, target.properties.size());
-        compareTargetProperties(expectedProperties, target.properties[0]);
+        ASSERT_EQ(1u, target.configs.size());
+        compareTargetProperties(expectedProperties, target.configs[0]);
     }
 }

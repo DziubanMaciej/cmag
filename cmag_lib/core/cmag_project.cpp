@@ -4,8 +4,8 @@
 
 void CmagProject::addTarget(CmagTarget &&newTarget) {
     // Register target's config if we haven't seen it yet.
-    for (const CmagTarget::Properties &properties : newTarget.properties) {
-        addConfig(properties.first);
+    for (const CmagTargetConfig &config : newTarget.configs) {
+        addConfig(config.name);
     }
 
     // Look, whether we already have a target of that name. In that case, we will
@@ -25,8 +25,8 @@ void CmagProject::mergeTargets(CmagTarget &dst, CmagTarget &&src) {
     // TODO check for config duplicates. What should happen then?
     // TODO check for matching type. What should happen if they don't match?
 
-    for (CmagTarget::Properties &srcProperties : src.properties) {
-        dst.properties.push_back(std::move(srcProperties));
+    for (CmagTargetConfig &srcConfig : src.configs) {
+        dst.configs.push_back(std::move(srcConfig));
     }
 }
 
