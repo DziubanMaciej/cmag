@@ -106,7 +106,11 @@ ParseResult CmagJsonParser::parseTargets(const nlohmann::json &node, std::vector
 
     for (auto targetNodeIt = node.begin(); targetNodeIt != node.end(); targetNodeIt++) {
         CmagTarget target{};
-        target.name = targetNodeIt.key(); // TODO verify
+        target.name = targetNodeIt.key();
+        if (target.name.empty()) {
+            return ParseResult::InvalidValue;
+        }
+
         ParseResult result = parseTarget(*targetNodeIt, target);
         if (result != ParseResult::Success) {
             return result;

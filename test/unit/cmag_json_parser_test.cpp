@@ -302,6 +302,24 @@ TEST(CmagProjectParseTest, givenTargetWithInvalidTypeThenReturnError) {
     ASSERT_EQ(ParseResult::InvalidValue, CmagJsonParser::parseProject(json, project));
 }
 
+TEST(CmagProjectParseTest, givenTargetWithEmptyNameThenReturnError) {
+    const char *json = R"DELIMETER(
+    {
+        "globals": {},
+        "targets" : {
+            "" : {
+                "type": "EXECUTABLE",
+                "configs": {
+                    "Debug" : {}
+                }
+            }
+        }
+    }
+    )DELIMETER";
+    CmagProject project{};
+    ASSERT_EQ(ParseResult::InvalidValue, CmagJsonParser::parseProject(json, project));
+}
+
 TEST(CmagTargetsFilesListFileParseTest, givenEmptyConfigsListThenParseCorrectly) {
     const char *json = R"DELIMETER(
     []
