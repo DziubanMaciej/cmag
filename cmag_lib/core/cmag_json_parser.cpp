@@ -119,7 +119,7 @@ ParseResult CmagJsonParser::parseTargets(const nlohmann::json &node, std::vector
 }
 
 ParseResult CmagJsonParser::parseTarget(const nlohmann::json &node, CmagTarget &outTarget) {
-    FATAL_ERROR_IF(outTarget.name == ""); // this should be checked earlier
+    FATAL_ERROR_IF(outTarget.name == "", "Parsing target with empty name");
 
     if (!node.is_object()) {
         return ParseResult::InvalidNodeType;
