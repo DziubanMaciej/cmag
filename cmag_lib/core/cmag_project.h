@@ -29,10 +29,16 @@ struct CmagTargetConfig {
     std::vector<CmagTargetProperty> properties;
 };
 
+struct CmagTargetGraphicalData {
+    float x;
+    float y;
+};
+
 struct CmagTarget {
     std::string name;
     CmagTargetType type;
     std::vector<CmagTargetConfig> configs;
+    CmagTargetGraphicalData graphical;
 
     CmagTargetConfig &getOrCreateConfig(std::string_view configName);
 };
@@ -43,6 +49,7 @@ class CmagProject {
 public:
     CmagProject() = default;
 
+    bool addTargetGraphical(std::string_view targetName, float x, float y);
     bool addTarget(CmagTarget &&newTarget);
 
     const auto &getConfigs() const { return configs; }

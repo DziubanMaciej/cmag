@@ -11,6 +11,7 @@ TEST(CmagProjectTest, givenTargetsWithDifferentNamesAreAddedThenAddAllOfThem) {
         {
             {"Debug", {}},
         },
+        {},
     };
 
     CmagTarget target2 = {
@@ -19,6 +20,7 @@ TEST(CmagProjectTest, givenTargetsWithDifferentNamesAreAddedThenAddAllOfThem) {
         {
             {"Debug", {}},
         },
+        {},
     };
 
     EXPECT_TRUE(project.addTarget(CmagTarget{target1}));
@@ -37,6 +39,7 @@ TEST(CmagProjectTest, givenTargetsWithSameNamesAndDifferentConfigsAreAddedThenAd
         {
             {"Debug", {}},
         },
+        {},
     };
 
     CmagTarget target2 = {
@@ -46,6 +49,7 @@ TEST(CmagProjectTest, givenTargetsWithSameNamesAndDifferentConfigsAreAddedThenAd
             {"Release", {}},
             {"ReleaseWithDebInfo", {}},
         },
+        {},
     };
 
     EXPECT_TRUE(project.addTarget(CmagTarget{target1}));
@@ -64,6 +68,7 @@ TEST(CmagProjectTest, givenTargetsWithSameNamesAndConflictingConfigsAreAddedThen
         {
             {"Debug", {}},
         },
+        {},
     };
 
     CmagTarget target2 = {
@@ -74,6 +79,7 @@ TEST(CmagProjectTest, givenTargetsWithSameNamesAndConflictingConfigsAreAddedThen
             {"ReleaseWithDebInfo", {}},
             {"Debug", {}},
         },
+        {},
     };
 
     EXPECT_TRUE(project.addTarget(CmagTarget{target1}));
@@ -89,6 +95,7 @@ TEST(CmagProjectTest, givenTargetsWithSameNamesAndConflictingTypesAreAddedThenRe
         {
             {"Debug", {}},
         },
+        {},
     };
 
     CmagTarget target2 = {
@@ -98,6 +105,7 @@ TEST(CmagProjectTest, givenTargetsWithSameNamesAndConflictingTypesAreAddedThenRe
             {"Release", {}},
             {"ReleaseWithDebInfo", {}},
         },
+        {},
     };
 
     EXPECT_TRUE(project.addTarget(CmagTarget{target1}));
@@ -113,6 +121,7 @@ TEST(CmagProjectTest, givenTargetsWithVariousConfigsAreAddedThenCollectAllConfig
         {
             {"Debug", {}},
         },
+        {},
     };
 
     CmagTarget target2 = {
@@ -122,6 +131,7 @@ TEST(CmagProjectTest, givenTargetsWithVariousConfigsAreAddedThenCollectAllConfig
             {"Release", {}},
             {"ReleaseWithDebInfo", {}},
         },
+        {},
     };
 
     CmagTarget target3 = {
@@ -131,6 +141,7 @@ TEST(CmagProjectTest, givenTargetsWithVariousConfigsAreAddedThenCollectAllConfig
             {"Debug", {}},
             {"MinSizeRel", {}},
         },
+        {},
     };
 
     EXPECT_TRUE(project.addTarget(CmagTarget{target1}));
@@ -163,6 +174,7 @@ TEST(CmagTargetTest, givenConfigExistsWhenGetOrCreateConfigIsCalledThenReturnExi
                 },
             },
         },
+        {},
     };
 
     {
@@ -199,6 +211,7 @@ TEST(CmagTargetTest, givenConfigDoesNotExistWhenGetOrCreateConfigIsCalledThenCre
                 },
             },
         },
+        {},
     };
 
     CmagTargetConfig &queriedConfig = target.getOrCreateConfig("RelWithDebInfo");

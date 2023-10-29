@@ -66,6 +66,7 @@ TEST_F(CmagWriterParserTest, givenProjectWithTargetWithoutPropertiesThenWriteAnd
         {
             {"Debug", {}},
         },
+        {},
     });
     verify(project);
 }
@@ -85,6 +86,7 @@ TEST_F(CmagWriterParserTest, givenProjectWithTargetWithPropertiesThenWriteAndRea
                 },
             },
         },
+        {},
     });
     verify(project);
 }
@@ -111,6 +113,7 @@ TEST_F(CmagWriterParserTest, givenProjectWithTargetWithMultipleConfigsThenWriteA
                 },
             },
         },
+        {},
     });
     verify(project);
 }
@@ -138,6 +141,7 @@ TEST_F(CmagWriterParserTest, givenProjectWithTargetWithMultipleConfigsAndDifferi
                 },
             },
         },
+        {},
     });
     verify(project);
 }
@@ -166,6 +170,7 @@ TEST_F(CmagWriterParserTest, givenProjectWithVariousTargetTypesThenWriteAndReadC
                     },
                 },
             },
+            {},
         });
         verify(project);
     }

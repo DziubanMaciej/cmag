@@ -99,7 +99,7 @@ int createProject(CmagGlobals &&globals, std::vector<CmagTarget> &&targets, Cmag
     return 0;
 }
 
-int generateXdot(const fs::path &buildDir, std::string_view projectName, const fs::path &graphvizPath) {
+int generateXdot(const fs::path &buildDir, std::string_view projectName, const fs::path &graphvizPath, CmagProject &project) {
     const std::string graphvizPathString = graphvizPath.string();
     const std::string xdotPath = buildDir / (std::string{projectName} + ".xdot");
     const char *argv[] = {
@@ -109,7 +109,7 @@ int generateXdot(const fs::path &buildDir, std::string_view projectName, const f
         "-o",
         xdotPath.c_str(),
     };
-    SubprocessResult result = runSubprocess(sizeof(argv) / sizeof(char*), argv);
+    SubprocessResult result = runSubprocess(sizeof(argv) / sizeof(char *), argv);
     if (result != SubprocessResult::Success) {
         LOG_ERROR("failed to generate xdot");
         return 1;
@@ -125,6 +125,12 @@ int generateXdot(const fs::path &buildDir, std::string_view projectName, const f
     if (parseResult != XdotParseResult::Success) {
         LOG_ERROR("failed to parse ", xdotPath);
         return 1;
+    }
+    for (const XdotData::Target &target : data.targets) {
+        if (!project.addTargetGraphical(target.name, target.x, target.y)) {
+            LOG_ERROR("failed to add graphical data for target ", target.name);
+            return 1;
+        }
     }
 
     return 0;
@@ -151,11 +157,11 @@ int generateProject(const fs::path &buildDir, std::string_view projectName, cons
         return result;
     }
 
-    if (int result = writeProject(buildDir, projectName, project); result) {
+    if (int result = generateXdot(buildDir, projectName, graphvizPath, project); result) {
         return result;
     }
 
-    if (int result = generateXdot(buildDir, projectName, graphvizPath); result) {
+    if (int result = writeProject(buildDir, projectName, project); result) {
         return result;
     }
 
