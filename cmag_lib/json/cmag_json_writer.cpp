@@ -29,6 +29,14 @@ nlohmann::json CmagJsonWriter::createTargetNode(const CmagTarget &target) {
     nlohmann::json node = nlohmann::json::object();
     node["type"] = target.type;
     node["configs"] = createConfigsNode(target.configs);
+    node["graphical"] = createTargetGraphicalNode(target.graphical);
+    return node;
+}
+
+nlohmann::json CmagJsonWriter::createTargetGraphicalNode(const CmagTargetGraphicalData &graphicalData) {
+    nlohmann::json node = nlohmann::json::object();
+    node["x"] = graphicalData.x;
+    node["y"] = graphicalData.y;
     return node;
 }
 

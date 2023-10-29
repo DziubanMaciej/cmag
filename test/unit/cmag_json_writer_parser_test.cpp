@@ -47,6 +47,11 @@ struct CmagWriterParserTest : ::testing::Test {
                     EXPECT_EQ(expProperty.value, actProperty.value);
                 }
             }
+
+            const auto &expGraphical = expTarget.graphical;
+            const auto &actGraphical = actTarget.graphical;
+            EXPECT_EQ(expGraphical.x, actGraphical.x);
+            EXPECT_EQ(expGraphical.y, actGraphical.y);
         }
     }
 };
@@ -67,6 +72,23 @@ TEST_F(CmagWriterParserTest, givenProjectWithTargetWithoutPropertiesThenWriteAnd
             {"Debug", {}},
         },
         {},
+    });
+    verify(project);
+}
+
+TEST_F(CmagWriterParserTest, givenProjectWithTargetWithGraphicalDataThenWriteAndReadCorrectly) {
+    CmagProject project;
+    project.getGlobals().darkMode = false;
+    project.addTarget(CmagTarget{
+        "myTarget",
+        CmagTargetType::Executable,
+        {
+            {"Debug", {}},
+        },
+        {
+            12.f,
+            25.3f,
+        },
     });
     verify(project);
 }

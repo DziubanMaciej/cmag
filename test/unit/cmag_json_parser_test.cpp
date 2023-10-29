@@ -82,6 +82,10 @@ TEST(CmagProjectParseTest, givenTargetWithNoPropertiesThenParseCorrectly) {
                 "type": "EXECUTABLE",
                 "configs": {
                     "Debug": {}
+                },
+                "graphical": {
+                    "x": 10,
+                    "y": 10
                 }
             }
         }
@@ -114,6 +118,10 @@ TEST(CmagProjectParseTest, givenTargetWithPropertiesThenParseCorrectly) {
                         "one": "1",
                         "two": "2"
                     }
+                },
+                "graphical": {
+                    "x": 10,
+                    "y": 10
                 }
             }
         }
@@ -153,6 +161,10 @@ TEST(CmagProjectParseTest, givenTargetWithMultipleConfigsThenParseCorrectly) {
                         "one": "1r",
                         "two": "2r"
                     }
+                },
+                "graphical": {
+                    "x": 10,
+                    "y": 10
                 }
             }
         }
@@ -200,6 +212,10 @@ TEST(CmagProjectParseTest, givenMultipleTargetsThenParseCorrectly) {
                     "Debug" : {
                         "prop": "1"
                     }
+                },
+                "graphical": {
+                    "x": 10,
+                    "y": 10
                 }
             },
             "myTarget2" : {
@@ -208,6 +224,10 @@ TEST(CmagProjectParseTest, givenMultipleTargetsThenParseCorrectly) {
                     "Debug" : {
                         "prop": "2"
                     }
+                },
+                "graphical": {
+                    "x": 10,
+                    "y": 10
                 }
             }
         }
@@ -260,6 +280,10 @@ TEST(CmagProjectParseTest, givenVariousTargetTypesTheParseThemCorrectly) {
                     "type": "%s",
                     "configs": {
                         "Debug" : {}
+                    },
+                    "graphical": {
+                        "x": 10,
+                        "y": 10
                     }
                 }
             }

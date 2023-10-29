@@ -48,7 +48,7 @@ ParseResult CmagJsonParser::parseTargetsFile(std::string_view json, std::vector<
         return ParseResult::InvalidNodeType;
     }
 
-    return parseTargets(node, outTargets);
+    return parseTargets(node, outTargets, false);
 }
 
 ParseResult CmagJsonParser::parseProject(std::string_view json, CmagProject &outProject) {
@@ -69,7 +69,7 @@ ParseResult CmagJsonParser::parseProject(std::string_view json, CmagProject &out
 
     if (auto targetsNodeIt = node.find("targets"); targetsNodeIt != node.end()) {
         std::vector<CmagTarget> targets{};
-        ParseResult result = parseTargets(*targetsNodeIt, targets);
+        ParseResult result = parseTargets(*targetsNodeIt, targets, true);
         if (result != ParseResult::Success) {
             return result;
         }
@@ -92,7 +92,7 @@ void CmagJsonParser::parseGlobalValues(const nlohmann::json &node, CmagGlobals &
     parseObjectField(node, "darkMode", outGlobals.darkMode); // optional, ignore result
 }
 
-ParseResult CmagJsonParser::parseTargets(const nlohmann::json &node, std::vector<CmagTarget> &outTargets) {
+ParseResult CmagJsonParser::parseTargets(const nlohmann::json &node, std::vector<CmagTarget> &outTargets, bool requireGraphical) {
     if (!node.is_object()) {
         return ParseResult::InvalidNodeType;
     }
@@ -104,7 +104,7 @@ ParseResult CmagJsonParser::parseTargets(const nlohmann::json &node, std::vector
             return ParseResult::InvalidValue;
         }
 
-        ParseResult result = parseTarget(*targetNodeIt, target);
+        ParseResult result = parseTarget(*targetNodeIt, target, requireGraphical);
         if (result != ParseResult::Success) {
             return result;
         }
@@ -115,8 +115,8 @@ ParseResult CmagJsonParser::parseTargets(const nlohmann::json &node, std::vector
     return ParseResult::Success;
 }
 
-ParseResult CmagJsonParser::parseTarget(const nlohmann::json &node, CmagTarget &outTarget) {
-    FATAL_ERROR_IF(outTarget.name == "", "Parsing target with empty name");
+ParseResult CmagJsonParser::parseTarget(const nlohmann::json &node, CmagTarget &outTarget, bool requireGraphical) {
+    FATAL_ERROR_IF(outTarget.name.empty(), "Parsing target with empty name");
 
     if (!node.is_object()) {
         return ParseResult::InvalidNodeType;
@@ -133,10 +133,24 @@ ParseResult CmagJsonParser::parseTarget(const nlohmann::json &node, CmagTarget &
     }
 
     if (auto configsNodeIt = node.find("configs"); configsNodeIt != node.end()) {
-        return parseConfigs(*configsNodeIt, outTarget);
+        result = parseConfigs(*configsNodeIt, outTarget);
+        if (result != ParseResult::Success) {
+            return result;
+        }
     } else {
         return ParseResult::MissingField;
     }
+
+    if (auto configsNodeIt = node.find("graphical"); configsNodeIt != node.end()) {
+        result = parseTargetGraphical(*configsNodeIt, outTarget.graphical);
+        if (result != ParseResult::Success) {
+            return result;
+        }
+    } else if (requireGraphical) {
+        return ParseResult::MissingField;
+    }
+
+    return ParseResult::Success;
 }
 
 ParseResult CmagJsonParser::parseConfigs(const nlohmann::json &node, CmagTarget &outTarget) {
@@ -167,6 +181,21 @@ ParseResult CmagJsonParser::parseConfig(const nlohmann::json &node, CmagTargetCo
     for (auto it = node.begin(); it != node.end(); it++) {
         CmagTargetProperty property = {it.key(), it.value()};
         outConfig.properties.push_back(std::move(property));
+    }
+
+    return ParseResult::Success;
+}
+
+ParseResult CmagJsonParser::parseTargetGraphical(const nlohmann::json &node, CmagTargetGraphicalData &outGraphical) {
+    if (!node.is_object()) {
+        return ParseResult::InvalidNodeType;
+    }
+
+    if (ParseResult result = parseObjectField(node, "x", outGraphical.x); result != ParseResult::Success) {
+        return result;
+    }
+    if (ParseResult result = parseObjectField(node, "y", outGraphical.y); result != ParseResult::Success) {
+        return result;
     }
 
     return ParseResult::Success;

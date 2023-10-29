@@ -108,6 +108,7 @@ int generateXdot(const fs::path &buildDir, std::string_view projectName, const f
         graphvizPathString.c_str(),
         "-o",
         xdotPath.c_str(),
+        nullptr,
     };
     SubprocessResult result = runSubprocess(sizeof(argv) / sizeof(char *), argv);
     if (result != SubprocessResult::Success) {

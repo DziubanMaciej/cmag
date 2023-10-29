@@ -9,6 +9,7 @@ class CmagProject;
 struct CmagTarget;
 struct CmagGlobals;
 struct CmagTargetConfig;
+struct CmagTargetGraphicalData;
 
 enum class ParseResult {
     Success,
@@ -29,13 +30,13 @@ public:
 private:
     static void parseGlobalValues(const nlohmann::json &node, CmagGlobals &outGlobals);
 
-    static ParseResult parseTargets(const nlohmann::json &node, std::vector<CmagTarget> &outTargets);
-    static ParseResult parseTarget(const nlohmann::json &node, CmagTarget &outTarget);
+    static ParseResult parseTargets(const nlohmann::json &node, std::vector<CmagTarget> &outTargets, bool requireGraphical);
+    static ParseResult parseTarget(const nlohmann::json &node, CmagTarget &outTarget, bool requireGraphical);
 
     static ParseResult parseConfigs(const nlohmann::json &node, CmagTarget &outTarget);
     static ParseResult parseConfig(const nlohmann::json &node, CmagTargetConfig &outConfig);
 
-    static ParseResult parseTargetProperties(const nlohmann::json &node, const std::string &config, CmagTarget &outTarget);
+    static ParseResult parseTargetGraphical(const nlohmann::json &node, CmagTargetGraphicalData &outGraphical);
 
     template <typename DstT>
     static ParseResult parseObjectField(const nlohmann::json &node, const char *name, DstT &dst);
