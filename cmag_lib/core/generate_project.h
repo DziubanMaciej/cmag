@@ -3,6 +3,7 @@
 #include "cmag_lib/json/cmag_json_writer.h"
 #include "cmag_lib/utils/error.h"
 #include "cmag_lib/utils/filesystem.h"
+#include "cmag_lib/xdot_parser.h"
 
 #include <fstream>
 #include <optional>
@@ -98,7 +99,38 @@ int createProject(CmagGlobals &&globals, std::vector<CmagTarget> &&targets, Cmag
     return 0;
 }
 
-int generateProject(const fs::path &buildDir, std::string_view projectName) {
+int generateXdot(const fs::path &buildDir, std::string_view projectName, const fs::path &graphvizPath) {
+    const std::string graphvizPathString = graphvizPath.string();
+    const std::string xdotPath = buildDir / (std::string{projectName} + ".xdot");
+    const char *argv[] = {
+        "dot",
+        "-Txdot",
+        graphvizPathString.c_str(),
+        "-o",
+        xdotPath.c_str(),
+    };
+    SubprocessResult result = runSubprocess(sizeof(argv) / sizeof(char*), argv);
+    if (result != SubprocessResult::Success) {
+        LOG_ERROR("failed to generate xdot");
+        return 1;
+    }
+
+    const auto xdotContent = readFile(xdotPath);
+    if (!xdotContent.has_value()) {
+        LOG_ERROR("failed to read ", xdotPath);
+        return 1;
+    }
+    XdotData data = {};
+    XdotParseResult parseResult = XdotParser::parse(xdotContent.value(), data);
+    if (parseResult != XdotParseResult::Success) {
+        LOG_ERROR("failed to parse ", xdotPath);
+        return 1;
+    }
+
+    return 0;
+}
+
+int generateProject(const fs::path &buildDir, std::string_view projectName, const fs::path &graphvizPath) {
     std::vector<fs::path> targetsFiles = {};
     if (int result = readTargetFilesList(buildDir, projectName, targetsFiles); result) {
         return result;
@@ -120,6 +152,10 @@ int generateProject(const fs::path &buildDir, std::string_view projectName) {
     }
 
     if (int result = writeProject(buildDir, projectName, project); result) {
+        return result;
+    }
+
+    if (int result = generateXdot(buildDir, projectName, graphvizPath); result) {
         return result;
     }
 

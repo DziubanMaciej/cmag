@@ -26,7 +26,7 @@ int main(int argc, const char **argv) {
     }
 
     // Merge information dumped by CMake generation to create .cmag-project file
-    if (int result = generateProject(argParser.getBuildPath(), "project"); result) {
+    if (int result = generateProject(argParser.getBuildPath(), "project", argParser.getGraphvizPath()); result) {
         return result;
     }
 

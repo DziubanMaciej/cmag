@@ -142,6 +142,7 @@ endfunction()
 if ("${CMAG_PROJECT_NAME}d" STREQUAL "d")
     set(CMAG_PROJECT_NAME ${CMAKE_PROJECT_NAME})
 endif()
+set(CMAG_PROJECT_NAME project) # TODO
 
 # Handle single-config and multi-config generators differently.
 get_property(CMAG_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
@@ -163,15 +164,22 @@ endif()
 
 # Write configs list
 json_append_configs(CONFIGS_JSON "${CMAG_CONFIGS}" "  " "  ")
-file(WRITE ${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-targets-list "${CONFIGS_JSON}")
+set(TARGETS_LIST_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-targets-list")
+file(WRITE "${TARGETS_LIST_FILE}" "${CONFIGS_JSON}")
 
 # Write global settings
 json_append_globals(GLOBALS_JSON "  " "  ")
-file(WRITE ${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-globals "${GLOBALS_JSON}")
+set(GLOBALS_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-globals")
+file(WRITE "${GLOBALS_FILE}" "${GLOBALS_JSON}")
 
 # Write per-config targets
 json_append_targets(TARGETS_JSON "${CMAG_CONFIG}" "  " "  ")
-file(GENERATE OUTPUT ${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}_${CMAG_CONFIG}.cmag-targets CONTENT "${TARGETS_JSON}")
+set(TARGETS_LIST_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}_${CMAG_CONFIG}.cmag-targets")
+file(GENERATE OUTPUT "${TARGETS_LIST_FILE}" CONTENT "${TARGETS_JSON}")
+
+message(STATUS "cmag: generating file ${TARGETS_LIST_FILE}")
+message(STATUS "cmag: generating file ${GLOBALS_FILE}")
+message(STATUS "cmag: generating file ${TARGETS_LIST_FILE}")
 
 # -----------------------------CMAG POSTAMBLE END---------------------------------------------
 )DELIMETER";
