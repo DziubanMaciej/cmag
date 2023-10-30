@@ -21,7 +21,20 @@ struct CmagWriterParserTest : ::testing::Test {
         // has to be before "Release" config and "propertyL" has to be before "propertyM".
 
         EXPECT_EQ(exp.getConfigs(), act.getConfigs());
-        EXPECT_EQ(exp.getGlobals().darkMode, act.getGlobals().darkMode);
+
+        const auto &expGlobals = exp.getGlobals();
+        const auto &actGlobals = act.getGlobals();
+        EXPECT_EQ(expGlobals.darkMode, actGlobals.darkMode);
+        EXPECT_EQ(expGlobals.cmagVersion, actGlobals.cmagVersion);
+        EXPECT_EQ(expGlobals.cmakeVersion, actGlobals.cmakeVersion);
+        EXPECT_EQ(expGlobals.cmakeProjectName, actGlobals.cmakeProjectName);
+        EXPECT_EQ(expGlobals.cmagProjectName, actGlobals.cmagProjectName);
+        EXPECT_EQ(expGlobals.sourceDir, actGlobals.sourceDir);
+        EXPECT_EQ(expGlobals.buildDir, actGlobals.buildDir);
+        EXPECT_EQ(expGlobals.generator, actGlobals.generator);
+        EXPECT_EQ(expGlobals.compilerId, actGlobals.compilerId);
+        EXPECT_EQ(expGlobals.compilerVersion, actGlobals.compilerVersion);
+        EXPECT_EQ(expGlobals.os, actGlobals.os);
 
         const auto &expTargets = exp.getTargets();
         const auto &actTargets = act.getTargets();
@@ -58,13 +71,11 @@ struct CmagWriterParserTest : ::testing::Test {
 
 TEST_F(CmagWriterParserTest, givenProjectWithNoTargetsThenWriteAndReadCorrectly) {
     CmagProject project;
-    project.getGlobals().darkMode = false;
     verify(project);
 }
 
 TEST_F(CmagWriterParserTest, givenProjectWithTargetWithoutPropertiesThenWriteAndReadCorrectly) {
     CmagProject project;
-    project.getGlobals().darkMode = false;
     project.addTarget(CmagTarget{
         "myTarget",
         CmagTargetType::Executable,
@@ -78,7 +89,6 @@ TEST_F(CmagWriterParserTest, givenProjectWithTargetWithoutPropertiesThenWriteAnd
 
 TEST_F(CmagWriterParserTest, givenProjectWithTargetWithGraphicalDataThenWriteAndReadCorrectly) {
     CmagProject project;
-    project.getGlobals().darkMode = false;
     project.addTarget(CmagTarget{
         "myTarget",
         CmagTargetType::Executable,
@@ -95,7 +105,6 @@ TEST_F(CmagWriterParserTest, givenProjectWithTargetWithGraphicalDataThenWriteAnd
 
 TEST_F(CmagWriterParserTest, givenProjectWithTargetWithPropertiesThenWriteAndReadCorrectly) {
     CmagProject project;
-    project.getGlobals().darkMode = false;
     project.addTarget(CmagTarget{
         "myTarget",
         CmagTargetType::Executable,
@@ -115,7 +124,6 @@ TEST_F(CmagWriterParserTest, givenProjectWithTargetWithPropertiesThenWriteAndRea
 
 TEST_F(CmagWriterParserTest, givenProjectWithTargetWithMultipleConfigsThenWriteAndReadCorrectly) {
     CmagProject project;
-    project.getGlobals().darkMode = false;
     project.addTarget(CmagTarget{
         "myTarget",
         CmagTargetType::Executable,
@@ -142,7 +150,6 @@ TEST_F(CmagWriterParserTest, givenProjectWithTargetWithMultipleConfigsThenWriteA
 
 TEST_F(CmagWriterParserTest, givenProjectWithTargetWithMultipleConfigsAndDifferingPropertiesThenWriteAndReadCorrectly) {
     CmagProject project;
-    project.getGlobals().darkMode = false;
     project.addTarget(CmagTarget{
         "myTarget",
         CmagTargetType::Executable,
@@ -179,7 +186,6 @@ TEST_F(CmagWriterParserTest, givenProjectWithVariousTargetTypesThenWriteAndReadC
     };
     for (CmagTargetType type : types) {
         CmagProject project;
-        project.getGlobals().darkMode = false;
         project.addTarget(CmagTarget{
             "myTarget",
             type,
@@ -196,4 +202,22 @@ TEST_F(CmagWriterParserTest, givenProjectWithVariousTargetTypesThenWriteAndReadC
         });
         verify(project);
     }
+}
+
+TEST_F(CmagWriterParserTest, givenProjectWithSetGlobalsThenWriteAndReadCorrectly) {
+    CmagProject project;
+
+    CmagGlobals &globals = project.getGlobals();
+    globals.darkMode = true;
+    globals.cmagVersion = "19.0.0";
+    globals.cmakeVersion = "3.5.9";
+    globals.cmakeProjectName = "myProject";
+    globals.cmagProjectName = "myCmagProject";
+    globals.sourceDir = "src";
+    globals.buildDir = "src/build";
+    globals.generator = "Karate Ninja";
+    globals.compilerId = "1.0.0.0.0";
+    globals.compilerVersion = "GNU Clang";
+    globals.os = "Serenity";
+    verify(project);
 }

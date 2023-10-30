@@ -89,7 +89,19 @@ ParseResult CmagJsonParser::parseProject(std::string_view json, CmagProject &out
 void CmagJsonParser::parseGlobalValues(const nlohmann::json &node, CmagGlobals &outGlobals) {
     FATAL_ERROR_IF(!node.is_object(), "node should be an object"); // This should already be checked, hence assertion.
 
-    parseObjectField(node, "darkMode", outGlobals.darkMode); // optional, ignore result
+#define PARSE_GLOBAL_FIELD(name) parseObjectField(node, #name, outGlobals.name)
+    PARSE_GLOBAL_FIELD(darkMode);
+    PARSE_GLOBAL_FIELD(cmagVersion);
+    PARSE_GLOBAL_FIELD(cmakeVersion);
+    PARSE_GLOBAL_FIELD(cmakeProjectName);
+    PARSE_GLOBAL_FIELD(cmagProjectName);
+    PARSE_GLOBAL_FIELD(sourceDir);
+    PARSE_GLOBAL_FIELD(buildDir);
+    PARSE_GLOBAL_FIELD(generator);
+    PARSE_GLOBAL_FIELD(compilerId);
+    PARSE_GLOBAL_FIELD(compilerVersion);
+    PARSE_GLOBAL_FIELD(os);
+#undef PARSE_GLOBAL_FIELD
 }
 
 ParseResult CmagJsonParser::parseTargets(const nlohmann::json &node, std::vector<CmagTarget> &outTargets, bool requireGraphical) {

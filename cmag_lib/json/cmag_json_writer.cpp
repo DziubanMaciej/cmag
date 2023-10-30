@@ -13,7 +13,19 @@ void CmagJsonWriter::writeProject(const CmagProject &project, std::ostream &out)
 
 nlohmann::json CmagJsonWriter::createGlobalsNode(const CmagGlobals &globals) {
     nlohmann::json node = nlohmann::json::object();
-    node["darkMode"] = globals.darkMode;
+#define WRITE_GLOBAL_FIELD(name) node[#name] = globals.name
+    WRITE_GLOBAL_FIELD(darkMode);
+    WRITE_GLOBAL_FIELD(cmagVersion);
+    WRITE_GLOBAL_FIELD(cmakeVersion);
+    WRITE_GLOBAL_FIELD(cmakeProjectName);
+    WRITE_GLOBAL_FIELD(cmagProjectName);
+    WRITE_GLOBAL_FIELD(sourceDir);
+    WRITE_GLOBAL_FIELD(buildDir);
+    WRITE_GLOBAL_FIELD(generator);
+    WRITE_GLOBAL_FIELD(compilerId);
+    WRITE_GLOBAL_FIELD(compilerVersion);
+    WRITE_GLOBAL_FIELD(os);
+#undef WRITE_GLOBAL_FIELD
     return node;
 }
 
