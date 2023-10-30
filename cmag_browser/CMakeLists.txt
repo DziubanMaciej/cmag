@@ -1,0 +1,21 @@
+cmake_minimum_required(VERSION 3.5)
+
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(QT NAMES Qt6 REQUIRED COMPONENTS Widgets)
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
+
+qt_add_executable(cmag-browser)
+target_common_setup(cmag-browser)
+target_find_sources_and_add(cmag-browser)
+target_link_libraries(cmag-browser PRIVATE Qt6::Widgets)
+target_link_libraries(cmag-browser PRIVATE cmag_lib)
+target_include_directories(cmag-browser PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
+if (WIN32)
+    set_target_properties(cmag-browser PROPERTIES WIN32_EXECUTABLE TRUE)
+endif()
+target_setup_vs_folders(cmag-browser)

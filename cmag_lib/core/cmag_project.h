@@ -71,6 +71,7 @@ public:
 
     const auto &getConfigs() const { return configs; }
     const auto &getTargets() const { return targets; }
+    auto &getTargets() { return targets; }
     const auto &getGlobals() const { return globals; }
     auto &getGlobals() { return globals; }
 
