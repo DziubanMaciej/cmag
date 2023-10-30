@@ -100,12 +100,10 @@ endfunction()
 
 function (json_append_lists_files OUT_VARIABLE PARENT_DIR DIR INDENT)
     # Append current dir to json
-    set(LINE "\"${DIR}\": \"${PARENT_DIR}\"")
-    if ("${PARENT_DIR}d" STREQUAL "d")
-        string(APPEND ${OUT_VARIABLE} "${INDENT}${LINE}")
-    else()
-        string(APPEND ${OUT_VARIABLE} ",\n${INDENT}${LINE}")
+    if (NOT "${PARENT_DIR}d" STREQUAL "d")
+        string(APPEND ${OUT_VARIABLE} ",\n")
     endif()
+    string(APPEND ${OUT_VARIABLE} "${INDENT}\"${DIR}\": \"${PARENT_DIR}\"")
 
     # Call for subdirectories recursively
     get_property(SUBDIRS DIRECTORY ${DIR} PROPERTY SUBDIRECTORIES)
