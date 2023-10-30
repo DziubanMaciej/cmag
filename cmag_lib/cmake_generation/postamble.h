@@ -8,6 +8,9 @@ function (get_all_targets OUT_VARIABLE DIR)
     get_property(TARGETS_IN_CURRENT_DIR DIRECTORY ${DIR} PROPERTY BUILDSYSTEM_TARGETS)
     list(APPEND ${OUT_VARIABLE} ${TARGETS_IN_CURRENT_DIR})
 
+    # Set a custom property, so we know where this target was defined
+    set_target_properties(${TARGETS_IN_CURRENT_DIR} PROPERTIES CMAG_CMAKE_LIST_DIR ${DIR})
+
     # Call for subdirectories recursively
     get_property(SUBDIRS DIRECTORY ${DIR} PROPERTY SUBDIRECTORIES)
     foreach (SUBDIR ${SUBDIRS})
@@ -65,6 +68,7 @@ function(json_append_target OUT_VARIABLE TGT CONFIG INDENT INDENT_INCREMENT IS_L
 
     json_append_line(${OUT_VARIABLE} "\"configs\": {" ${INNER_INDENT})
     json_append_line(${OUT_VARIABLE} "\"${CONFIG}\": {" ${INNER_INNER_INDENT})
+    json_append_target_property(${OUT_VARIABLE} ${TGT} CMAG_CMAKE_LIST_DIR ${INNER_INNER_INNER_INDENT} FALSE)
     json_append_target_property(${OUT_VARIABLE} ${TGT} INCLUDE_DIRECTORIES ${INNER_INNER_INNER_INDENT} FALSE)
     json_append_target_property(${OUT_VARIABLE} ${TGT} LINK_LIBRARIES ${INNER_INNER_INNER_INDENT} FALSE)
     json_append_target_property(${OUT_VARIABLE} ${TGT} COMPILE_DEFINITIONS ${INNER_INNER_INNER_INDENT} FALSE)
