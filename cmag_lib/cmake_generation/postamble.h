@@ -3,24 +3,11 @@ const char *postamble = R"DELIMETER(
 # -----------------------------CMAG POSTAMBLE BEGIN-------------------------------------------
 cmake_minimum_required(VERSION 3.9.0)
 
-function (get_all_targets OUT_VARIABLE DIR)
-    # Call for this directory
-    get_property(TARGETS_IN_CURRENT_DIR DIRECTORY ${DIR} PROPERTY BUILDSYSTEM_TARGETS)
-    list(APPEND ${OUT_VARIABLE} ${TARGETS_IN_CURRENT_DIR})
 
-    # Set a custom property, so we know where this target was defined
-    set_target_properties(${TARGETS_IN_CURRENT_DIR} PROPERTIES CMAG_CMAKE_LIST_DIR ${DIR})
 
-    # Call for subdirectories recursively
-    get_property(SUBDIRS DIRECTORY ${DIR} PROPERTY SUBDIRECTORIES)
-    foreach (SUBDIR ${SUBDIRS})
-        get_all_targets(${OUT_VARIABLE} ${SUBDIR})
-    endforeach ()
 
-    # Propagate to outer scope
-    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
-endfunction()
 
+# -------------------------------------------------------------------- Utilities for JSON assembling
 macro(json_append_line OUT_VARIABLE LINE INDENT)
     string(APPEND ${OUT_VARIABLE} "${INDENT}${LINE}\n")
 endmacro()
@@ -46,6 +33,11 @@ macro(json_append_key_value_unquoted OUT_VARIABLE KEY VALUE INDENT IS_LAST)
     json_append_line(${OUT_VARIABLE} ${LINE} ${INDENT})
 endmacro()
 
+
+
+
+
+# -------------------------------------------------------------------- Assembling JSON for .cmag-targets file
 macro(json_append_target_property OUT_VARIABLE TGT PROPERTY INDENT IS_LAST)
     json_append_target_named_property(${OUT_VARIABLE} ${TGT} ${PROPERTY} ${PROPERTY} ${INDENT} ${IS_LAST})
 endmacro()
@@ -57,6 +49,24 @@ macro(json_append_target_named_property OUT_VARIABLE TGT NAME PROPERTY INDENT IS
     endif()
     json_append_key_value(${OUT_VARIABLE} "${NAME}" "${VALUE}" ${INDENT} ${IS_LAST})
 endmacro()
+
+function (get_all_targets OUT_VARIABLE DIR)
+    # Call for this directory
+    get_property(TARGETS_IN_CURRENT_DIR DIRECTORY ${DIR} PROPERTY BUILDSYSTEM_TARGETS)
+    list(APPEND ${OUT_VARIABLE} ${TARGETS_IN_CURRENT_DIR})
+
+    # Set a custom property, so we know where this target was defined
+    set_target_properties(${TARGETS_IN_CURRENT_DIR} PROPERTIES CMAG_CMAKE_LIST_DIR ${DIR})
+
+    # Call for subdirectories recursively
+    get_property(SUBDIRS DIRECTORY ${DIR} PROPERTY SUBDIRECTORIES)
+    foreach (SUBDIR ${SUBDIRS})
+        get_all_targets(${OUT_VARIABLE} ${SUBDIR})
+    endforeach ()
+
+    # Propagate to outer scope
+    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
+endfunction()
 
 function(json_append_target OUT_VARIABLE TGT CONFIG INDENT INDENT_INCREMENT IS_LAST)
     set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
@@ -98,6 +108,37 @@ function(json_append_target OUT_VARIABLE TGT CONFIG INDENT INDENT_INCREMENT IS_L
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
 endfunction()
 
+function(json_append_targets OUT_VARIABLE CONFIG INDENT INDENT_INCREMENT)
+    set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
+
+    json_append_line(${OUT_VARIABLE} "{" ${INDENT})
+
+    get_all_targets(ALL_TARGETS ${CMAKE_CURRENT_SOURCE_DIR})
+
+    list(LENGTH ALL_TARGETS LAST_TARGET_INDEX)
+    math(EXPR LAST_TARGET_INDEX "${LAST_TARGET_INDEX} - 1")
+    set(COUNTER 0)
+    foreach(TGT IN LISTS ALL_TARGETS)
+        if(LAST_TARGET_INDEX EQUAL COUNTER)
+            set(IS_LAST TRUE)
+        else()
+            set(IS_LAST FALSE)
+        endif()
+        math(EXPR COUNTER "${COUNTER}+1")
+
+        json_append_target(${OUT_VARIABLE} ${TGT} ${CONFIG} ${INNER_INDENT} ${INDENT_INCREMENT} ${IS_LAST})
+    endforeach()
+
+    json_append_line(${OUT_VARIABLE} "}" ${INDENT})
+
+    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
+endfunction()
+
+
+
+
+
+# -------------------------------------------------------------------- Assembling JSON for .cmag-globals file
 function (json_append_lists_files OUT_VARIABLE PARENT_DIR DIR INDENT)
     # Append current dir to json
     if (NOT "${PARENT_DIR}d" STREQUAL "d")
@@ -136,32 +177,11 @@ function(json_append_globals OUT_VARIABLE INDENT INDENT_INCREMENT)
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
 endfunction()
 
-function(json_append_targets OUT_VARIABLE CONFIG INDENT INDENT_INCREMENT)
-    set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
 
-    json_append_line(${OUT_VARIABLE} "{" ${INDENT})
 
-    get_all_targets(ALL_TARGETS ${CMAKE_CURRENT_SOURCE_DIR})
 
-    list(LENGTH ALL_TARGETS LAST_TARGET_INDEX)
-    math(EXPR LAST_TARGET_INDEX "${LAST_TARGET_INDEX} - 1")
-    set(COUNTER 0)
-    foreach(TGT IN LISTS ALL_TARGETS)
-        if(LAST_TARGET_INDEX EQUAL COUNTER)
-            set(IS_LAST TRUE)
-        else()
-            set(IS_LAST FALSE)
-        endif()
-        math(EXPR COUNTER "${COUNTER}+1")
 
-        json_append_target(${OUT_VARIABLE} ${TGT} ${CONFIG} ${INNER_INDENT} ${INDENT_INCREMENT} ${IS_LAST})
-    endforeach()
-
-    json_append_line(${OUT_VARIABLE} "}" ${INDENT})
-
-    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
-endfunction()
-
+# -------------------------------------------------------------------- Assembling JSON for .cmag-targets-list file
 function(json_append_configs OUT_VARIABLE CONFIGS INDENT INDENT_INCREMENT)
     set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
 
@@ -187,6 +207,11 @@ function(json_append_configs OUT_VARIABLE CONFIGS INDENT INDENT_INCREMENT)
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
 endfunction()
 
+
+
+
+
+# -------------------------------------------------------------------- Main code
 # Get project name
 if ("${CMAG_PROJECT_NAME}d" STREQUAL "d")
     set(CMAG_PROJECT_NAME ${CMAKE_PROJECT_NAME})
