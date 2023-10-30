@@ -65,13 +65,31 @@ function(json_append_target OUT_VARIABLE TGT CONFIG INDENT INDENT_INCREMENT IS_L
 
     json_append_line(${OUT_VARIABLE} "\"${TGT}\": {" ${INDENT})
     json_append_target_named_property(${OUT_VARIABLE} ${TGT} type TYPE ${INNER_INDENT} FALSE)
+    json_append_target_named_property(${OUT_VARIABLE} ${TGT} listDir CMAG_CMAKE_LIST_DIR ${INNER_INDENT} FALSE)
 
     json_append_line(${OUT_VARIABLE} "\"configs\": {" ${INNER_INDENT})
     json_append_line(${OUT_VARIABLE} "\"${CONFIG}\": {" ${INNER_INNER_INDENT})
-    json_append_target_property(${OUT_VARIABLE} ${TGT} CMAG_CMAKE_LIST_DIR ${INNER_INNER_INNER_INDENT} FALSE)
-    json_append_target_property(${OUT_VARIABLE} ${TGT} INCLUDE_DIRECTORIES ${INNER_INNER_INNER_INDENT} FALSE)
-    json_append_target_property(${OUT_VARIABLE} ${TGT} LINK_LIBRARIES ${INNER_INNER_INNER_INDENT} FALSE)
-    json_append_target_property(${OUT_VARIABLE} ${TGT} COMPILE_DEFINITIONS ${INNER_INNER_INNER_INDENT} FALSE)
+    set(PROPERTIES_TO_QUERY
+        LINK_DIRECTORIES
+        LINK_LIBRARIES
+        INCLUDE_DIRECTORIES
+        COMPILE_DEFINITIONS
+        COMPILE_FEATURES
+        COMPILE_OPTIONS
+        COMPILE_FLAGS
+        LINK_OPTIONS
+        INTERFACE_LINK_DIRECTORIES
+        INTERFACE_LINK_LIBRARIES
+        INTERFACE_INCLUDE_DIRECTORIES
+        INTERFACE_COMPILE_DEFINITIONS
+        INTERFACE_COMPILE_FEATURES
+        INTERFACE_COMPILE_OPTIONS
+        INTERFACE_LINK_OPTIONS
+        SOURCES
+    )
+    foreach(PROP ${PROPERTIES_TO_QUERY})
+        json_append_target_property(${OUT_VARIABLE} ${TGT} ${PROP} ${INNER_INNER_INNER_INDENT} FALSE)
+    endforeach()
     json_append_target_property(${OUT_VARIABLE} ${TGT} MANUALLY_ADDED_DEPENDENCIES ${INNER_INNER_INNER_INDENT} TRUE)
     json_append_line_comma(${OUT_VARIABLE} "}" ${INNER_INNER_INDENT} TRUE)
     json_append_line_comma(${OUT_VARIABLE} "}" ${INNER_INDENT} TRUE)
@@ -83,7 +101,7 @@ endfunction()
 function (json_append_lists_files OUT_VARIABLE PARENT_DIR DIR INDENT)
     # Append current dir to json
     set(LINE "\"${DIR}\": \"${PARENT_DIR}\"")
-    if ("${PARENT_DIR}d" STREQUAL "dg")
+    if ("${PARENT_DIR}d" STREQUAL "d")
         string(APPEND ${OUT_VARIABLE} "${INDENT}${LINE}")
     else()
         string(APPEND ${OUT_VARIABLE} ",\n${INDENT}${LINE}")
@@ -112,7 +130,7 @@ function(json_append_globals OUT_VARIABLE INDENT INDENT_INCREMENT)
     json_append_key_value_unquoted(${OUT_VARIABLE} darkMode true ${INNER_INDENT} FALSE)
 
     json_append_line(${OUT_VARIABLE} "\"listFiles\": {" ${INNER_INDENT})
-    json_append_lists_files(${OUT_VARIABLE} "" ${CMAKE_CURRENT_SOURCE_DIR} ${INNER_INNER_INDENT})  # TODO can we leave empty instead of null?
+    json_append_lists_files(${OUT_VARIABLE} "" ${CMAKE_CURRENT_SOURCE_DIR} ${INNER_INNER_INDENT})
     json_append_line(${OUT_VARIABLE} "}" ${INNER_INDENT})
 
     json_append_line(${OUT_VARIABLE} "}" ${INDENT})
