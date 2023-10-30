@@ -1,6 +1,6 @@
 #include "cmag_json_writer.h"
 
-#include "cmag_lib/json/enum_serialization.h"
+#include "cmag_lib/parse/enum_serialization.h"
 
 #include <iomanip>
 

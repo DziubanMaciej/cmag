@@ -20,7 +20,7 @@ SubprocessResult runSubprocess(const std::vector<std::string> &args) {
         // Child
 
         // Prepare args
-        std::vector<const char*> argv= {};
+        std::vector<const char *> argv = {};
         argv.reserve(args.size() + 1);
         for (const std::string &arg : args) {
             argv.push_back(arg.c_str());

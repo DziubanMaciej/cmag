@@ -1,12 +1,12 @@
 #include "cmag.h"
 
-#include "cmag_lib/cmake_generation/cmake_lists_shimmer.h"
-#include "cmag_lib/json/cmag_json_parser.h"
-#include "cmag_lib/json/cmag_json_writer.h"
+#include "cmag_lib/parse/cmag_json_parser.h"
+#include "cmag_lib/parse/cmag_json_writer.h"
+#include "cmag_lib/parse/xdot_parser.h"
+#include "cmag_lib/shim/cmake_lists_shimmer.h"
 #include "cmag_lib/utils/error.h"
 #include "cmag_lib/utils/file_utils.h"
 #include "cmag_lib/utils/subprocess.h"
-#include "cmag_lib/xdot_parser.h"
 
 #include <string_view>
 

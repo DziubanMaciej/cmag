@@ -154,7 +154,7 @@ XdotParseResult XdotParser::readStringFloatingPoint(std::string_view &xdot, floa
     }
 
     // TODO this is not very nice, but it will do for now.
-    std::string floatString  {xdot.substr(0, charCount)};
+    std::string floatString{xdot.substr(0, charCount)};
     sscanf(floatString.c_str(), "%f", &outFloat);
     xdot.remove_prefix(charCount);
     return XdotParseResult::Success;

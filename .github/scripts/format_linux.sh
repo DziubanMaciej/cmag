@@ -29,5 +29,6 @@ find .                                                                 \
     \( -name "*.cpp" -o -name "*.c" -o -name "*.h" -o -name "*.hpp" \) \
     -not -path "./third_party/*"                                       \
     -not -path "./build*/*"                                            \
+    -not -path "./cmake-build-*/*"                                     \
     -print                                                             \
 | xargs clang-format -i --verbose

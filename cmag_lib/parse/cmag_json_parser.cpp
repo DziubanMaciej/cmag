@@ -1,7 +1,7 @@
 #include "cmag_json_parser.h"
 
 #include "cmag_lib/core/cmag_project.h"
-#include "cmag_lib/json/enum_serialization.h"
+#include "cmag_lib/parse/enum_serialization.h"
 #include "cmag_lib/utils/error.h"
 
 #define RETURN_ERROR(expr)                 \

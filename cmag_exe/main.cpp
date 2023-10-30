@@ -1,5 +1,5 @@
-#include "cmag_lib/cmag.h"
-#include "cmag_lib/cmake_generation/argument_parser.h"
+#include "cmag_lib/core/argument_parser.h"
+#include "cmag_lib/core/cmag.h"
 #include "cmag_lib/utils/error.h"
 
 #define RETURN_ERROR(expr)                \

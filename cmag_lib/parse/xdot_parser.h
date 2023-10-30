@@ -1,7 +1,7 @@
 #pragma once
 
-#include <string_view>
 #include <string>
+#include <string_view>
 #include <vector>
 
 enum class XdotParseResult {
@@ -30,5 +30,4 @@ private:
     static XdotParseResult readNextNonWhitespace(std::string_view &xdot, char &outChar);
     static XdotParseResult readStringAlphabetic(std::string_view &xdot, std::string &outString);
     static XdotParseResult readStringFloatingPoint(std::string_view &xdot, float &outFloat);
-
 };
