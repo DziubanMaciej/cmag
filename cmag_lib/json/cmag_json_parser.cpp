@@ -4,6 +4,14 @@
 #include "cmag_lib/json/enum_serialization.h"
 #include "cmag_lib/utils/error.h"
 
+#define RETURN_ERROR(expr)                 \
+    do {                                   \
+        const ParseResult r = (expr);      \
+        if ((r) != ParseResult::Success) { \
+            return (r);                    \
+        }                                  \
+    } while (false)
+
 ParseResult CmagJsonParser::parseTargetsFilesListFile(std::string_view json, std::vector<fs::path> &outFiles) {
     const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);
     if (node.is_discarded()) {
@@ -34,7 +42,7 @@ ParseResult CmagJsonParser::parseGlobalsFile(std::string_view json, CmagGlobals 
         return ParseResult::InvalidNodeType;
     }
 
-    parseGlobalValues(node, outGlobals);
+    RETURN_ERROR(parseGlobalValues(node, outGlobals));
 
     return ParseResult::Success;
 }
@@ -62,7 +70,7 @@ ParseResult CmagJsonParser::parseProject(std::string_view json, CmagProject &out
     }
 
     if (auto globalsNodeIt = node.find("globals"); globalsNodeIt != node.end()) {
-        parseGlobalValues(*globalsNodeIt, outProject.getGlobals());
+        RETURN_ERROR(parseGlobalValues(*globalsNodeIt, outProject.getGlobals()));
     } else {
         return ParseResult::MissingField;
     }
@@ -86,10 +94,15 @@ ParseResult CmagJsonParser::parseProject(std::string_view json, CmagProject &out
     return ParseResult::Success;
 }
 
-void CmagJsonParser::parseGlobalValues(const nlohmann::json &node, CmagGlobals &outGlobals) {
+ParseResult CmagJsonParser::parseGlobalValues(const nlohmann::json &node, CmagGlobals &outGlobals) {
     FATAL_ERROR_IF(!node.is_object(), "node should be an object"); // This should already be checked, hence assertion.
 
-#define PARSE_GLOBAL_FIELD(name) parseObjectField(node, #name, outGlobals.name)
+#define PARSE_GLOBAL_FIELD(name)                                                                                   \
+    do {                                                                                                           \
+        if (ParseResult result = parseObjectField(node, #name, outGlobals.name); result != ParseResult::Success) { \
+            return result;                                                                                         \
+        }                                                                                                          \
+    } while (false)
     PARSE_GLOBAL_FIELD(darkMode);
     PARSE_GLOBAL_FIELD(cmagVersion);
     PARSE_GLOBAL_FIELD(cmakeVersion);
@@ -102,6 +115,8 @@ void CmagJsonParser::parseGlobalValues(const nlohmann::json &node, CmagGlobals &
     PARSE_GLOBAL_FIELD(compilerVersion);
     PARSE_GLOBAL_FIELD(os);
 #undef PARSE_GLOBAL_FIELD
+
+    return ParseResult::Success;
 }
 
 ParseResult CmagJsonParser::parseTargets(const nlohmann::json &node, std::vector<CmagTarget> &outTargets, bool requireGraphical) {

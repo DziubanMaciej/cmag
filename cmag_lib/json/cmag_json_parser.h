@@ -28,7 +28,7 @@ public:
     static ParseResult parseTargetsFile(std::string_view json, std::vector<CmagTarget> &outTargets);
 
 private:
-    static void parseGlobalValues(const nlohmann::json &node, CmagGlobals &outGlobals);
+    static ParseResult parseGlobalValues(const nlohmann::json &node, CmagGlobals &outGlobals);
 
     static ParseResult parseTargets(const nlohmann::json &node, std::vector<CmagTarget> &outTargets, bool requireGraphical);
     static ParseResult parseTarget(const nlohmann::json &node, CmagTarget &outTarget, bool requireGraphical);

@@ -2,6 +2,33 @@
 #include "cmag_lib/json/cmag_json_parser.h"
 
 #include <gtest/gtest.h>
+#include <stdarg.h>
+
+struct CmagParseTest : ::testing::Test {
+    template <typename... Args>
+    const char *insertGlobals(const char *jsonFormat, Args... args) {
+        const char *globals = R"DELIMETER(
+            {
+                "darkMode": false,
+                "cmagVersion": "",
+                "cmakeVersion": "",
+                "cmakeProjectName": "",
+                "cmagProjectName": "",
+                "sourceDir": "",
+                "buildDir": "",
+                "generator": "",
+                "compilerId": "",
+                "compilerVersion": "",
+                "os": ""
+            }
+        )DELIMETER";
+
+        sprintf(jsonBuffer, jsonFormat, globals, args...);
+        return jsonBuffer;
+    }
+
+    char jsonBuffer[4096];
+};
 
 void compareTargetProperties(const CmagTargetConfig &expected, const CmagTargetConfig &actual) {
     // Config name
@@ -15,52 +42,60 @@ void compareTargetProperties(const CmagTargetConfig &expected, const CmagTargetC
     }
 }
 
-TEST(CmagProjectParseTest, givenProjectWithNoTargetsAndNoGlobalsThenParseCorrectly) {
-    const char *json = R"DELIMETER(
+using CmagProjectParseTest = CmagParseTest;
+
+TEST_F(CmagProjectParseTest, givenProjectWithNoTargetsAndNoGlobalsThenParseCorrectly) {
+    const char *json = insertGlobals(R"DELIMETER(
     {
-        "globals": {},
+        "globals": %s,
         "targets" : {}
     }
-    )DELIMETER";
+    )DELIMETER");
     CmagProject project{};
     ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseProject(json, project));
     ASSERT_EQ(0u, project.getTargets().size());
     EXPECT_FALSE(project.getGlobals().darkMode);
 }
 
-TEST(CmagProjectParseTest, givenProjectWithDarkModeThenParseCorrectly) {
-    {
-        const char *json = R"DELIMETER(
+TEST_F(CmagProjectParseTest, givenProjectWithGlobalsSetThenParseCorrectly) {
+    const char *json = R"DELIMETER(
         {
             "globals": {
-                "darkMode": true
+                "darkMode": true,
+                "cmagVersion": "A",
+                "cmakeVersion": "B",
+                "cmakeProjectName": "C",
+                "cmagProjectName": "D",
+                "sourceDir": "E",
+                "buildDir": "F",
+                "generator": "G",
+                "compilerId": "H",
+                "compilerVersion": "I",
+                "os": "J"
             },
             "targets" : {}
         }
         )DELIMETER";
-        CmagProject project{};
-        ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseProject(json, project));
-        EXPECT_TRUE(project.getGlobals().darkMode);
-    }
-    {
-        const char *json = R"DELIMETER(
-        {
-            "globals": {
-                "darkMode": false
-            },
-            "targets" : {}
-        }
-        )DELIMETER";
-        CmagProject project{};
-        ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseProject(json, project));
-        EXPECT_FALSE(project.getGlobals().darkMode);
-    }
+    CmagProject project{};
+    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseProject(json, project));
+    CmagGlobals &globals = project.getGlobals();
+    EXPECT_TRUE(globals.darkMode);
+    EXPECT_STREQ(globals.cmagVersion.c_str(), "A");
+    EXPECT_STREQ(globals.cmakeVersion.c_str(), "B");
+    EXPECT_STREQ(globals.cmakeProjectName.c_str(), "C");
+    EXPECT_STREQ(globals.cmagProjectName.c_str(), "D");
+    EXPECT_STREQ(globals.sourceDir.c_str(), "E");
+    EXPECT_STREQ(globals.buildDir.c_str(), "F");
+    EXPECT_STREQ(globals.generator.c_str(), "G");
+    EXPECT_STREQ(globals.compilerId.c_str(), "H");
+    EXPECT_STREQ(globals.compilerVersion.c_str(), "I");
+    EXPECT_STREQ(globals.os.c_str(), "J");
 }
 
-TEST(CmagProjectParseTest, givenTargetWithNoConfigsThenReturnError) {
-    const char *json = R"DELIMETER(
+TEST_F(CmagProjectParseTest, givenTargetWithNoConfigsThenReturnError) {
+    const char *json = insertGlobals(R"DELIMETER(
     {
-        "globals": {},
+        "globals": %s,
         "targets" : {
             "myTarget" : {
                 "type": "EXECUTABLE",
@@ -68,15 +103,15 @@ TEST(CmagProjectParseTest, givenTargetWithNoConfigsThenReturnError) {
             }
         }
     }
-    )DELIMETER";
+    )DELIMETER");
     CmagProject project{};
     ASSERT_EQ(ParseResult::MissingField, CmagJsonParser::parseProject(json, project));
 }
 
-TEST(CmagProjectParseTest, givenTargetWithNoPropertiesThenParseCorrectly) {
-    const char *json = R"DELIMETER(
+TEST_F(CmagProjectParseTest, givenTargetWithNoPropertiesThenParseCorrectly) {
+    const char *json = insertGlobals(R"DELIMETER(
     {
-        "globals": {},
+        "globals": %s,
         "targets" : {
             "myTarget" : {
                 "type": "EXECUTABLE",
@@ -90,7 +125,7 @@ TEST(CmagProjectParseTest, givenTargetWithNoPropertiesThenParseCorrectly) {
             }
         }
     }
-    )DELIMETER";
+    )DELIMETER");
     CmagProject project{};
     ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseProject(json, project));
     ASSERT_EQ(1u, project.getTargets().size());
@@ -106,10 +141,10 @@ TEST(CmagProjectParseTest, givenTargetWithNoPropertiesThenParseCorrectly) {
     compareTargetProperties(expectedProperties, target.configs[0]);
 }
 
-TEST(CmagProjectParseTest, givenTargetWithPropertiesThenParseCorrectly) {
-    const char *json = R"DELIMETER(
+TEST_F(CmagProjectParseTest, givenTargetWithPropertiesThenParseCorrectly) {
+    const char *json = insertGlobals(R"DELIMETER(
     {
-        "globals": {},
+        "globals": %s,
         "targets" : {
             "myTarget" : {
                 "type": "EXECUTABLE",
@@ -126,7 +161,7 @@ TEST(CmagProjectParseTest, givenTargetWithPropertiesThenParseCorrectly) {
             }
         }
     }
-    )DELIMETER";
+    )DELIMETER");
     CmagProject project{};
     ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseProject(json, project));
     ASSERT_EQ(1u, project.getTargets().size());
@@ -145,10 +180,10 @@ TEST(CmagProjectParseTest, givenTargetWithPropertiesThenParseCorrectly) {
     compareTargetProperties(expectedProperties, target.configs[0]);
 }
 
-TEST(CmagProjectParseTest, givenTargetWithMultipleConfigsThenParseCorrectly) {
-    const char *json = R"DELIMETER(
+TEST_F(CmagProjectParseTest, givenTargetWithMultipleConfigsThenParseCorrectly) {
+    const char *json = insertGlobals(R"DELIMETER(
     {
-        "globals": {},
+        "globals": %s,
         "targets" : {
             "myTarget" : {
                 "type": "EXECUTABLE",
@@ -169,7 +204,7 @@ TEST(CmagProjectParseTest, givenTargetWithMultipleConfigsThenParseCorrectly) {
             }
         }
     }
-    )DELIMETER";
+    )DELIMETER");
     CmagProject project{};
     ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseProject(json, project));
     ASSERT_EQ(1u, project.getTargets().size());
@@ -201,10 +236,10 @@ TEST(CmagProjectParseTest, givenTargetWithMultipleConfigsThenParseCorrectly) {
     }
 }
 
-TEST(CmagProjectParseTest, givenMultipleTargetsThenParseCorrectly) {
-    const char *json = R"DELIMETER(
+TEST_F(CmagProjectParseTest, givenMultipleTargetsThenParseCorrectly) {
+    const char *json = insertGlobals(R"DELIMETER(
     {
-        "globals": {},
+        "globals": %s,
         "targets" : {
             "myTarget1" : {
                 "type": "EXECUTABLE",
@@ -232,7 +267,7 @@ TEST(CmagProjectParseTest, givenMultipleTargetsThenParseCorrectly) {
             }
         }
     }
-    )DELIMETER";
+    )DELIMETER");
     CmagProject project{};
     ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseProject(json, project));
     ASSERT_EQ(2u, project.getTargets().size());
@@ -261,7 +296,7 @@ TEST(CmagProjectParseTest, givenMultipleTargetsThenParseCorrectly) {
     }
 }
 
-TEST(CmagProjectParseTest, givenVariousTargetTypesTheParseThemCorrectly) {
+TEST_F(CmagProjectParseTest, givenVariousTargetTypesTheParseThemCorrectly) {
     std::pair<CmagTargetType, const char *> cases[] = {
         {CmagTargetType::StaticLibrary, "STATIC_LIBRARY"},
         {CmagTargetType::ModuleLibrary, "MODULE_LIBRARY"},
@@ -272,9 +307,9 @@ TEST(CmagProjectParseTest, givenVariousTargetTypesTheParseThemCorrectly) {
     };
 
     for (auto [type, typeString] : cases) {
-        const char *jsonFormat = R"DELIMETER(
+        const char *json = insertGlobals(R"DELIMETER(
         {
-            "globals": {},
+            "globals": %s,
             "targets" : {
                 "myTarget" : {
                     "type": "%s",
@@ -288,9 +323,8 @@ TEST(CmagProjectParseTest, givenVariousTargetTypesTheParseThemCorrectly) {
                 }
             }
         }
-        )DELIMETER";
-        char json[4096];
-        sprintf(json, jsonFormat, typeString);
+        )DELIMETER",
+                                         typeString);
 
         CmagProject project{};
         ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseProject(json, project));
@@ -308,10 +342,10 @@ TEST(CmagProjectParseTest, givenVariousTargetTypesTheParseThemCorrectly) {
     }
 }
 
-TEST(CmagProjectParseTest, givenTargetWithInvalidTypeThenReturnError) {
-    const char *json = R"DELIMETER(
+TEST_F(CmagProjectParseTest, givenTargetWithInvalidTypeThenReturnError) {
+    const char *json = insertGlobals(R"DELIMETER(
     {
-        "globals": {},
+        "globals": %s,
         "targets" : {
             "myTarget" : {
                 "type": "exe",
@@ -321,15 +355,15 @@ TEST(CmagProjectParseTest, givenTargetWithInvalidTypeThenReturnError) {
             }
         }
     }
-    )DELIMETER";
+    )DELIMETER");
     CmagProject project{};
     ASSERT_EQ(ParseResult::InvalidValue, CmagJsonParser::parseProject(json, project));
 }
 
-TEST(CmagProjectParseTest, givenTargetWithEmptyNameThenReturnError) {
-    const char *json = R"DELIMETER(
+TEST_F(CmagProjectParseTest, givenTargetWithEmptyNameThenReturnError) {
+    const char *json = insertGlobals(R"DELIMETER(
     {
-        "globals": {},
+        "globals": %s,
         "targets" : {
             "" : {
                 "type": "EXECUTABLE",
@@ -339,7 +373,7 @@ TEST(CmagProjectParseTest, givenTargetWithEmptyNameThenReturnError) {
             }
         }
     }
-    )DELIMETER";
+    )DELIMETER");
     CmagProject project{};
     ASSERT_EQ(ParseResult::InvalidValue, CmagJsonParser::parseProject(json, project));
 }
@@ -379,36 +413,44 @@ TEST(CmagTargetsFilesListFileParseTest, givenMultipleConfigsThenParseCorrectly) 
     EXPECT_EQ("project_CustomConf.cmag-targets-list", files[2]);
 }
 
-TEST(CmagGlobalsFileParseTest, givenEmptyGlobalsThenParseCorrectly) {
+TEST(CmagGlobalsFileParseTest, givenEmptyGlobalsThenReturnError) {
     const char *json = R"DELIMETER(
     {}
     )DELIMETER";
     CmagGlobals globals{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseGlobalsFile(json, globals));
+    ASSERT_EQ(ParseResult::MissingField, CmagJsonParser::parseGlobalsFile(json, globals));
     EXPECT_FALSE(globals.darkMode);
 }
 
-TEST(CmagGlobalsFileParseTest, givenDarkModeSpecifiedThenParseCorrectly) {
+TEST(CmagGlobalsFileParseTest, givenAllFieldsSpecifiedThenParseCorrectly) {
+    const char *json = R"DELIMETER(
     {
-        const char *json = R"DELIMETER(
-        {
-            "darkMode" : false
-        }
-        )DELIMETER";
-        CmagGlobals globals{};
-        ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseGlobalsFile(json, globals));
-        EXPECT_FALSE(globals.darkMode);
+        "darkMode": true,
+        "cmagVersion": "A",
+        "cmakeVersion": "B",
+        "cmakeProjectName": "C",
+        "cmagProjectName": "D",
+        "sourceDir": "E",
+        "buildDir": "F",
+        "generator": "G",
+        "compilerId": "H",
+        "compilerVersion": "I",
+        "os": "J"
     }
-    {
-        const char *json = R"DELIMETER(
-        {
-            "darkMode" : true
-        }
-        )DELIMETER";
-        CmagGlobals globals{};
-        ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseGlobalsFile(json, globals));
-        EXPECT_TRUE(globals.darkMode);
-    }
+    )DELIMETER";
+    CmagGlobals globals{};
+    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseGlobalsFile(json, globals));
+    EXPECT_TRUE(globals.darkMode);
+    EXPECT_STREQ(globals.cmagVersion.c_str(), "A");
+    EXPECT_STREQ(globals.cmakeVersion.c_str(), "B");
+    EXPECT_STREQ(globals.cmakeProjectName.c_str(), "C");
+    EXPECT_STREQ(globals.cmagProjectName.c_str(), "D");
+    EXPECT_STREQ(globals.sourceDir.c_str(), "E");
+    EXPECT_STREQ(globals.buildDir.c_str(), "F");
+    EXPECT_STREQ(globals.generator.c_str(), "G");
+    EXPECT_STREQ(globals.compilerId.c_str(), "H");
+    EXPECT_STREQ(globals.compilerVersion.c_str(), "I");
+    EXPECT_STREQ(globals.os.c_str(), "J");
 }
 
 TEST(CmagTargetsFileParseTest, givenNoTargetsThenParseCorrectly) {
