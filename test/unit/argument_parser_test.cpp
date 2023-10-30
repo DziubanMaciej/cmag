@@ -2,6 +2,13 @@
 
 #include <gtest/gtest.h>
 
+void compareArgs(const std::vector<std::string> &exp, const std::vector<std::string> &act) {
+    ASSERT_EQ(exp.size(), act.size());
+    for (size_t i = 0u; i < exp.size(); i++) {
+        EXPECT_EQ(exp[i], act[i]);
+    }
+}
+
 TEST(ArgumentParserTest, givenEmptyArgumentsThenArgumentsAreInvalid) {
     const char *argv[] = {"cmag", "cmake"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
@@ -171,13 +178,14 @@ TEST(ArgumentParserTest, givenNoExtraArgsWhenConstructingArgsForCMakeThenReturnA
     EXPECT_TRUE(parser.getExtraArgs().empty());
 
     auto cmakeArgs = parser.constructArgsForCmake();
-    EXPECT_EQ(6u, cmakeArgs.size());
-    EXPECT_STREQ("cmake", cmakeArgs[0]);
-    EXPECT_STREQ("..", cmakeArgs[1]);
-    EXPECT_STREQ("--graphviz=a.graph", cmakeArgs[2]);
-    EXPECT_STREQ("-B", cmakeArgs[3]);
-    EXPECT_STREQ("bbb", cmakeArgs[4]);
-    EXPECT_EQ(nullptr, cmakeArgs[5]);
+    std::vector<std::string> expectedArgs = {
+        "cmake",
+        "..",
+        "--graphviz=a.graph",
+        "-B",
+        "bbb",
+    };
+    compareArgs(expectedArgs, cmakeArgs);
 }
 
 TEST(ArgumentParserTest, givenExtraArgsWhenConstructingArgsForCMakeThenReturnAppendThemAtTheEnd) {
@@ -188,12 +196,13 @@ TEST(ArgumentParserTest, givenExtraArgsWhenConstructingArgsForCMakeThenReturnApp
     EXPECT_EQ(2u, parser.getExtraArgs().size());
 
     auto cmakeArgs = parser.constructArgsForCmake();
-    EXPECT_EQ(7u, cmakeArgs.size());
-    EXPECT_STREQ("cmake", cmakeArgs[0]);
-    EXPECT_STREQ("..", cmakeArgs[1]);
-    EXPECT_STREQ("-B", cmakeArgs[2]);
-    EXPECT_STREQ("bbb", cmakeArgs[3]);
-    EXPECT_STREQ("--graphviz", cmakeArgs[4]);
-    EXPECT_EQ(fs::path("bbb/graph.dot"), cmakeArgs[5]);
-    EXPECT_EQ(nullptr, cmakeArgs[6]);
+    std::vector<std::string> expectedArgs = {
+        "cmake",
+        "..",
+        "-B",
+        "bbb",
+        "--graphviz",
+        fs::path("bbb/graph.dot"),
+    };
+    compareArgs(expectedArgs, cmakeArgs);
 }

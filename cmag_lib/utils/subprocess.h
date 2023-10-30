@@ -1,5 +1,8 @@
 #pragma once
 
+#include <string>
+#include <vector>
+
 enum class SubprocessResult {
     Success,
     CreationFailed,
@@ -8,4 +11,4 @@ enum class SubprocessResult {
     PathResolvingFailed,
 };
 
-SubprocessResult runSubprocess(int argc, const char **argv);
+SubprocessResult runSubprocess(const std::vector<std::string> &args);

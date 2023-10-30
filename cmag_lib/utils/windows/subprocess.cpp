@@ -4,7 +4,7 @@
 #include <Windows.h>
 #include <sstream>
 
-SubprocessResult runSubprocess(int argc, const char **argv) {
+SubprocessResult runSubprocess(const std::vector<std::string> &args) {
     // Get application name
     FATAL_ERROR_IF(argc == 0);
     char applicationName[4096];

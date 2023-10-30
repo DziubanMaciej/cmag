@@ -1,7 +1,14 @@
+#include "cmag_lib/cmag.h"
 #include "cmag_lib/cmake_generation/argument_parser.h"
-#include "cmag_lib/cmake_generation/generate.h"
-#include "cmag_lib/core/generate_project.h"
 #include "cmag_lib/utils/error.h"
+
+#define RETURN_ERROR(expr)                \
+    do {                                  \
+        const CmagResult r = (expr);      \
+        if ((r) != CmagResult::Success) { \
+            return static_cast<int>(r);   \
+        }                                 \
+    } while (false)
 
 int main(int argc, const char **argv) {
     // Parse arguments
@@ -20,15 +27,10 @@ int main(int argc, const char **argv) {
         return 1;
     }
 
-    // Call CMake and gather information about the build system
-    if (int result = generateCmake(argParser); result) {
-        return result;
-    }
-
-    // Merge information dumped by CMake generation to create .cmag-project file
-    if (int result = generateProject(argParser.getBuildPath(), "project", argParser.getGraphvizPath()); result) {
-        return result;
-    }
-
+    Cmag cmag{"project"};
+    RETURN_ERROR(cmag.generateCmake(argParser.getSourcePath(), argParser.constructArgsForCmake()));
+    RETURN_ERROR(cmag.readCmagProjectFromGeneration(argParser.getBuildPath()));
+    RETURN_ERROR(cmag.generateGraphPositionsForProject(argParser.getBuildPath(), argParser.getGraphvizPath()));
+    RETURN_ERROR(cmag.writeProjectToFile(argParser.getBuildPath()));
     return 0;
 }

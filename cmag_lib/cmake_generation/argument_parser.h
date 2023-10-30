@@ -15,7 +15,7 @@ public:
     auto isValid() const { return valid; }
 
     void printHelp() {} // TODO
-    std::vector<const char *> constructArgsForCmake() const;
+    std::vector<std::string> constructArgsForCmake() const;
 
 private:
     const char *parseKeyValueArgument(std::string_view prefix, int &argIndex, std::string_view currentArg, const char *nextArg);

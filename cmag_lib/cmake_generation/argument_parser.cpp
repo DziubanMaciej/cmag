@@ -91,15 +91,14 @@ const char *ArgumentParser::parseKeyValueArgument(std::string_view prefix, int &
 
     return nullptr;
 }
-std::vector<const char *> ArgumentParser::constructArgsForCmake() const {
-    std::vector<const char *> result = {};
+std::vector<std::string> ArgumentParser::constructArgsForCmake() const {
+    std::vector<std::string> result = {};
     result.reserve(argc - 1 + extraArgs.size());
     for (int i = 1; i < argc; i++) {
-        result.push_back(argv[i]);
+        result.emplace_back(argv[i]);
     }
     for (const auto &extraArg : extraArgs) {
-        result.push_back(extraArg.c_str());
+        result.emplace_back(extraArg.c_str());
     }
-    result.push_back(nullptr);
     return result;
 }

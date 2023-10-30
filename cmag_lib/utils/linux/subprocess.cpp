@@ -10,7 +10,7 @@
         FATAL_ERROR("Syscall error on \"", #expression, "\", ", strerror(errno)); \
     }
 
-SubprocessResult runSubprocess(int, const char **argv) {
+SubprocessResult runSubprocess(const std::vector<std::string> &args) {
     int forkResult = fork();
     if (forkResult == -1) {
         return SubprocessResult::CreationFailed;
@@ -18,7 +18,17 @@ SubprocessResult runSubprocess(int, const char **argv) {
 
     if (forkResult == 0) {
         // Child
-        char *const *argvCasted = const_cast<char *const *>(argv); // we can mess with const correctness, since we're calling exec anyway.
+
+        // Prepare args
+        std::vector<const char*> argv= {};
+        argv.reserve(args.size() + 1);
+        for (const std::string &arg : args) {
+            argv.push_back(arg.c_str());
+        }
+        argv.push_back(nullptr);
+
+        // Call exec
+        char *const *argvCasted = const_cast<char *const *>(argv.data()); // we can mess with const correctness, since we're calling exec anyway.
         FATAL_ERROR_ON_FAILED_SYSCALL(execvp(argv[0], argvCasted));
         FATAL_ERROR("Unreachable code");
     } else {
