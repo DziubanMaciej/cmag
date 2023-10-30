@@ -80,12 +80,41 @@ function(json_append_target OUT_VARIABLE TGT CONFIG INDENT INDENT_INCREMENT IS_L
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
 endfunction()
 
+function (json_append_lists_files OUT_VARIABLE PARENT_DIR DIR INDENT)
+    # Append current dir to json
+    set(LINE "\"${DIR}\": \"${PARENT_DIR}\"")
+    if ("${PARENT_DIR}d" STREQUAL "dg")
+        string(APPEND ${OUT_VARIABLE} "${INDENT}${LINE}")
+    else()
+        string(APPEND ${OUT_VARIABLE} ",\n${INDENT}${LINE}")
+    endif()
+
+    # Call for subdirectories recursively
+    get_property(SUBDIRS DIRECTORY ${DIR} PROPERTY SUBDIRECTORIES)
+    foreach (SUBDIR ${SUBDIRS})
+        json_append_lists_files(${OUT_VARIABLE} ${DIR} ${SUBDIR} ${INDENT})
+    endforeach ()
+
+    # Add trailing newline
+    if ("${PARENT_DIR}d" STREQUAL "d")
+        string(APPEND ${OUT_VARIABLE} "\n")
+    endif()
+
+    # Propagate to outer scope
+    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
+endfunction()
+
 function(json_append_globals OUT_VARIABLE INDENT INDENT_INCREMENT)
     set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
     set(INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
 
     json_append_line(${OUT_VARIABLE} "{" ${INDENT})
-    json_append_key_value_unquoted(${OUT_VARIABLE} darkMode true ${INNER_INDENT} TRUE)
+    json_append_key_value_unquoted(${OUT_VARIABLE} darkMode true ${INNER_INDENT} FALSE)
+
+    json_append_line(${OUT_VARIABLE} "\"listFiles\": {" ${INNER_INDENT})
+    json_append_lists_files(${OUT_VARIABLE} "" ${CMAKE_CURRENT_SOURCE_DIR} ${INNER_INNER_INDENT})  # TODO can we leave empty instead of null?
+    json_append_line(${OUT_VARIABLE} "}" ${INNER_INDENT})
+
     json_append_line(${OUT_VARIABLE} "}" ${INDENT})
 
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
