@@ -24,11 +24,13 @@ QSize TargetGraphWidget::minimumSizeHint() const {
 void TargetGraphWidget::paintEvent(QPaintEvent *) {
     QPainter painter(this);
     painter.setTransform(camera.transform);
-    QPen unfocusedPen{};
+    QPen normalPen{};
     QPen focusedPen{};
     focusedPen.setColor(Qt::green);
+    QPen selectedPen{};
+    selectedPen.setColor(Qt::blue);
     for (const CmagTarget &target : cmagProject.getTargets()) {
-        drawTarget(target, painter, unfocusedPen, focusedPen);
+        drawTarget(target, painter, normalPen, focusedPen, selectedPen);
     }
 }
 
@@ -37,12 +39,21 @@ void TargetGraphWidget::mousePressEvent(QMouseEvent *event) {
         return;
     }
 
-    if (focusedTarget && event->button() == Qt::LeftButton) {
-        targetDrag.active = true;
-        targetDrag.target = focusedTarget;
-        targetDrag.startPoint = event->position();
+    if (event->button() == Qt::LeftButton) {
+        if (focusedTarget) {
+            targetDrag.active = true;
+            targetDrag.target = focusedTarget;
+            targetDrag.startPoint = event->position();
+        }
+
+        if (selectedTarget != focusedTarget) {
+            selectedTarget = focusedTarget;
+            emit setSelectedTarget(selectedTarget);
+        }
+
         repaint();
     }
+
     if (event->button() == Qt::MiddleButton) {
         cameraDrag.active = true;
         cameraDrag.lastPoint = event->position();
@@ -142,8 +153,9 @@ bool TargetGraphWidget::isPointInTarget(const CmagTarget &target, QPointF point)
 void TargetGraphWidget::drawTarget(
     const CmagTarget &target,
     QPainter &painter,
-    QPen &unfocusedPen,
-    QPen &focusedPen) const {
+    QPen &normalPen,
+    QPen &focusedPen,
+    QPen &selectedPen) const {
 
     QPointF offset = {};
     if (targetDrag.active && targetDrag.target == &target) {
@@ -157,10 +169,12 @@ void TargetGraphWidget::drawTarget(
     rect.setTop(target.graphical.y + offset.y() - 50);
     rect.setBottom(target.graphical.y + offset.y() + 50);
 
-    if (focusedTarget == &target) {
+    if (selectedTarget == &target) {
+        painter.setPen(selectedPen);
+    } else if (focusedTarget == &target) {
         painter.setPen(focusedPen);
     } else {
-        painter.setPen(unfocusedPen);
+        painter.setPen(normalPen);
     }
     painter.drawRect(rect);
     painter.drawText(rect, Qt::AlignmentFlag::AlignCenter, QString(target.name.c_str()), &rect);

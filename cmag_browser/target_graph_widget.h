@@ -14,6 +14,9 @@ public:
     QSize sizeHint() const override;
     QSize minimumSizeHint() const override;
 
+signals:
+    void setSelectedTarget(CmagTarget *target);
+
 protected:
     void paintEvent(QPaintEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
@@ -24,6 +27,7 @@ protected:
 private:
     CmagProject &cmagProject;
     CmagTarget *focusedTarget = {};
+    CmagTarget *selectedTarget = {};
     struct TargetDrag {
         bool active = {};
         QPointF startPoint = {};
@@ -43,5 +47,5 @@ private:
     void updateFocusedTarget(QPointF mousePosition);
     void updateCamera();
     bool isPointInTarget(const CmagTarget &target, QPointF point) const;
-    void drawTarget(const CmagTarget &target, QPainter &painter, QPen &unfocusedPen, QPen &focusedPen) const;
+    void drawTarget(const CmagTarget &target, QPainter &painter, QPen &normalPen, QPen &focusedPen, QPen &selectedPen) const;
 };

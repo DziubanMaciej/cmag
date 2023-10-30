@@ -17,5 +17,7 @@ public:
     ~MainWindow() override;
 
 private:
+    void insertWidget(const char *containerName, QWidget *widget);
+
     Ui::MainWindow *ui;
 };
