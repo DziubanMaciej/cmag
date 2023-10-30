@@ -206,3 +206,42 @@ TEST(ArgumentParserTest, givenExtraArgsWhenConstructingArgsForCMakeThenReturnApp
     };
     compareArgs(expectedArgs, cmakeArgs);
 }
+
+TEST(ArgumentParserTest, givenProjectNameIsNotPassedThenDefaultNameIsUsed) {
+    const char *argv[] = {"cmag", "cmake", ".."};
+    const int argc = sizeof(argv) / sizeof(argv[0]);
+    ArgumentParser parser{argc, argv};
+    EXPECT_TRUE(parser.isValid());
+    EXPECT_STREQ("project", parser.getProjectName().c_str());
+}
+
+TEST(ArgumentParserTest, givenProjectNameIsPassedThenItIsUsed) {
+    const char *argv[] = {"cmag", "-p", "Aaa", "-p", "Bbb", "cmake", ".."};
+    const int argc = sizeof(argv) / sizeof(argv[0]);
+    ArgumentParser parser{argc, argv};
+    EXPECT_TRUE(parser.isValid());
+    EXPECT_STREQ("Bbb", parser.getProjectName().c_str());
+}
+
+TEST(ArgumentParserTest, givenExtraTargetPropertiesAreNotPassedThenListIsEmpty) {
+    const char *argv[] = {"cmag", "cmake", ".."};
+    const int argc = sizeof(argv) / sizeof(argv[0]);
+    ArgumentParser parser{argc, argv};
+    EXPECT_TRUE(parser.isValid());
+    EXPECT_STREQ("", parser.getExtraTargetProperties().c_str());
+}
+
+TEST(ArgumentParserTest, givenExtraTargetPropertiesArePassedThenPopulateList) {
+    const char *argv[] = {"cmag", "-e", "Aa;Bb", "-e", "Cc;Dd", "cmake", ".."};
+    const int argc = sizeof(argv) / sizeof(argv[0]);
+    ArgumentParser parser{argc, argv};
+    EXPECT_TRUE(parser.isValid());
+    EXPECT_STREQ("Aa;Bb;Cc;Dd", parser.getExtraTargetProperties().c_str());
+}
+
+TEST(ArgumentParserTest, givenUnknownCmagArgThenReturnError) {
+    const char *argv[] = {"cmag", "-x", "cmake", ".."};
+    const int argc = sizeof(argv) / sizeof(argv[0]);
+    ArgumentParser parser{argc, argv};
+    EXPECT_FALSE(parser.isValid());
+}

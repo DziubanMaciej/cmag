@@ -13,9 +13,46 @@ ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(a
         valid = false;
         return;
     }
+    int argIndex = 0;
 
-    int argIndex = 2; // skip our process name and cmake process name
+    // Skip Cmag process name
+    argIndex++;
 
+    // First try to parse Cmag-specific arguments. The first argument that does not start with a dash will be treated
+    // as Cmake command and the rest will be args to Cmake.
+    for (; argIndex < argc; argIndex++) {
+        const std::string arg = argv[argIndex];
+        const char *nextArg = (argIndex + 1) < argc ? argv[argIndex + 1] : nullptr;
+
+        // Check for end of Cmag args
+        if (arg[0] != '-') {
+            break;
+        }
+
+        // Parse arguments known to us
+        bool validArg = false;
+        if (const char *value = parseKeyValueArgument("-p", argIndex, arg, nextArg); value) {
+            projectName = value;
+            validArg = true;
+        }
+        if (const char *value = parseKeyValueArgument("-e", argIndex, arg, nextArg); value) {
+            if (!extraTargetProperties.empty()) {
+                extraTargetProperties.push_back(';');
+            }
+            extraTargetProperties += value;
+            validArg = true;
+        }
+
+        // Check validity of current arg
+        if (!validArg) {
+            valid = false;
+        }
+    }
+
+    // Skip CMake process name
+    argIndex++;
+
+    // Process CMake arguments
     for (; argIndex < argc; argIndex++) {
         std::string arg = argv[argIndex];
         const char *nextArg = (argIndex + 1) < argc ? argv[argIndex + 1] : nullptr;
@@ -49,6 +86,9 @@ ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(a
     }
 
     // Handle arguments that were not passed by user
+    if (projectName.empty()) {
+        projectName = "project";
+    }
     if (sourcePath.empty()) {
         valid = false;
     }
