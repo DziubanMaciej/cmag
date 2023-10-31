@@ -28,7 +28,7 @@ int main(int argc, const char **argv) {
     }
 
     Cmag cmag{argParser.getProjectName()};
-    RETURN_ERROR(cmag.generateCmake(argParser.getSourcePath(), argParser.constructArgsForCmake()));
+    RETURN_ERROR(cmag.generateCmake(argParser.getSourcePath(), argParser.constructArgsForCmake(), argParser.getExtraTargetProperties()));
     RETURN_ERROR(cmag.readCmagProjectFromGeneration(argParser.getBuildPath()));
     RETURN_ERROR(cmag.generateGraphPositionsForProject(argParser.getBuildPath(), argParser.getGraphvizPath()));
     RETURN_ERROR(cmag.writeProjectToFile(argParser.getBuildPath()));

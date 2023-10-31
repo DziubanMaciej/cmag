@@ -207,6 +207,20 @@ TEST(ArgumentParserTest, givenExtraArgsWhenConstructingArgsForCMakeThenReturnApp
     compareArgs(expectedArgs, cmakeArgs);
 }
 
+TEST(ArgumentParserTest, givenCmagArgsArePassedThenConstructCmakeArgsProperly) {
+    const char *argv[] = {"cmag", "-p", "Aaa", "-e", "Bbb", "cmake", "..", "--graphviz=a.graph"};
+    const int argc = sizeof(argv) / sizeof(argv[0]);
+    ArgumentParser parser{argc, argv};
+    EXPECT_TRUE(parser.isValid());
+    auto cmakeArgs = parser.constructArgsForCmake();
+    std::vector<std::string> expectedArgs = {
+        "cmake",
+        "..",
+        "--graphviz=a.graph",
+    };
+    compareArgs(expectedArgs, cmakeArgs);
+}
+
 TEST(ArgumentParserTest, givenProjectNameIsNotPassedThenDefaultNameIsUsed) {
     const char *argv[] = {"cmag", "cmake", ".."};
     const int argc = sizeof(argv) / sizeof(argv[0]);

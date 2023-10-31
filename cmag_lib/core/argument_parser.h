@@ -24,6 +24,7 @@ public:
 private:
     const char *parseKeyValueArgument(std::string_view prefix, int &argIndex, std::string_view currentArg, const char *nextArg);
 
+    int cmakeArgsStartIndex = {};
     int argc = {};
     const char **argv = {};
 

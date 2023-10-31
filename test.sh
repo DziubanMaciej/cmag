@@ -10,8 +10,8 @@ popd
 
 rm -rf test/acceptance/with_subdirs/build
 mkdir -p test/acceptance/with_subdirs/build
-"$build_dir"/bin/Debug/cmag cmake -S test/acceptance/with_subdirs -B test/acceptance/with_subdirs/build -DCMAG_PROJECT_NAME=project #|| exit 1
-"$build_dir"/bin/cmag cmake -S test/acceptance/with_subdirs -B test/acceptance/with_subdirs/build -DCMAG_PROJECT_NAME=project #|| exit 1
+"$build_dir"/bin/Debug/cmag -p project -e MY_PROP cmake -S test/acceptance/with_subdirs -B test/acceptance/with_subdirs/build
+"$build_dir"/bin/cmag       -p project -e MY_PROP cmake -S test/acceptance/with_subdirs -B test/acceptance/with_subdirs/build
 
 echo
 echo "----------------------- Configs:"

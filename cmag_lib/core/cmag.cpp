@@ -10,7 +10,7 @@
 
 #include <string_view>
 
-CmagResult Cmag::generateCmake(const fs::path &sourcePath, const std::vector<std::string> &cmakeArgs) {
+CmagResult Cmag::generateCmake(const fs::path &sourcePath, std::vector<std::string> cmakeArgs, std::string_view extraTargetProperties) {
     // Shim original CMakeLists.txt and insert extra CMake code to query information about the build-system
     // and save it to a file.
     CMakeListsShimmer shimmer{sourcePath};
@@ -27,6 +27,10 @@ CmagResult Cmag::generateCmake(const fs::path &sourcePath, const std::vector<std
     default:
         UNREACHABLE_CODE;
     }
+
+    // Prepare CMake args
+    cmakeArgs.push_back(std::string{"-DCMAG_PROJECT_NAME="} + projectName);
+    cmakeArgs.push_back(std::string{"-DCMAG_EXTRA_TARGET_PROPERTIES="} + extraTargetProperties.data()); // this could be bad if string_view doesn't end with \0
 
     // Call CMake
     const SubprocessResult result = runSubprocess(cmakeArgs);

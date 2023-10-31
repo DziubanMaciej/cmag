@@ -50,6 +50,7 @@ ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(a
     }
 
     // Skip CMake process name
+    cmakeArgsStartIndex = argIndex;
     argIndex++;
 
     // Process CMake arguments
@@ -134,7 +135,7 @@ const char *ArgumentParser::parseKeyValueArgument(std::string_view prefix, int &
 std::vector<std::string> ArgumentParser::constructArgsForCmake() const {
     std::vector<std::string> result = {};
     result.reserve(argc - 1 + extraArgs.size());
-    for (int i = 1; i < argc; i++) {
+    for (int i = cmakeArgsStartIndex; i < argc; i++) {
         result.emplace_back(argv[i]);
     }
     for (const auto &extraArg : extraArgs) {

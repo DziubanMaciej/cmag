@@ -96,6 +96,7 @@ function(json_append_target OUT_VARIABLE TGT CONFIG INDENT INDENT_INCREMENT IS_L
         INTERFACE_COMPILE_OPTIONS
         INTERFACE_LINK_OPTIONS
         SOURCES
+        ${CMAG_EXTRA_TARGET_PROPERTIES}
     )
     foreach(PROP ${PROPERTIES_TO_QUERY})
         json_append_target_property(${OUT_VARIABLE} ${TGT} ${PROP} ${INNER_INNER_INNER_INDENT} FALSE)
@@ -222,11 +223,10 @@ endfunction()
 
 
 # -------------------------------------------------------------------- Main code
-# Get project name
+# Verify project name is set.
 if ("${CMAG_PROJECT_NAME}d" STREQUAL "d")
-    set(CMAG_PROJECT_NAME ${CMAKE_PROJECT_NAME})
+    message(FATAL_ERROR "cmag: CMAG_PROJECT_NAME should be set by cmag")
 endif()
-set(CMAG_PROJECT_NAME project) # TODO
 
 # Handle single-config and multi-config generators differently.
 get_property(CMAG_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
