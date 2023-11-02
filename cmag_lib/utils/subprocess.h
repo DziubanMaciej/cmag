@@ -12,3 +12,4 @@ enum class SubprocessResult {
 };
 
 SubprocessResult runSubprocess(const std::vector<std::string> &args);
+SubprocessResult runSubprocess(const std::vector<std::string> &args, std::string &stdOut, std::string &stdErr);

@@ -8,6 +8,7 @@ const static inline fs::path srcProjectsRoot = fs::path{SRC_PROJECTS_ROOT};
 const static inline fs::path dstProjectsRoot = fs::path{DST_PROJECTS_ROOT};
 
 struct CmagOsTest : ::testing::Test {
+    // TODO rename ProjectInfo -> TestWorkspace
     struct ProjectInfo {
         bool valid = false;
         fs::path sourcePath;

@@ -24,7 +24,7 @@ public:
     CmagResult generateGraphPositionsForProject(const fs::path &buildPath, const fs::path &graphvizPath);
     CmagResult writeProjectToFile(const fs::path &buildPath);
 
-private:
+protected:
     std::string projectName;
     CmagProject project;
 };
