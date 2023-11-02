@@ -7,11 +7,12 @@
 #include <fstream>
 #include <string>
 
-CMakeListsShimmer::CMakeListsShimmer(const fs::path &directory) : cmake_lists_path(directory / "CMakeLists.txt"),
-                                                                  cmake_lists_backup_path(directory / "CMakeLists.txt.real") {}
+CMakeListsShimmer::CMakeListsShimmer(const fs::path &sourceDirectory) : sourceDirectory(sourceDirectory),
+                                                                        cmakeListsPath(sourceDirectory / "CMakeLists.txt") {}
 
 CMakeListsShimmer::~CMakeListsShimmer() {
     if (isShimmed) {
+        // TODO print warning?
         unshim();
     }
 }
@@ -19,22 +20,22 @@ CMakeListsShimmer::~CMakeListsShimmer() {
 ShimResult CMakeListsShimmer::shim() {
     FATAL_ERROR_IF(isShimmed, "Already shimmed");
 
-    if (!fs::is_regular_file(cmake_lists_path)) {
-        printf("xd %s\n", cmake_lists_path.string().c_str());
+    if (!fs::is_regular_file(cmakeListsPath)) {
         return ShimResult::InvalidDirectory;
     }
 
+    generateBackupPath();
     std::error_code errorCode{};
-    fs::rename(cmake_lists_path, cmake_lists_backup_path, errorCode);
+    fs::rename(cmakeListsPath, cmakeListsBackupPath, errorCode);
     if (errorCode) {
         return ShimResult::NoPermission;
     }
 
-    std::ifstream input{cmake_lists_backup_path};
+    std::ifstream input{cmakeListsBackupPath};
     if (!input) {
         return ShimResult::NoPermission;
     }
-    std::ofstream output{cmake_lists_path, std::ios::out};
+    std::ofstream output{cmakeListsPath, std::ios::out};
     if (!output) {
         return ShimResult::NoPermission;
     }
@@ -52,11 +53,22 @@ ShimResult CMakeListsShimmer::unshim() {
     FATAL_ERROR_IF(!isShimmed, "Not shimmed");
 
     std::error_code errorCode{};
-    fs::rename(cmake_lists_backup_path, cmake_lists_path, errorCode);
+    fs::rename(cmakeListsBackupPath, cmakeListsPath, errorCode);
     if (errorCode) {
         return ShimResult::NoPermission;
     }
 
     isShimmed = false;
     return ShimResult::Success;
+}
+
+void CMakeListsShimmer::generateBackupPath() {
+    // Should we put some boundary on that loop?
+    for (size_t i = 0; true; i++) {
+        std::string dirName = std::string{"CMakeLists.txt.backup"} + std::to_string(i) + ".cmake";
+        cmakeListsBackupPath = sourceDirectory / dirName;
+        if (!fs::exists(cmakeListsBackupPath)) {
+            return;
+        }
+    }
 }
