@@ -33,7 +33,7 @@ XdotParseResult XdotParser::parse(std::string_view xdot, XdotData &outData) {
             XdotData::Target target = {};
 
             RETURN_ERROR(skipToString(xdot, "label="));
-            RETURN_ERROR(readStringAlphabetic(xdot, target.name));
+            RETURN_ERROR(readStringAlphabetic(xdot, target.name)); // TODO target names can also contain other characters. Better read everything until comma.
 
             RETURN_ERROR(skipToString(xdot, "pos=\""));
             RETURN_ERROR(readStringFloatingPoint(xdot, target.x));

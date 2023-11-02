@@ -47,6 +47,13 @@ macro(json_append_target_named_property OUT_VARIABLE TGT NAME PROPERTY INDENT IS
     if("${PROPERTY}" STREQUAL "LINK_LIBRARIES")
         set(VALUE "$<GENEX_EVAL:${VALUE}>")
     endif()
+    if("${PROPERTY}" STREQUAL "INTERFACE_LINK_LIBRARIES")
+        # TODO: this is incorrect. When a library have an PRIVATE dependency X, it will appear in
+        # INTERFACE_LINK_LIBRARIES as $<LINK_ONLY:X> and will be resolved to "X" instead of "".
+        # Possible WA: dump both non-genex-evaled and genex-evaled property, parse expressions with
+        # $<LINK_ONLY> in the former, and remove them from the latter.
+        set(VALUE "$<TARGET_GENEX_EVAL:${TGT},${VALUE}>")
+    endif()
     json_append_key_value(${OUT_VARIABLE} "${NAME}" "${VALUE}" ${INDENT} ${IS_LAST})
 endmacro()
 

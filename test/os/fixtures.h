@@ -13,10 +13,11 @@ struct CmagOsTest : ::testing::Test {
         bool valid = false;
         fs::path sourcePath;
         fs::path buildPath;
+        fs::path graphvizPath;
     };
 
     void TearDown() override {
-        for (auto &project : projects) {
+        for (auto &project: projects) {
             removeFile(project.sourcePath);
         }
     }
@@ -44,6 +45,7 @@ struct CmagOsTest : ::testing::Test {
         project.valid = !::testing::Test::HasFailure();
         project.sourcePath = dstProjectDir;
         project.buildPath = dstProjectDir / "build";
+        project.graphvizPath = dstProjectDir / "build" / "a.dot";
         projects.push_back(project);
         return project;
     }
@@ -77,4 +79,14 @@ struct CmagOsTest : ::testing::Test {
 
 private:
     std::vector<ProjectInfo> projects = {};
+};
+
+struct RaiiStdoutCapture {
+    RaiiStdoutCapture() {
+        testing::internal::CaptureStdout();
+    }
+
+    ~RaiiStdoutCapture() {
+        testing::internal::GetCapturedStdout();
+    }
 };

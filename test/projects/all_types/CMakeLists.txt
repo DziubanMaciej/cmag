@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10.0)
 project(AllTypes)
-file(WRITE main.cpp "int main()")
+file(WRITE file.cpp "int main()")
 
 add_library(StaticLib STATIC file.cpp)
 
