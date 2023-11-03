@@ -67,15 +67,15 @@ CmakeGeneratorDb::CmakeGeneratorDb(bool allGenerators) {
             continue;
         }
 
-        // Mark already seen generators
-        hasVisualStudio |= generator.isVisualStudio;
-        hasMultiConfig |= generator.isMultiConfig;
-        hasSingleConfig |= (!generator.isMultiConfig);
-
         // Perform a dummy CMake run to see, whether this generator works. If it does,
         // add it to our list.
         if (isGeneratorAvailable(generator.name.c_str())) {
             generators.push_back(generator);
+
+            // Mark already seen generators
+            hasVisualStudio |= generator.isVisualStudio;
+            hasMultiConfig |= generator.isMultiConfig;
+            hasSingleConfig |= (!generator.isMultiConfig);
         }
     }
 }

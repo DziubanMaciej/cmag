@@ -14,13 +14,13 @@ struct CmagTest : CmagOsTest, testing::WithParamInterface<CMakeGenerator> {
         return {
             "cmake",
             "-S",
-            workspace.sourcePath,
+            workspace.sourcePath.string(),
             "-B",
-            workspace.buildPath,
+            workspace.buildPath.string(),
             "-G",
             GetParam().name,
             "--graphviz",
-            workspace.graphvizPath,
+            workspace.graphvizPath.string(),
         };
     }
 

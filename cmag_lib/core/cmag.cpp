@@ -118,7 +118,7 @@ CmagResult Cmag::readCmagProjectFromGeneration(const fs::path &buildPath) {
 }
 CmagResult Cmag::generateGraphPositionsForProject(const fs::path &buildPath, const fs::path &graphvizPath) {
     // Perform .dot->.xdot conversion
-    const std::string xdotPath = buildPath / (projectName + ".xdot");
+    const std::string xdotPath = (buildPath / (projectName + ".xdot")).string();
     {
         const std::string graphvizPathString = graphvizPath.string();
         std::vector<std::string> dotArgs{
