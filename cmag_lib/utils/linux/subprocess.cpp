@@ -35,7 +35,7 @@ static SubprocessResult waitForResult(int pid) {
 std::vector<char *> prepareArgsForExecvp(const std::vector<std::string> &args) {
     std::vector<char *> argv = {};
     argv.reserve(args.size() + 1);
-    for (const std::string &arg : args) {
+    for (const std::string &arg: args) {
         // we can mess with const correctness, since we're calling exec anyway.
         argv.push_back(const_cast<char *>(arg.c_str()));
     }
@@ -62,9 +62,10 @@ SubprocessResult runSubprocess(const std::vector<std::string> &args) {
 }
 
 SubprocessResult runSubprocess(const std::vector<std::string> &args, std::string &stdOut, std::string &stdErr) {
-    int pipe_stdout[2], pipe_stderr[2];
-    pipe(pipe_stdout);
-    pipe(pipe_stderr);
+    int pipe_stdout[2] = {};
+    int pipe_stderr[2] = {};
+    FATAL_ERROR_ON_FAILED_SYSCALL(pipe(pipe_stdout));
+    FATAL_ERROR_ON_FAILED_SYSCALL(pipe(pipe_stderr));
 
     int forkResult = fork();
     if (forkResult == -1) {
@@ -74,12 +75,12 @@ SubprocessResult runSubprocess(const std::vector<std::string> &args, std::string
     if (forkResult == 0) {
         // Child
 
-        close(pipe_stdout[0]);
-        close(pipe_stderr[0]);
-        dup2(pipe_stdout[1], STDOUT_FILENO);
-        dup2(pipe_stderr[1], STDERR_FILENO);
-        close(pipe_stdout[1]);
-        close(pipe_stderr[1]);
+        FATAL_ERROR_ON_FAILED_SYSCALL(close(pipe_stdout[0]));
+        FATAL_ERROR_ON_FAILED_SYSCALL(close(pipe_stderr[0]));
+        FATAL_ERROR_ON_FAILED_SYSCALL(dup2(pipe_stdout[1], STDOUT_FILENO));
+        FATAL_ERROR_ON_FAILED_SYSCALL(dup2(pipe_stderr[1], STDERR_FILENO));
+        FATAL_ERROR_ON_FAILED_SYSCALL(close(pipe_stdout[1]));
+        FATAL_ERROR_ON_FAILED_SYSCALL(close(pipe_stderr[1]));
 
         std::vector<char *> argsPrepared = prepareArgsForExecvp(args);
         FATAL_ERROR_ON_FAILED_SYSCALL(execvp(argsPrepared[0], argsPrepared.data()));
@@ -87,8 +88,8 @@ SubprocessResult runSubprocess(const std::vector<std::string> &args, std::string
     } else {
         // Parent
 
-        close(pipe_stdout[1]);
-        close(pipe_stderr[1]);
+        FATAL_ERROR_ON_FAILED_SYSCALL(close(pipe_stdout[1]));
+        FATAL_ERROR_ON_FAILED_SYSCALL(close(pipe_stderr[1]));
 
         SubprocessResult result = waitForResult(forkResult);
 
