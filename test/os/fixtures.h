@@ -17,7 +17,7 @@ struct CmagOsTest : ::testing::Test {
     };
 
     void TearDown() override {
-        for (auto &project: projects) {
+        for (auto &project : projects) {
             removeFile(project.sourcePath);
         }
     }

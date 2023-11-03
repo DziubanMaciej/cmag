@@ -1,6 +1,6 @@
 #include "cmag_lib/core/cmag.h"
-#include "cmag_lib/utils/file_utils.h"
 #include "cmag_lib/parse/cmag_json_parser.h"
+#include "cmag_lib/utils/file_utils.h"
 #include "test/os/cmake_generator_db.h"
 #include "test/os/fixtures.h"
 
@@ -12,15 +12,15 @@ struct WhiteboxCmag : Cmag {
 struct CmagTest : CmagOsTest, testing::WithParamInterface<CMakeGenerator> {
     static std::vector<std::string> constructCmakeArgs(const ProjectInfo &workspace) {
         return {
-                "cmake",
-                "-S",
-                workspace.sourcePath,
-                "-B",
-                workspace.buildPath,
-                "-G",
-                GetParam().name,
-                "--graphviz",
-                workspace.graphvizPath,
+            "cmake",
+            "-S",
+            workspace.sourcePath,
+            "-B",
+            workspace.buildPath,
+            "-G",
+            GetParam().name,
+            "--graphviz",
+            workspace.graphvizPath,
         };
     }
 
@@ -40,7 +40,7 @@ struct CmagTest : CmagOsTest, testing::WithParamInterface<CMakeGenerator> {
     }
 
     static void verifyProperty(const CmagTargetConfig &config, const char *name, const char *expectedValue) {
-        for (const CmagTargetProperty &prop: config.properties) {
+        for (const CmagTargetProperty &prop : config.properties) {
             if (prop.name == name) {
                 EXPECT_STREQ(expectedValue, prop.value.c_str());
                 return;
@@ -50,13 +50,13 @@ struct CmagTest : CmagOsTest, testing::WithParamInterface<CMakeGenerator> {
     }
 
     static void verifyPropertyForEachConfig(const CmagTarget &target, const char *name, const char *expectedValue) {
-        for (const CmagTargetConfig &config: target.configs) {
+        for (const CmagTargetConfig &config : target.configs) {
             verifyProperty(config, name, expectedValue);
         }
     }
 
     static void verifyNoProperty(const CmagTargetConfig &config, const char *name) {
-        for (const CmagTargetProperty &prop: config.properties) {
+        for (const CmagTargetProperty &prop : config.properties) {
             EXPECT_STRNE(name, prop.name.c_str());
         }
     }
@@ -87,7 +87,7 @@ TEST_P(CmagTest, givenSimpleProjectWithCustomPropertiesThenProcessItCorrectly) {
     const CmagTarget &target = cmag.project.getTargets()[0];
     EXPECT_STREQ("Exe", target.name.c_str());
     verifyConfigNaming(target);
-    for (const CmagTargetConfig &config: target.configs) {
+    for (const CmagTargetConfig &config : target.configs) {
         verifyProperty(config, "MY_CUSTOM_PROP1", "customValue1");
         verifyProperty(config, "MY_CUSTOM_PROP2", "customValue2");
         verifyNoProperty(config, "MY_CUSTOM_PROP3");
@@ -117,7 +117,7 @@ TEST_P(CmagTest, givenProjectWrittenToFileThenItCanBeParsedBack) {
     ASSERT_EQ(1u, parsedProject.getTargets().size());
     const CmagTarget &target = parsedProject.getTargets()[0];
     EXPECT_STREQ("Exe", target.name.c_str());
-    for (const CmagTargetConfig &config: target.configs) {
+    for (const CmagTargetConfig &config : target.configs) {
         verifyProperty(config, "MY_CUSTOM_PROP1", "customValue1");
         verifyProperty(config, "MY_CUSTOM_PROP2", "customValue2");
         verifyNoProperty(config, "MY_CUSTOM_PROP3");
@@ -168,11 +168,9 @@ TEST_P(CmagTest, givenProjectWithAllTargetTypesThenAllTargetsAreDetectedCorrectl
     verifyPropertyForEachConfig(targets[5], "SOURCES", "file.cpp");
 }
 
-
 TEST_P(CmagTest, givenProjectWithTargetsDefinedInSubdirectoriesThenAllTargetAreDetectedCorrectly) {
     ProjectInfo workspace = prepareProject("with_subdirs");
     ASSERT_TRUE(workspace.valid);
-
 
     WhiteboxCmag cmag{"project"};
     {
@@ -197,14 +195,13 @@ TEST_P(CmagTest, givenProjectWithTargetsDefinedInSubdirectoriesThenAllTargetAreD
         EXPECT_STREQ("LibA", target.name.c_str());
         EXPECT_EQ(CmagTargetType::StaticLibrary, target.type);
         verifyPropertyForEachConfig(target, "LINK_LIBRARIES", "");
-
     }
     {
         const CmagTarget &target = targets[2];
         EXPECT_STREQ("LibB", target.name.c_str());
         EXPECT_EQ(CmagTargetType::StaticLibrary, target.type);
         verifyPropertyForEachConfig(target, "LINK_LIBRARIES", "LibC;LibD");
-        //verifyPropertyForEachConfig(target, "INTERFACE_LINK_LIBRARIES", "LibC;LibE"); // TODO remove $<LINK_ONLY:...>
+        // verifyPropertyForEachConfig(target, "INTERFACE_LINK_LIBRARIES", "LibC;LibE"); // TODO remove $<LINK_ONLY:...>
         verifyPropertyForEachConfig(target, "INCLUDE_DIRECTORIES", "/DirC;/DirD");
         verifyPropertyForEachConfig(target, "INTERFACE_INCLUDE_DIRECTORIES", "/DirC;/DirE");
     }
@@ -237,11 +234,9 @@ TEST_P(CmagTest, givenProjectWithTargetsDefinedInSubdirectoriesThenAllTargetAreD
     }
 }
 
-
 TEST_P(CmagTest, givenGeneratorExpressionsInPropertiesThenResolveThemToActualValues) {
     ProjectInfo workspace = prepareProject("genex");
     ASSERT_TRUE(workspace.valid);
-
 
     WhiteboxCmag cmag{"project"};
     {
@@ -254,7 +249,7 @@ TEST_P(CmagTest, givenGeneratorExpressionsInPropertiesThenResolveThemToActualVal
     ASSERT_EQ(1u, cmag.project.getTargets().size());
 
     const CmagTarget &target = cmag.project.getTargets()[0];
-    for (const CmagTargetConfig &config: target.configs) {
+    for (const CmagTargetConfig &config : target.configs) {
         const bool isDebug = config.name == "Debug";
         const char *letter = isDebug ? "D" : "R";
         const char *letterPath = isDebug ? "/D" : "/R";
@@ -278,7 +273,6 @@ TEST_P(CmagTest, whenGeneratingPositionsForGraphThenPositionsAreNonZero) {
     ProjectInfo workspace = prepareProject("simple");
     ASSERT_TRUE(workspace.valid);
 
-
     WhiteboxCmag cmag{"project"};
     {
         RaiiStdoutCapture capture{};
@@ -292,7 +286,6 @@ TEST_P(CmagTest, whenGeneratingPositionsForGraphThenPositionsAreNonZero) {
     const CmagTarget &target = cmag.project.getTargets()[0];
     EXPECT_NE(0u, target.graphical.x);
     EXPECT_NE(0u, target.graphical.y);
-
 }
 
 TEST_P(CmagTest, givenMultiConfigGeneratorCustomConfigNamesSpecifiedThenProcessThemCorrectly) {
@@ -358,4 +351,4 @@ TEST_P(CmagTest, givenSingleConfigGeneratorCustomConfigNameSpecifiedThenProcessI
 }
 
 INSTANTIATE_TEST_SUITE_P(, CmagTest, ::testing::ValuesIn(CmakeGeneratorDb::instance().generators),
-                           CmagTest::constructParamName);
+                         CmagTest::constructParamName);
