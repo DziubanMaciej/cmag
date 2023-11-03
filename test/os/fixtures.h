@@ -5,8 +5,8 @@
 #include <gtest/gtest.h>
 
 #if _WIN32
-#include <aclapi.h>
 #include <Windows.h>
+#include <aclapi.h>
 #endif
 
 const static inline fs::path srcProjectsRoot = fs::path{SRC_PROJECTS_ROOT};
@@ -79,7 +79,7 @@ struct CmagOsTest : ::testing::Test {
     static bool clearPermissions(const fs::path &file) {
 #ifdef _WIN32
         // Prepare deny rule
-        EXPLICIT_ACCESS denyAccess = { };
+        EXPLICIT_ACCESS denyAccess = {};
         denyAccess.grfAccessMode = DENY_ACCESS;
         denyAccess.grfAccessPermissions = GENERIC_ALL;
         denyAccess.grfInheritance = NO_INHERITANCE;
@@ -89,8 +89,7 @@ struct CmagOsTest : ::testing::Test {
 
         // Create new ACL with the deny rule
         PACL newAcl = NULL;
-        if (SetEntriesInAclA(1, &denyAccess, NULL, &newAcl) != ERROR_SUCCESS)
-        {
+        if (SetEntriesInAclA(1, &denyAccess, NULL, &newAcl) != ERROR_SUCCESS) {
             return false;
         }
 
@@ -108,14 +107,12 @@ struct CmagOsTest : ::testing::Test {
 #endif
     }
 
-    static bool restorePermissions([[maybe_unused]] const fs::path& file)
-    {
+    static bool restorePermissions([[maybe_unused]] const fs::path &file) {
 #ifdef _WIN32
         // Get the current ACL
         std::string filePath = file.string();
         PSECURITY_DESCRIPTOR securityDescriptor = NULL;
-        if (GetNamedSecurityInfo(filePath.data(), SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL, NULL, NULL, &securityDescriptor) != ERROR_SUCCESS)
-        {
+        if (GetNamedSecurityInfo(filePath.data(), SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL, NULL, NULL, &securityDescriptor) != ERROR_SUCCESS) {
             return false;
         }
         PACL currentAcl = NULL;
@@ -134,28 +131,24 @@ struct CmagOsTest : ::testing::Test {
         // Initialize a new ACL
         std::unique_ptr<char[]> newAclMemory = std::make_unique<char[]>(currentAcl->AclSize);
         PACL newAcl = reinterpret_cast<PACL>(newAclMemory.get());
-        if (InitializeAcl(newAcl, currentAcl->AclSize, ACL_REVISION) == 0)
-        {
+        if (InitializeAcl(newAcl, currentAcl->AclSize, ACL_REVISION) == 0) {
             return false;
         }
 
         // Add entries from old ACL to new ACL, but skip 'deny' rules.
-        for (DWORD i = 0; i < currentAcl->AceCount; i++)
-        {
-            ACCESS_ALLOWED_ACE* ace = NULL;
-            if (GetAce(currentAcl, i, (LPVOID*)&ace) == 0)
-            {
+        for (DWORD i = 0; i < currentAcl->AceCount; i++) {
+            ACCESS_ALLOWED_ACE *ace = NULL;
+            if (GetAce(currentAcl, i, (LPVOID *)&ace) == 0) {
                 EXPECT_TRUE(false);
                 continue;
             }
-            if (ace->Header.AceType == ACCESS_DENIED_ACE_TYPE)
-            {
+            if (ace->Header.AceType == ACCESS_DENIED_ACE_TYPE) {
                 continue;
             }
 
             EXPECT_NE(0, AddAce(newAcl, ACL_REVISION, 0, ace, ace->Header.AceSize));
         }
-        
+
         // Set the new DACL in the security descriptor.
         const bool result = SetNamedSecurityInfoA(filePath.data(), SE_FILE_OBJECT, DACL_SECURITY_INFORMATION, NULL, NULL, newAcl, NULL) == ERROR_SUCCESS;
         return result;

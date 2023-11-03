@@ -4,40 +4,35 @@
 #include <Windows.h>
 #include <sstream>
 
-#define RETURN_ERROR(expr)                \
-    do {                                  \
+#define RETURN_ERROR(expr)                      \
+    do {                                        \
         const SubprocessResult r = (expr);      \
         if ((r) != SubprocessResult::Success) { \
-            return r;   \
-        }                                 \
+            return r;                           \
+        }                                       \
     } while (false)
 
-static SubprocessResult prepareArgsForCreateProcess(const std::vector<std::string>& args, std::string &outAppName, std::string &outCmdline)
-{
+static SubprocessResult prepareArgsForCreateProcess(const std::vector<std::string> &args, std::string &outAppName, std::string &outCmdline) {
     // Get application name
     FATAL_ERROR_IF(args.empty());
     char applicationName[4096];
-    if (::SearchPathA(NULL, args[0].c_str(), ".exe", sizeof(applicationName), applicationName, NULL) == 0)
-    {
+    if (::SearchPathA(NULL, args[0].c_str(), ".exe", sizeof(applicationName), applicationName, NULL) == 0) {
         return SubprocessResult::PathResolvingFailed;
     }
 
     // Prepare arguments
     std::ostringstream fullCommandLineStream = {};
-    for (const std::string& arg : args)
-    {
+    for (const std::string &arg : args) {
         fullCommandLineStream << "\"" << arg << "\" ";
     }
-    
+
     outAppName = applicationName;
     outCmdline = fullCommandLineStream.str();
     return SubprocessResult::Success;
 }
 
-static SubprocessResult waitForResult(PROCESS_INFORMATION &processInfo)
-{
-    if (::WaitForSingleObject(processInfo.hProcess, INFINITE) != WAIT_OBJECT_0)
-    {
+static SubprocessResult waitForResult(PROCESS_INFORMATION &processInfo) {
+    if (::WaitForSingleObject(processInfo.hProcess, INFINITE) != WAIT_OBJECT_0) {
         ::CloseHandle(processInfo.hProcess);
         ::CloseHandle(processInfo.hThread);
         return SubprocessResult::ProcessKilled;
@@ -49,24 +44,19 @@ static SubprocessResult waitForResult(PROCESS_INFORMATION &processInfo)
     return exitCode == 0 ? SubprocessResult::Success : SubprocessResult::ProcessFailed;
 }
 
-static SubprocessResult createPipeForStd(STARTUPINFO& startupInfo, bool isStderr, HANDLE& readHandle, HANDLE& writeHandle)
-{
+static SubprocessResult createPipeForStd(STARTUPINFO &startupInfo, bool isStderr, HANDLE &readHandle, HANDLE &writeHandle) {
     SECURITY_ATTRIBUTES saAttr;
     saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
     saAttr.bInheritHandle = TRUE;
     saAttr.lpSecurityDescriptor = NULL;
 
-    if (CreatePipe(&readHandle, &writeHandle, &saAttr, 0) == 0)
-    {
+    if (CreatePipe(&readHandle, &writeHandle, &saAttr, 0) == 0) {
         return SubprocessResult::CreationFailed;
     }
 
-    if (isStderr)
-    {
+    if (isStderr) {
         startupInfo.hStdError = writeHandle;
-    }
-    else
-    {
+    } else {
         startupInfo.hStdOutput = writeHandle;
     }
     startupInfo.dwFlags |= STARTF_USESTDHANDLES;
@@ -74,14 +64,11 @@ static SubprocessResult createPipeForStd(STARTUPINFO& startupInfo, bool isStderr
     return SubprocessResult::Success;
 }
 
-void readPipeForStd(HANDLE readHandle, std::string &outContent)
-{
+void readPipeForStd(HANDLE readHandle, std::string &outContent) {
     CHAR buffer[4096];
     DWORD bytesRead;
-    while (true)
-    {
-        if (!ReadFile(readHandle, buffer, sizeof(buffer), &bytesRead, NULL) || bytesRead == 0)
-        {
+    while (true) {
+        if (!ReadFile(readHandle, buffer, sizeof(buffer), &bytesRead, NULL) || bytesRead == 0) {
             int a = GetLastError();
             break;
         }
@@ -89,7 +76,7 @@ void readPipeForStd(HANDLE readHandle, std::string &outContent)
     }
 }
 
-SubprocessResult runSubprocess(const std::vector<std::string>& args) {
+SubprocessResult runSubprocess(const std::vector<std::string> &args) {
     std::string appName;
     std::string cmdLine;
     RETURN_ERROR(prepareArgsForCreateProcess(args, appName, cmdLine));
@@ -117,10 +104,7 @@ SubprocessResult runSubprocess(const std::vector<std::string>& args) {
     return waitForResult(processInfo);
 }
 
-
-
-SubprocessResult runSubprocess(const std::vector<std::string>& args, std::string& stdOut, std::string& stdErr)
-{
+SubprocessResult runSubprocess(const std::vector<std::string> &args, std::string &stdOut, std::string &stdErr) {
     std::string appName;
     std::string cmdLine;
     RETURN_ERROR(prepareArgsForCreateProcess(args, appName, cmdLine));
@@ -149,8 +133,7 @@ SubprocessResult runSubprocess(const std::vector<std::string>& args, std::string
         &processInfo);
     ::CloseHandle(pipeStdoutWrite);
     ::CloseHandle(pipeStderrWrite);
-    if (success == FALSE)
-    {
+    if (success == FALSE) {
         ::CloseHandle(pipeStdoutRead);
         ::CloseHandle(pipeStderrRead);
         return SubprocessResult::CreationFailed;
