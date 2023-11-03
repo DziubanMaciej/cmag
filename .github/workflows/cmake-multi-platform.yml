@@ -38,12 +38,11 @@ jobs:
 
     steps:
     - name: Install graphviz
-      if: matrix.os == 'ubuntu-latest'
-      run: sudo apt-get install -y graphviz
+      uses: ts-graphviz/setup-graphviz@v1
+
 
     - name: Install ninja
-      if: matrix.os == 'ubuntu-latest'
-      run: sudo apt-get install -y ninja-build
+      uses: seanmiddleditch/gha-setup-ninja@master
 
     - name: Checkout repository
       uses: actions/checkout@v3

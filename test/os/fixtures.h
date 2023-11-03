@@ -3,8 +3,11 @@
 #include "cmag_lib/utils/filesystem.h"
 
 #include <gtest/gtest.h>
+
+#if _WIN32
 #include <aclapi.h>
 #include <Windows.h>
+#endif
 
 const static inline fs::path srcProjectsRoot = fs::path{SRC_PROJECTS_ROOT};
 const static inline fs::path dstProjectsRoot = fs::path{DST_PROJECTS_ROOT};
