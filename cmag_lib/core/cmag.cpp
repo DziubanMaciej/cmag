@@ -153,10 +153,7 @@ CmagResult Cmag::generateGraphPositionsForProject(const fs::path &buildPath, con
     // Assign values to project
     {
         for (const XdotData::Target &target : xdotData.targets) {
-            if (!project.addTargetGraphical(target.name, target.x, target.y)) {
-                LOG_ERROR("failed to add graphical data for target ", target.name);
-                return CmagResult::ProjectCreationError;
-            }
+            project.addTargetGraphical(target.name, target.x, target.y);
         }
     }
 

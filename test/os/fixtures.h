@@ -8,10 +8,12 @@ const static inline fs::path srcProjectsRoot = fs::path{SRC_PROJECTS_ROOT};
 const static inline fs::path dstProjectsRoot = fs::path{DST_PROJECTS_ROOT};
 
 struct CmagOsTest : ::testing::Test {
+    // TODO rename ProjectInfo -> TestWorkspace
     struct ProjectInfo {
         bool valid = false;
         fs::path sourcePath;
         fs::path buildPath;
+        fs::path graphvizPath;
     };
 
     void TearDown() override {
@@ -43,6 +45,7 @@ struct CmagOsTest : ::testing::Test {
         project.valid = !::testing::Test::HasFailure();
         project.sourcePath = dstProjectDir;
         project.buildPath = dstProjectDir / "build";
+        project.graphvizPath = dstProjectDir / "build" / "a.dot";
         projects.push_back(project);
         return project;
     }
@@ -76,4 +79,14 @@ struct CmagOsTest : ::testing::Test {
 
 private:
     std::vector<ProjectInfo> projects = {};
+};
+
+struct RaiiStdoutCapture {
+    RaiiStdoutCapture() {
+        testing::internal::CaptureStdout();
+    }
+
+    ~RaiiStdoutCapture() {
+        testing::internal::GetCapturedStdout();
+    }
 };

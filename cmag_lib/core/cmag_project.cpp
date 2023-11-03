@@ -2,18 +2,17 @@
 
 #include <algorithm>
 
-bool CmagProject::addTargetGraphical(std::string_view targetName, float x, float y) {
+void CmagProject::addTargetGraphical(std::string_view targetName, float x, float y) {
     auto targetIt = std::find_if(targets.begin(), targets.end(), [targetName](const CmagTarget &target) {
         return target.name == targetName;
     });
     if (targetIt == targets.end()) {
-        return false;
+        return;
     }
 
     CmagTargetGraphicalData &graphical = targetIt->graphical;
     graphical.x = x;
     graphical.y = y;
-    return true;
 }
 
 bool CmagProject::addTarget(CmagTarget &&newTarget) {

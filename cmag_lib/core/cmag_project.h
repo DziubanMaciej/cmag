@@ -59,7 +59,7 @@ class CmagProject {
 public:
     CmagProject() = default;
 
-    bool addTargetGraphical(std::string_view targetName, float x, float y);
+    void addTargetGraphical(std::string_view targetName, float x, float y);
     bool addTarget(CmagTarget &&newTarget);
 
     const auto &getConfigs() const { return configs; }
