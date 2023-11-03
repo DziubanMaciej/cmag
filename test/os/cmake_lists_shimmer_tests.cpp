@@ -58,10 +58,12 @@ TEST_F(CMakeListsShimmerTests, givenCMakeListsIsDirectoryWhenShimmngThenReturnEr
 
 TEST_F(CMakeListsShimmerTests, givenNoPermissionsToCMakeListsWhenShimmngThenReturnError) {
     const fs::path cmakeLists = project.sourcePath / "CMakeLists.txt";
-    clearPermissions(cmakeLists);
+    ASSERT_TRUE(clearPermissions(cmakeLists));
 
     CMakeListsShimmer shimmer{project.sourcePath};
     EXPECT_EQ(ShimResult::NoPermission, shimmer.shim());
+
+    ASSERT_TRUE(restorePermissions(cmakeLists));
 }
 
 TEST_F(CMakeListsShimmerTests, givenAlreadyShimmedWhenShimmngThenUseDifferentName) {

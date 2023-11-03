@@ -202,7 +202,7 @@ TEST(ArgumentParserTest, givenExtraArgsWhenConstructingArgsForCMakeThenReturnApp
         "-B",
         "bbb",
         "--graphviz",
-        fs::path("bbb/graph.dot"),
+        (fs::path("bbb") / "graph.dot").string(),
     };
     compareArgs(expectedArgs, cmakeArgs);
 }

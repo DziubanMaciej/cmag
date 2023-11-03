@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.10.0)
 project(WithSubdirs)
+set(CMAKE_SUPPRESS_REGENERATION true)
 file(WRITE file.cpp "int main()")
 
 add_executable(Executable file.cpp)
