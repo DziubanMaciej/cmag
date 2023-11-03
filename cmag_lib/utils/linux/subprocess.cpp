@@ -35,7 +35,7 @@ static SubprocessResult waitForResult(int pid) {
 std::vector<char *> prepareArgsForExecvp(const std::vector<std::string> &args) {
     std::vector<char *> argv = {};
     argv.reserve(args.size() + 1);
-    for (const std::string &arg: args) {
+    for (const std::string &arg : args) {
         // we can mess with const correctness, since we're calling exec anyway.
         argv.push_back(const_cast<char *>(arg.c_str()));
     }
