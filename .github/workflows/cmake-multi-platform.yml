@@ -42,7 +42,7 @@ jobs:
 
 
     - name: Install ninja
-      uses: seanmiddleditch/gha-setup-ninja@master
+      uses: ashutoshvarma/setup-ninja@master
 
     - name: Checkout repository
       uses: actions/checkout@v3
