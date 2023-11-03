@@ -108,7 +108,7 @@ struct CmagOsTest : ::testing::Test {
 #endif
     }
 
-    static bool restorePermissions(const fs::path& file)
+    static bool restorePermissions([[maybe_unused]] const fs::path& file)
     {
 #ifdef _WIN32
         // Get the current ACL
