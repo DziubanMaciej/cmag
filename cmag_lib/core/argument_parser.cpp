@@ -1,6 +1,7 @@
 #include "argument_parser.h"
 
 #include <cstring>
+#include "cmag_lib/utils/error.h"
 
 static const char *keyValueArgs[] = {
     "-G",
@@ -104,13 +105,18 @@ ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(a
 }
 
 const char *ArgumentParser::parseKeyValueArgument(std::string_view prefix, int &argIndex, std::string_view currentArg, const char *nextArg) {
+    FATAL_ERROR_IF(prefix[0] != '-', "Prefix must start with a dash")
+    const bool isLongArgName = prefix[1] == '-';
+    FATAL_ERROR_IF(isLongArgName && prefix[2] == '-', "Prefix cannot have three dashes")
+
+    // Early return if our prefix doesn't match
     if (currentArg.find(prefix) != 0) {
         return nullptr;
     }
 
-    const char nextChar = currentArg.data()[prefix.length()];
+    // Check for two args form, e.g. "cmake -S sourceDir"
+    const char nextChar = currentArg[prefix.length()];
     if (nextChar == '\0') {
-        // Two args form, value is in next arg
         if (nextArg != nullptr) {
             argIndex++;
             return nextArg;
@@ -120,6 +126,7 @@ const char *ArgumentParser::parseKeyValueArgument(std::string_view prefix, int &
         }
     }
 
+    // Check for one arg form with equal sign, e.g. "cmake -S=sourceDir"
     if (nextChar == '=') {
         // Equal sign form, value is in current arg, after the equals sign
         if (currentArg.length() > prefix.length() + 1) {
@@ -128,6 +135,11 @@ const char *ArgumentParser::parseKeyValueArgument(std::string_view prefix, int &
             valid = false;
             return nullptr;
         }
+    }
+
+    // Check for one arg form without equal sign, e.g. "cmake -SsourceDir"
+    if (!isLongArgName) {
+        return currentArg.substr(prefix.length()).data();
     }
 
     return nullptr;

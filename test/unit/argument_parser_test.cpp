@@ -39,6 +39,22 @@ TEST(ArgumentParserTest, givenExplicitSourcePathArgumentThenSourcePathIsValid) {
     EXPECT_STREQ("..", parser.getSourcePath().string().c_str());
 }
 
+TEST(ArgumentParserTest, givenKeyValueArgumentWithEqualSignThenParseCorrectly) {
+    const char *argv[] = {"cmag", "cmake", "-S=.."};
+    const int argc = sizeof(argv) / sizeof(argv[0]);
+    ArgumentParser parser{argc, argv};
+    EXPECT_TRUE(parser.isValid());
+    EXPECT_STREQ("..", parser.getSourcePath().string().c_str());
+}
+
+TEST(ArgumentParserTest, givenKeyValueArgumentWithoutEqualSignThenParseCorrectly) {
+    const char *argv[] = {"cmag", "cmake", "-S.."};
+    const int argc = sizeof(argv) / sizeof(argv[0]);
+    ArgumentParser parser{argc, argv};
+    EXPECT_TRUE(parser.isValid());
+    EXPECT_STREQ("..", parser.getSourcePath().string().c_str());
+}
+
 TEST(ArgumentParserTest, givenNoBuildPathArgumentThenBuildPathDefaultsToCurrentDirectory) {
     const char *argv[] = {"cmag", "cmake", ".."};
     const int argc = sizeof(argv) / sizeof(argv[0]);
