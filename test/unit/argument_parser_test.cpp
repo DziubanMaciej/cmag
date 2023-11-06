@@ -275,3 +275,20 @@ TEST(ArgumentParserTest, givenUnknownCmagArgThenReturnError) {
     ArgumentParser parser{argc, argv};
     EXPECT_FALSE(parser.isValid());
 }
+
+TEST(ArgumentParserTest, givenEmptyArgsToCmakeThenIgnoreThem) {
+    const char *argv[] = {"cmag", "cmake", "", "-S", "source", "", "-B", "build", ""};
+    const int argc = sizeof(argv) / sizeof(argv[0]);
+    ArgumentParser parser{argc, argv};
+    EXPECT_TRUE(parser.isValid());
+    EXPECT_STREQ("source", parser.getSourcePath().string().c_str());
+    EXPECT_STREQ("build", parser.getBuildPath().string().c_str());
+}
+
+TEST(ArgumentParserTest, givenEmptyArgsToCmagThenIgnoreThem) {
+    const char *argv[] = {"cmag", "", "-p", "", "cmake", ".."};
+    const int argc = sizeof(argv) / sizeof(argv[0]);
+    ArgumentParser parser{argc, argv};
+    EXPECT_TRUE(parser.isValid());
+    EXPECT_STREQ("..", parser.getSourcePath().string().c_str());
+}

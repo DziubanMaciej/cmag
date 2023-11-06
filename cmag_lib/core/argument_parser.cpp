@@ -1,7 +1,8 @@
 #include "argument_parser.h"
 
-#include <cstring>
 #include "cmag_lib/utils/error.h"
+
+#include <cstring>
 
 static const char *keyValueArgs[] = {
     "-G",
@@ -24,6 +25,11 @@ ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(a
     for (; argIndex < argc; argIndex++) {
         const std::string arg = argv[argIndex];
         const char *nextArg = (argIndex + 1) < argc ? argv[argIndex + 1] : nullptr;
+
+        // Ignore empty args
+        if (arg.empty()) {
+            continue;
+        }
 
         // Check for end of Cmag args
         if (arg[0] != '-') {
@@ -59,6 +65,11 @@ ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(a
         std::string arg = argv[argIndex];
         const char *nextArg = (argIndex + 1) < argc ? argv[argIndex + 1] : nullptr;
 
+        // Ignore empty args
+        if (arg.empty()) {
+            continue;
+        }
+
         // Handle arguments that we care about
         if (const char *value = parseKeyValueArgument("-S", argIndex, arg, nextArg); value) {
             sourcePath = value;
@@ -78,7 +89,8 @@ ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(a
             }
         }
 
-        // Skip rest of CMake options. This cover both valueless options like "-Wdev" and key-value options with equal sign form, like "-S=.."
+        // Skip rest of CMake options. This cover both valueless options like "-Wdev" and key-value options in
+        // single arg form, like "-S=.." or "-S.."
         if (arg[0] == '-') {
             continue;
         }
@@ -104,7 +116,8 @@ ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(a
     }
 }
 
-const char *ArgumentParser::parseKeyValueArgument(std::string_view prefix, int &argIndex, std::string_view currentArg, const char *nextArg) {
+const char *ArgumentParser::parseKeyValueArgument(std::string_view prefix, int &argIndex, std::string_view currentArg,
+                                                  const char *nextArg) {
     FATAL_ERROR_IF(prefix[0] != '-', "Prefix must start with a dash")
     const bool isLongArgName = prefix[1] == '-';
     FATAL_ERROR_IF(isLongArgName && prefix[2] == '-', "Prefix cannot have three dashes")
@@ -144,6 +157,7 @@ const char *ArgumentParser::parseKeyValueArgument(std::string_view prefix, int &
 
     return nullptr;
 }
+
 std::vector<std::string> ArgumentParser::constructArgsForCmake() const {
     std::vector<std::string> result = {};
     result.reserve(argc - 1 + extraArgs.size());
