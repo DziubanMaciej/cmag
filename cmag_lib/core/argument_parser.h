@@ -18,8 +18,8 @@ public:
     const auto &getBuildPath() const { return buildPath; }
     const auto &getGraphvizPath() const { return graphvizPath; }
 
-    void printHelp() {}                                     // TODO
     std::vector<std::string> constructArgsForCmake() const; // TODO move this out of this class
+    void printHelp();
 
 private:
     const char *parseKeyValueArgument(std::string_view prefix, int &argIndex, std::string_view currentArg, const char *nextArg);

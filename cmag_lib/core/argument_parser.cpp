@@ -169,3 +169,28 @@ std::vector<std::string> ArgumentParser::constructArgsForCmake() const {
     }
     return result;
 }
+
+void ArgumentParser::printHelp() {
+    const char *message = R"DELIMETER(Usage
+
+    cmag [cmag_args] <cmake_command> <cmake_args>
+
+Prepend name of cmag binary to CMake command to generate .cmag-project file. Cmag parses the
+command line arguments to figure out values passed to CMake, like source directory or build
+directory. All arguments are then passed verbatim to CMake. Output .cmag-project file will reside
+in CMake's build directory.
+
+Cmag supports a number of additional arguments, all of which must be specified before the CMake command.
+    -p    name of the project. Used in filename before .cmag-project extension. Default is "project".
+    -e    extra properties. By default Cmag dumps a predefined list of CMake properties. The user can extend this list
+          by additional properties. Multiple properties are delimited by a semicolon.
+
+Examples:
+    cmag cmake ..
+    cmag /usr/bin/cmake ..
+    cmag -p main_project cmake -S=. -B=build
+    cmag -e "OUTPUT_NAME;LINK_FLAGS" cmake ..
+
+)DELIMETER";
+    printf("%s", message);
+}

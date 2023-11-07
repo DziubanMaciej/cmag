@@ -13,17 +13,19 @@
 int main(int argc, const char **argv) {
     // Parse arguments
     ArgumentParser argParser{argc, argv};
+    const fs::path &sourcePath = argParser.getSourcePath();
     if (!argParser.isValid()) {
-        printf("<help message>\n");
+        argParser.printHelp();
         return 1;
     }
-    const fs::path &sourcePath = argParser.getSourcePath();
     if (sourcePath.empty()) {
-        LOG_ERROR("empty source dir.");
+        LOG_ERROR("empty source dir.\n");
+        argParser.printHelp();
         return 1;
     }
     if (!fs::is_directory(sourcePath)) {
-        LOG_ERROR("not a valid source dir.");
+        LOG_ERROR("not a valid source dir.\n");
+        argParser.printHelp();
         return 1;
     }
 
