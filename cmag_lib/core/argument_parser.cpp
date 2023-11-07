@@ -49,6 +49,10 @@ ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(a
             extraTargetProperties += value;
             validArg = true;
         }
+        if (arg == "-d") {
+            jsonDebug = true;
+            validArg = true;
+        }
 
         // Check validity of current arg
         if (!validArg) {
@@ -184,6 +188,7 @@ Cmag supports a number of additional arguments, all of which must be specified b
     -p    name of the project. Used in filename before .cmag-project extension. Default is "project".
     -e    extra properties. By default Cmag dumps a predefined list of CMake properties. The user can extend this list
           by additional properties. Multiple properties are delimited by a semicolon.
+    -d    json debug. Dump json files before generator expression evaluation. Useful for cmag development.
 
 Examples:
     cmag cmake ..

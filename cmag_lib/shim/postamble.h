@@ -272,5 +272,11 @@ message(STATUS "cmag: generating file ${TARGETS_LIST_FILE}")
 message(STATUS "cmag: generating file ${GLOBALS_FILE}")
 message(STATUS "cmag: generating file ${TARGETS_LIST_FILE}")
 
+if (CMAG_JSON_DEBUG)
+    set(TARGETS_LIST_DEBUG_FILE "${TARGETS_LIST_FILE}.debug")
+    message(STATUS "cmag: writing debug file ${TARGETS_LIST_DEBUG_FILE}")
+    file(WRITE "${TARGETS_LIST_DEBUG_FILE}" "${TARGETS_JSON}")
+endif()
+
 # -----------------------------CMAG POSTAMBLE END---------------------------------------------
 )DELIMETER";

@@ -79,7 +79,7 @@ TEST_P(CmagTest, givenSimpleProjectWithCustomPropertiesThenProcessItCorrectly) {
     {
         RaiiStdoutCapture capture{};
         ASSERT_EQ(CmagResult::Success, cmag.generateCmake(workspace.sourcePath, constructCmakeArgs(workspace),
-                                                          "MY_CUSTOM_PROP1;MY_CUSTOM_PROP2"));
+                                                          "MY_CUSTOM_PROP1;MY_CUSTOM_PROP2", false));
         ASSERT_EQ(CmagResult::Success, cmag.readCmagProjectFromGeneration(workspace.buildPath));
     }
 
@@ -103,7 +103,7 @@ TEST_P(CmagTest, givenProjectWrittenToFileThenItCanBeParsedBack) {
     {
         RaiiStdoutCapture capture{};
         ASSERT_EQ(CmagResult::Success, cmag.generateCmake(workspace.sourcePath, constructCmakeArgs(workspace),
-                                                          "MY_CUSTOM_PROP1;MY_CUSTOM_PROP2"));
+                                                          "MY_CUSTOM_PROP1;MY_CUSTOM_PROP2", false));
         ASSERT_EQ(CmagResult::Success, cmag.readCmagProjectFromGeneration(workspace.buildPath));
         ASSERT_EQ(CmagResult::Success, cmag.writeProjectToFile(workspace.buildPath));
     }
@@ -133,7 +133,7 @@ TEST_P(CmagTest, givenProjectWithAllTargetTypesThenAllTargetsAreDetectedCorrectl
     {
         RaiiStdoutCapture capture{};
         ASSERT_EQ(CmagResult::Success, cmag.generateCmake(workspace.sourcePath, constructCmakeArgs(workspace),
-                                                          "MY_CUSTOM_PROP1;MY_CUSTOM_PROP2"));
+                                                          "MY_CUSTOM_PROP1;MY_CUSTOM_PROP2", false));
         ASSERT_EQ(CmagResult::Success, cmag.readCmagProjectFromGeneration(workspace.buildPath));
     }
 
@@ -175,7 +175,7 @@ TEST_P(CmagTest, givenProjectWithTargetsDefinedInSubdirectoriesThenAllTargetAreD
     WhiteboxCmag cmag{"project"};
     {
         RaiiStdoutCapture capture{};
-        ASSERT_EQ(CmagResult::Success, cmag.generateCmake(workspace.sourcePath, constructCmakeArgs(workspace), ""));
+        ASSERT_EQ(CmagResult::Success, cmag.generateCmake(workspace.sourcePath, constructCmakeArgs(workspace), "", false));
         ASSERT_EQ(CmagResult::Success, cmag.readCmagProjectFromGeneration(workspace.buildPath));
     }
 
@@ -242,7 +242,7 @@ TEST_P(CmagTest, givenGeneratorExpressionsInPropertiesThenResolveThemToActualVal
     {
         RaiiStdoutCapture capture{};
         ASSERT_EQ(CmagResult::Success,
-                  cmag.generateCmake(workspace.sourcePath, constructCmakeArgs(workspace), "CUSTOM_PROP"));
+                  cmag.generateCmake(workspace.sourcePath, constructCmakeArgs(workspace), "CUSTOM_PROP", false));
         ASSERT_EQ(CmagResult::Success, cmag.readCmagProjectFromGeneration(workspace.buildPath));
     }
 
@@ -276,7 +276,7 @@ TEST_P(CmagTest, whenGeneratingPositionsForGraphThenPositionsAreNonZero) {
     WhiteboxCmag cmag{"project"};
     {
         RaiiStdoutCapture capture{};
-        ASSERT_EQ(CmagResult::Success, cmag.generateCmake(workspace.sourcePath, constructCmakeArgs(workspace), ""));
+        ASSERT_EQ(CmagResult::Success, cmag.generateCmake(workspace.sourcePath, constructCmakeArgs(workspace), "", false));
         ASSERT_EQ(CmagResult::Success, cmag.readCmagProjectFromGeneration(workspace.buildPath));
         ASSERT_EQ(CmagResult::Success,
                   cmag.generateGraphPositionsForProject(workspace.buildPath, workspace.graphvizPath));
@@ -301,7 +301,7 @@ TEST_P(CmagTest, givenMultiConfigGeneratorCustomConfigNamesSpecifiedThenProcessT
         RaiiStdoutCapture capture{};
         auto cmakeArgs = constructCmakeArgs(workspace);
         cmakeArgs.emplace_back("-DCMAKE_CONFIGURATION_TYPES=Elmo;CookieMonster");
-        ASSERT_EQ(CmagResult::Success, cmag.generateCmake(workspace.sourcePath, cmakeArgs, ""));
+        ASSERT_EQ(CmagResult::Success, cmag.generateCmake(workspace.sourcePath, cmakeArgs, "", false));
         ASSERT_EQ(CmagResult::Success, cmag.readCmagProjectFromGeneration(workspace.buildPath));
     }
 
@@ -335,7 +335,7 @@ TEST_P(CmagTest, givenSingleConfigGeneratorCustomConfigNameSpecifiedThenProcessI
         auto cmakeArgs = constructCmakeArgs(workspace);
         cmakeArgs.emplace_back("-DCMAKE_BUILD_TYPE=Elmo");
 
-        ASSERT_EQ(CmagResult::Success, cmag.generateCmake(workspace.sourcePath, cmakeArgs, ""));
+        ASSERT_EQ(CmagResult::Success, cmag.generateCmake(workspace.sourcePath, cmakeArgs, "", false));
         ASSERT_EQ(CmagResult::Success, cmag.readCmagProjectFromGeneration(workspace.buildPath));
     }
 

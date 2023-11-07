@@ -285,10 +285,19 @@ TEST(ArgumentParserTest, givenEmptyArgsToCmakeThenIgnoreThem) {
     EXPECT_STREQ("build", parser.getBuildPath().string().c_str());
 }
 
-TEST(ArgumentParserTest, givenEmptyArgsToCmagThenIgnoreThem) {
-    const char *argv[] = {"cmag", "", "-p", "", "cmake", ".."};
+TEST(ArgumentParserTest, givenNoJsonDebugArgThenParseCorrectly) {
+    const char *argv[] = {"cmag", "cmake", ".."};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     ArgumentParser parser{argc, argv};
     EXPECT_TRUE(parser.isValid());
-    EXPECT_STREQ("..", parser.getSourcePath().string().c_str());
+    EXPECT_FALSE(parser.getJsonDebug());
+}
+
+
+TEST(ArgumentParserTest, givenJsonDebugArgThenParseCorrectly) {
+    const char *argv[] = {"cmag", "-d", "cmake", ".."};
+    const int argc = sizeof(argv) / sizeof(argv[0]);
+    ArgumentParser parser{argc, argv};
+    EXPECT_TRUE(parser.isValid());
+    EXPECT_TRUE(parser.getJsonDebug());
 }

@@ -13,6 +13,7 @@ public:
 
     const auto &getProjectName() const { return projectName; }
     const auto &getExtraTargetProperties() const { return extraTargetProperties; }
+    auto getJsonDebug() const { return jsonDebug; }
 
     const auto &getSourcePath() const { return sourcePath; }
     const auto &getBuildPath() const { return buildPath; }
@@ -34,6 +35,7 @@ private:
     // Cmag args
     std::string projectName = {};
     std::string extraTargetProperties = {};
+    bool jsonDebug = false;
 
     // Cmake args
     fs::path sourcePath = {};

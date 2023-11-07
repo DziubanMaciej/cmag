@@ -18,7 +18,7 @@ class Cmag {
 public:
     Cmag(std::string_view projectName) : projectName(projectName) {}
 
-    CmagResult generateCmake(const fs::path &sourcePath, std::vector<std::string> cmakeArgs, std::string_view extraTargetProperties);
+    CmagResult generateCmake(const fs::path &sourcePath, std::vector<std::string> cmakeArgs, std::string_view extraTargetProperties, bool jsonDebug);
     CmagResult readCmagProjectFromGeneration(const fs::path &buildPath);
     CmagResult readCmagProjectFromMerge() { return CmagResult::Success; } // TODO implement
     CmagResult generateGraphPositionsForProject(const fs::path &buildPath, const fs::path &graphvizPath);
