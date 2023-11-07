@@ -21,17 +21,22 @@ function(json_append_line_comma OUT_VARIABLE LINE INDENT IS_LAST)
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
 endfunction()
 
-macro(json_append_key_value OUT_VARIABLE KEY VALUE INDENT IS_LAST)
+function(json_append_key_value OUT_VARIABLE KEY VALUE INDENT IS_LAST)
     json_append_key_value_unquoted(${OUT_VARIABLE} ${KEY} "\"${VALUE}\"" ${INDENT} ${IS_LAST})
-endmacro()
 
-macro(json_append_key_value_unquoted OUT_VARIABLE KEY VALUE INDENT IS_LAST)
+    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
+endfunction()
+
+function(json_append_key_value_unquoted OUT_VARIABLE KEY VALUE INDENT IS_LAST)
     set(LINE "\"${KEY}\": ${VALUE}")
     if(NOT ${IS_LAST})
         set(LINE "${LINE},")
     endif()
+
     json_append_line(${OUT_VARIABLE} ${LINE} ${INDENT})
-endmacro()
+
+    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
+endfunction()
 
 
 
@@ -54,6 +59,10 @@ macro(json_append_target_named_property OUT_VARIABLE TGT NAME PROPERTY INDENT IS
         # $<LINK_ONLY> in the former, and remove them from the latter.
         set(VALUE "$<TARGET_GENEX_EVAL:${TGT},${VALUE}>")
     endif()
+
+    # Escape quotes in property values
+    set(VALUE "$<LIST:TRANSFORM,${VALUE},REPLACE,\",\\\\\\\\\">")
+
     json_append_key_value(${OUT_VARIABLE} "${NAME}" "${VALUE}" ${INDENT} ${IS_LAST})
 endmacro()
 

@@ -253,7 +253,7 @@ TEST_P(CmagTest, givenGeneratorExpressionsInPropertiesThenResolveThemToActualVal
         const bool isDebug = config.name == "Debug";
         const char *letter = isDebug ? "D" : "R";
         const char *letterPath = isDebug ? "/D" : "/R";
-        const char *letterDef = isDebug ? "VALUE=D" : "VALUE=R";
+        const char *letterDef = isDebug ? "VALUE=\"D\"" : "VALUE=\"R\"";
 
         verifyProperty(config, "LINK_DIRECTORIES", letterPath);
         verifyProperty(config, "LINK_LIBRARIES", letter);
