@@ -28,6 +28,7 @@ private:
     static XdotParseResult skipToString(std::string_view &xdot, std::string_view expectedString);
     static XdotParseResult expectNumber(std::string_view &xdot);
     static XdotParseResult readNextNonWhitespace(std::string_view &xdot, char &outChar);
-    static XdotParseResult readStringAlphabetic(std::string_view &xdot, std::string &outString);
+    static XdotParseResult readOptionalChar(std::string_view &xdot, char optionalChar);
+    static XdotParseResult readTargetName(std::string_view &xdot, std::string &outString);
     static XdotParseResult readStringFloatingPoint(std::string_view &xdot, float &outFloat);
 };

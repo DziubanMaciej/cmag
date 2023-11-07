@@ -293,7 +293,6 @@ TEST(ArgumentParserTest, givenNoJsonDebugArgThenParseCorrectly) {
     EXPECT_FALSE(parser.getJsonDebug());
 }
 
-
 TEST(ArgumentParserTest, givenJsonDebugArgThenParseCorrectly) {
     const char *argv[] = {"cmag", "-d", "cmake", ".."};
     const int argc = sizeof(argv) / sizeof(argv[0]);

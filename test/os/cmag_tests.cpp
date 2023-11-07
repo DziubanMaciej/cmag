@@ -124,7 +124,7 @@ TEST_P(CmagTest, givenProjectWrittenToFileThenItCanBeParsedBack) {
     }
 }
 
-TEST_P(CmagTest, givenProjectWithAllTargetTypesThenAllTargetsAreDetectedCorrectly) {
+TEST_P(CmagTest, givenProjectWithAllTargetTypesThenAllTargetsAreDetectedCorrectlyAndGraphPositionsAreParsed) {
     ProjectInfo workspace = prepareProject("all_types");
     ASSERT_TRUE(workspace.valid);
 
@@ -135,36 +135,49 @@ TEST_P(CmagTest, givenProjectWithAllTargetTypesThenAllTargetsAreDetectedCorrectl
         ASSERT_EQ(CmagResult::Success, cmag.generateCmake(workspace.sourcePath, constructCmakeArgs(workspace),
                                                           "MY_CUSTOM_PROP1;MY_CUSTOM_PROP2", false));
         ASSERT_EQ(CmagResult::Success, cmag.readCmagProjectFromGeneration(workspace.buildPath));
+        ASSERT_EQ(CmagResult::Success, cmag.generateGraphPositionsForProject(workspace.buildPath, workspace.graphvizPath));
     }
 
     auto targets = getSortedTargets(cmag.project);
     ASSERT_EQ(6u, targets.size());
 
-    EXPECT_STREQ("Executable", targets[0].name.c_str());
+    EXPECT_STREQ("Executable_with_fancy_name_1", targets[0].name.c_str());
     EXPECT_EQ(CmagTargetType::Executable, targets[0].type);
+    EXPECT_NE(0u, targets[0].graphical.x);
+    EXPECT_NE(0u, targets[0].graphical.y);
     verifyPropertyForEachConfig(targets[0], "SOURCES", "file.cpp");
     verifyPropertyForEachConfig(targets[0], "LINK_LIBRARIES", "StaticLib;SharedLib;ObjectLib;InterfaceLib");
 
     EXPECT_STREQ("InterfaceLib", targets[1].name.c_str());
     EXPECT_EQ(CmagTargetType::InterfaceLibrary, targets[1].type);
+    EXPECT_NE(0u, targets[1].graphical.x);
+    EXPECT_NE(0u, targets[1].graphical.y);
     verifyPropertyForEachConfig(targets[1], "SOURCES", "");
     verifyPropertyForEachConfig(targets[1], "INTERFACE_LINK_LIBRARIES", "SharedLib");
 
     EXPECT_STREQ("ModuleLib", targets[2].name.c_str());
     EXPECT_EQ(CmagTargetType::ModuleLibrary, targets[2].type);
+    EXPECT_NE(0u, targets[2].graphical.x);
+    EXPECT_NE(0u, targets[2].graphical.y);
     verifyPropertyForEachConfig(targets[2], "SOURCES", "file.cpp");
 
     EXPECT_STREQ("ObjectLib", targets[3].name.c_str());
     EXPECT_EQ(CmagTargetType::ObjectLibrary, targets[3].type);
+    EXPECT_NE(0u, targets[3].graphical.x);
+    EXPECT_NE(0u, targets[3].graphical.y);
     verifyPropertyForEachConfig(targets[3], "SOURCES", "file.cpp");
 
     EXPECT_STREQ("SharedLib", targets[4].name.c_str());
     EXPECT_EQ(CmagTargetType::SharedLibrary, targets[4].type);
+    EXPECT_NE(0u, targets[4].graphical.x);
+    EXPECT_NE(0u, targets[4].graphical.y);
     verifyPropertyForEachConfig(targets[4], "MANUALLY_ADDED_DEPENDENCIES", "StaticLib");
     verifyPropertyForEachConfig(targets[4], "SOURCES", "file.cpp");
 
     EXPECT_STREQ("StaticLib", targets[5].name.c_str());
     EXPECT_EQ(CmagTargetType::StaticLibrary, targets[5].type);
+    EXPECT_NE(0u, targets[5].graphical.x);
+    EXPECT_NE(0u, targets[5].graphical.y);
     verifyPropertyForEachConfig(targets[5], "SOURCES", "file.cpp");
 }
 
@@ -267,25 +280,6 @@ TEST_P(CmagTest, givenGeneratorExpressionsInPropertiesThenResolveThemToActualVal
 
         verifyProperty(config, "CUSTOM_PROP", "$<IF:$<CONFIG:Debug>,D,R>");
     }
-}
-
-TEST_P(CmagTest, whenGeneratingPositionsForGraphThenPositionsAreNonZero) {
-    ProjectInfo workspace = prepareProject("simple");
-    ASSERT_TRUE(workspace.valid);
-
-    WhiteboxCmag cmag{"project"};
-    {
-        RaiiStdoutCapture capture{};
-        ASSERT_EQ(CmagResult::Success, cmag.generateCmake(workspace.sourcePath, constructCmakeArgs(workspace), "", false));
-        ASSERT_EQ(CmagResult::Success, cmag.readCmagProjectFromGeneration(workspace.buildPath));
-        ASSERT_EQ(CmagResult::Success,
-                  cmag.generateGraphPositionsForProject(workspace.buildPath, workspace.graphvizPath));
-    }
-
-    ASSERT_EQ(1u, cmag.project.getTargets().size());
-    const CmagTarget &target = cmag.project.getTargets()[0];
-    EXPECT_NE(0u, target.graphical.x);
-    EXPECT_NE(0u, target.graphical.y);
 }
 
 TEST_P(CmagTest, givenMultiConfigGeneratorCustomConfigNamesSpecifiedThenProcessThemCorrectly) {

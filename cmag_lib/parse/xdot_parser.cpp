@@ -33,7 +33,8 @@ XdotParseResult XdotParser::parse(std::string_view xdot, XdotData &outData) {
             XdotData::Target target = {};
 
             RETURN_ERROR(skipToString(xdot, "label="));
-            RETURN_ERROR(readStringAlphabetic(xdot, target.name)); // TODO target names can also contain other characters. Better read everything until comma.
+            RETURN_ERROR(readOptionalChar(xdot, '"'));
+            RETURN_ERROR(readTargetName(xdot, target.name));
 
             RETURN_ERROR(skipToString(xdot, "pos=\""));
             RETURN_ERROR(readStringFloatingPoint(xdot, target.x));
@@ -110,13 +111,26 @@ XdotParseResult XdotParser::readNextNonWhitespace(std::string_view &xdot, char &
     return XdotParseResult::Eof;
 }
 
-XdotParseResult XdotParser::readStringAlphabetic(std::string_view &xdot, std::string &outString) {
+XdotParseResult XdotParser::readOptionalChar(std::string_view &xdot, char optionalChar) {
+    const auto inputLen = xdot.length();
+    if (inputLen == 0) {
+        return XdotParseResult::Eof;
+    }
+
+    if (xdot[0] == optionalChar) {
+        xdot.remove_prefix(1);
+    }
+    return XdotParseResult::Success;
+}
+
+XdotParseResult XdotParser::readTargetName(std::string_view &xdot, std::string &outString) {
     const auto inputLen = xdot.length();
 
     size_t charCount = 0;
     for (; charCount < inputLen; charCount++) {
         char nextChar = xdot[charCount];
-        if (!::isalpha(nextChar)) {
+        // See specification of target name in CMake https://cmake.org/cmake/help/latest/policy/CMP0037.html
+        if (!::isalpha(nextChar) && !::isdigit(nextChar) && nextChar != '_' && nextChar != '.' && nextChar != '+' && nextChar != '-') {
             break;
         }
     }
