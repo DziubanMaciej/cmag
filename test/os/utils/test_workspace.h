@@ -1,5 +1,7 @@
 #pragma once
 
+#include "test/os/utils/file_operations.h"
+
 struct TestWorkspace {
     const static inline fs::path srcProjectsRoot = fs::path{SRC_PROJECTS_ROOT};
     const static inline fs::path dstProjectsRoot = fs::path{DST_PROJECTS_ROOT};

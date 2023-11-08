@@ -1,5 +1,8 @@
 #include "cmake_generator_db.h"
 
+#include "cmag_lib/utils/error.h"
+#include "test/os/utils/test_workspace.h"
+
 CmakeGeneratorDb::CmakeGeneratorDb(bool allGenerators) {
     CMakeGenerator possibleGenerators[] = {
 #if _WIN32
@@ -81,14 +84,27 @@ CmakeGeneratorDb::CmakeGeneratorDb(bool allGenerators) {
 }
 
 bool CmakeGeneratorDb::isGeneratorAvailable(const char *name) {
+    TestWorkspace workspace = TestWorkspace::prepare("hello_world");
+
     std::vector<std::string> args{
         "cmake",
+        "-B",
+        workspace.buildPath.string(),
+        "-S",
+        workspace.sourcePath.string(),
         "-G",
         name,
     };
+
     std::string stdOut{};
     std::string stdErr{};
-    runSubprocess(args, stdOut, stdErr);
-
-    return stdErr.find("CMake Error: Could not create named generator") == std::string::npos;
+    const SubprocessResult result = runSubprocess(args, stdOut, stdErr);
+    switch (result) {
+    case SubprocessResult::Success:
+        return true;
+    case SubprocessResult::ProcessFailed:
+        return false;
+    default:
+        FATAL_ERROR("Unexepected result when checking generator availability: ", int(result));
+    }
 }
