@@ -174,7 +174,8 @@ CmagResult Cmag::generateGraphPositionsForProject(const fs::path &buildPath, con
 
 CmagResult Cmag::writeProjectToFile(const fs::path &buildPath) {
     std::string fileName = std::string(projectName) + ".cmag-project";
-    std::ofstream outFile{buildPath / fileName, std::ios::out};
+    fs::path filePath = buildPath / fileName;
+    std::ofstream outFile{filePath, std::ios::out};
     if (!outFile) {
         LOG_ERROR("failed to open ", fileName);
         return CmagResult::FileAccessError;
@@ -185,5 +186,6 @@ CmagResult Cmag::writeProjectToFile(const fs::path &buildPath) {
         return CmagResult::FileAccessError;
     }
 
+    LOG_INFO("Successfully written project file to ", filePath.string());
     return CmagResult::Success;
 }
