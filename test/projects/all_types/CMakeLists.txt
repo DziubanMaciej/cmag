@@ -24,6 +24,8 @@ target_link_libraries(Executable_with_fancy_name_1 PRIVATE
     InterfaceLib
 )
 
+add_custom_target(UtilityTarget echo abc)
+
 add_executable(Aliases::Executable_1 ALIAS Executable_with_fancy_name_1)
 add_executable(Aliases::Executable_2 ALIAS Executable_with_fancy_name_1)
 add_library(Aliases::InterfaceLib ALIAS InterfaceLib)

@@ -12,6 +12,7 @@ enum class CmagTargetType {
     ObjectLibrary,
     InterfaceLibrary,
     Executable,
+    Utility
     // TODO ExternalLibrary?
 };
 

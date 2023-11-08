@@ -182,6 +182,7 @@ TEST_F(CmagWriterParserTest, givenProjectWithVariousTargetTypesThenWriteAndReadC
         CmagTargetType::SharedLibrary,
         CmagTargetType::ObjectLibrary,
         CmagTargetType::InterfaceLibrary,
+        CmagTargetType::Utility,
         CmagTargetType::Executable,
     };
     for (CmagTargetType type : types) {

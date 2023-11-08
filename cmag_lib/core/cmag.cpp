@@ -10,7 +10,7 @@
 
 #include <string_view>
 
-CmagResult Cmag::generateCmake(const fs::path &sourcePath, std::vector<std::string> cmakeArgs, std::string_view extraTargetProperties, bool jsonDebug) {
+CmagResult Cmag::generateCmake(const fs::path &sourcePath, const fs::path &buildPath, std::vector<std::string> cmakeArgs, std::string_view extraTargetProperties, bool jsonDebug) {
     // Shim original CMakeLists.txt and insert extra CMake code to query information about the build-system
     // and save it to a file.
     CMakeListsShimmer shimmer{sourcePath};
@@ -32,6 +32,17 @@ CmagResult Cmag::generateCmake(const fs::path &sourcePath, std::vector<std::stri
     cmakeArgs.push_back(std::string{"-DCMAG_PROJECT_NAME="} + projectName);
     cmakeArgs.push_back(std::string{"-DCMAG_EXTRA_TARGET_PROPERTIES="} + extraTargetProperties.data()); // this could be bad if string_view doesn't end with \0
     cmakeArgs.push_back(std::string{"-DCMAG_JSON_DEBUG="} + std::to_string(jsonDebug));
+
+    // Prepare graphviz file
+    {
+        fs::path filePath = buildPath / "CMakeGraphVizOptions.cmake";
+        std::ofstream outFile{filePath, std::ios::out};
+        if (!outFile) {
+            LOG_ERROR("failed to open ", filePath.string());
+            return CmagResult::FileAccessError;
+        }
+        outFile << "set(GRAPHVIZ_CUSTOM_TARGETS TRUE)\n";
+    }
 
     // Call CMake
     const SubprocessResult result = runSubprocess(cmakeArgs);

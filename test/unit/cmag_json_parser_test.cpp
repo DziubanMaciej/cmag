@@ -303,6 +303,7 @@ TEST_F(CmagProjectParseTest, givenVariousTargetTypesTheParseThemCorrectly) {
         {CmagTargetType::SharedLibrary, "SHARED_LIBRARY"},
         {CmagTargetType::ObjectLibrary, "OBJECT_LIBRARY"},
         {CmagTargetType::InterfaceLibrary, "INTERFACE_LIBRARY"},
+        {CmagTargetType::Utility, "UTILITY"},
         {CmagTargetType::Executable, "EXECUTABLE"},
     };
 

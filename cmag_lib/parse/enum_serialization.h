@@ -11,4 +11,5 @@ NLOHMANN_JSON_SERIALIZE_ENUM(CmagTargetType,
                                  {CmagTargetType::ObjectLibrary, "OBJECT_LIBRARY"},
                                  {CmagTargetType::InterfaceLibrary, "INTERFACE_LIBRARY"},
                                  {CmagTargetType::Executable, "EXECUTABLE"},
+                                 {CmagTargetType::Utility, "UTILITY"},
                              })
