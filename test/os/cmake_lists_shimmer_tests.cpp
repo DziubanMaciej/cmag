@@ -6,8 +6,8 @@ struct CMakeListsShimmerTests : CmagOsTest {
     void SetUp() override {
         CmagOsTest::SetUp();
 
-        project = prepareProject("simple");
-        ASSERT_TRUE(project.valid);
+        workspace = prepareWorkspace("simple");
+        ASSERT_TRUE(workspace.valid);
     }
 
     static bool isShimmedFile(const fs::path &file) {
@@ -21,14 +21,14 @@ struct CMakeListsShimmerTests : CmagOsTest {
                contents.value().rfind("CMAG POSTAMBLE END") != std::string::npos;
     }
 
-    ProjectInfo project = {};
+    TestWorkspace workspace = {};
 };
 
 TEST_F(CMakeListsShimmerTests, givenCMakeListsFileThenCorrectlyShimAndUnshim) {
-    const fs::path backupFile = project.sourcePath / "CMakeLists.txt.backup0.cmake";
-    const fs::path cmakeLists = project.sourcePath / "CMakeLists.txt";
+    const fs::path backupFile = workspace.sourcePath / "CMakeLists.txt.backup0.cmake";
+    const fs::path cmakeLists = workspace.sourcePath / "CMakeLists.txt";
 
-    CMakeListsShimmer shimmer{project.sourcePath};
+    CMakeListsShimmer shimmer{workspace.sourcePath};
 
     EXPECT_EQ(ShimResult::Success, shimmer.shim());
     EXPECT_TRUE(isShimmedFile(cmakeLists));
@@ -40,43 +40,43 @@ TEST_F(CMakeListsShimmerTests, givenCMakeListsFileThenCorrectlyShimAndUnshim) {
 }
 
 TEST_F(CMakeListsShimmerTests, givenNoCmakeListsFileWhenShimmngThenReturnError) {
-    const fs::path cmakeLists = project.sourcePath / "CMakeLists.txt";
+    const fs::path cmakeLists = workspace.sourcePath / "CMakeLists.txt";
     removeFile(cmakeLists);
 
-    CMakeListsShimmer shimmer{project.sourcePath};
+    CMakeListsShimmer shimmer{workspace.sourcePath};
     EXPECT_EQ(ShimResult::InvalidDirectory, shimmer.shim());
 }
 
 TEST_F(CMakeListsShimmerTests, givenCMakeListsIsDirectoryWhenShimmngThenReturnError) {
-    const fs::path cmakeLists = project.sourcePath / "CMakeLists.txt";
+    const fs::path cmakeLists = workspace.sourcePath / "CMakeLists.txt";
     removeFile(cmakeLists);
     createDir(cmakeLists);
 
-    CMakeListsShimmer shimmer{project.sourcePath};
+    CMakeListsShimmer shimmer{workspace.sourcePath};
     EXPECT_EQ(ShimResult::InvalidDirectory, shimmer.shim());
 }
 
 TEST_F(CMakeListsShimmerTests, givenNoPermissionsToCMakeListsWhenShimmngThenReturnError) {
-    const fs::path cmakeLists = project.sourcePath / "CMakeLists.txt";
+    const fs::path cmakeLists = workspace.sourcePath / "CMakeLists.txt";
     ASSERT_TRUE(clearPermissions(cmakeLists));
 
-    CMakeListsShimmer shimmer{project.sourcePath};
+    CMakeListsShimmer shimmer{workspace.sourcePath};
     EXPECT_EQ(ShimResult::NoPermission, shimmer.shim());
 
     ASSERT_TRUE(restorePermissions(cmakeLists));
 }
 
 TEST_F(CMakeListsShimmerTests, givenAlreadyShimmedWhenShimmngThenUseDifferentName) {
-    const fs::path cmakeLists = project.sourcePath / "CMakeLists.txt";
-    const fs::path backupFile0 = project.sourcePath / "CMakeLists.txt.backup0.cmake";
-    const fs::path backupFile1 = project.sourcePath / "CMakeLists.txt.backup1.cmake";
+    const fs::path cmakeLists = workspace.sourcePath / "CMakeLists.txt";
+    const fs::path backupFile0 = workspace.sourcePath / "CMakeLists.txt.backup0.cmake";
+    const fs::path backupFile1 = workspace.sourcePath / "CMakeLists.txt.backup1.cmake";
 
-    CMakeListsShimmer shimmer0{project.sourcePath};
+    CMakeListsShimmer shimmer0{workspace.sourcePath};
     EXPECT_EQ(ShimResult::Success, shimmer0.shim());
     EXPECT_TRUE(isShimmedFile(cmakeLists));
     EXPECT_FALSE(isShimmedFile(backupFile0));
 
-    CMakeListsShimmer shimmer1{project.sourcePath};
+    CMakeListsShimmer shimmer1{workspace.sourcePath};
     EXPECT_EQ(ShimResult::Success, shimmer1.shim());
     EXPECT_TRUE(isShimmedFile(cmakeLists));
     EXPECT_FALSE(isShimmedFile(backupFile0));
@@ -94,10 +94,10 @@ TEST_F(CMakeListsShimmerTests, givenAlreadyShimmedWhenShimmngThenUseDifferentNam
 }
 
 TEST_F(CMakeListsShimmerTests, givenRealFileDeletedWhenUnshimmingThenReturnError) {
-    const fs::path backupFile = project.sourcePath / "CMakeLists.txt.backup0.cmake";
-    const fs::path cmakeLists = project.sourcePath / "CMakeLists.txt";
+    const fs::path backupFile = workspace.sourcePath / "CMakeLists.txt.backup0.cmake";
+    const fs::path cmakeLists = workspace.sourcePath / "CMakeLists.txt";
 
-    CMakeListsShimmer shimmer{project.sourcePath};
+    CMakeListsShimmer shimmer{workspace.sourcePath};
 
     EXPECT_EQ(ShimResult::Success, shimmer.shim());
     EXPECT_TRUE(isShimmedFile(cmakeLists));
@@ -111,10 +111,10 @@ TEST_F(CMakeListsShimmerTests, givenRealFileDeletedWhenUnshimmingThenReturnError
 }
 
 TEST_F(CMakeListsShimmerTests, givenShimFileDeletedWhenUnshimmingThenIgnore) {
-    const fs::path backupFile = project.sourcePath / "CMakeLists.txt.backup0.cmake";
-    const fs::path cmakeLists = project.sourcePath / "CMakeLists.txt";
+    const fs::path backupFile = workspace.sourcePath / "CMakeLists.txt.backup0.cmake";
+    const fs::path cmakeLists = workspace.sourcePath / "CMakeLists.txt";
 
-    CMakeListsShimmer shimmer{project.sourcePath};
+    CMakeListsShimmer shimmer{workspace.sourcePath};
 
     EXPECT_EQ(ShimResult::Success, shimmer.shim());
     EXPECT_TRUE(isShimmedFile(cmakeLists));
@@ -128,11 +128,11 @@ TEST_F(CMakeListsShimmerTests, givenShimFileDeletedWhenUnshimmingThenIgnore) {
 }
 
 TEST_F(CMakeListsShimmerTests, whenDestructorCalledThenCallUnshim) {
-    const fs::path backupFile = project.sourcePath / "CMakeLists.txt.backup0.cmake";
-    const fs::path cmakeLists = project.sourcePath / "CMakeLists.txt";
+    const fs::path backupFile = workspace.sourcePath / "CMakeLists.txt.backup0.cmake";
+    const fs::path cmakeLists = workspace.sourcePath / "CMakeLists.txt";
 
     {
-        CMakeListsShimmer shimmer{project.sourcePath};
+        CMakeListsShimmer shimmer{workspace.sourcePath};
 
         EXPECT_EQ(ShimResult::Success, shimmer.shim());
         EXPECT_TRUE(isShimmedFile(cmakeLists));

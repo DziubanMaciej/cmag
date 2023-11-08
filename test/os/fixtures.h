@@ -13,8 +13,7 @@ const static inline fs::path srcProjectsRoot = fs::path{SRC_PROJECTS_ROOT};
 const static inline fs::path dstProjectsRoot = fs::path{DST_PROJECTS_ROOT};
 
 struct CmagOsTest : ::testing::Test {
-    // TODO rename ProjectInfo -> TestWorkspace
-    struct ProjectInfo {
+    struct TestWorkspace {
         bool valid = false;
         fs::path sourcePath;
         fs::path buildPath;
@@ -22,12 +21,12 @@ struct CmagOsTest : ::testing::Test {
     };
 
     void TearDown() override {
-        for (auto &project : projects) {
-            removeFile(project.sourcePath);
+        for (auto &workspace : workspaces) {
+            removeFile(workspace.sourcePath);
         }
     }
 
-    ProjectInfo prepareProject(std::string_view name) {
+    TestWorkspace prepareWorkspace(std::string_view name) {
         const fs::path srcProjectDir = srcProjectsRoot / name;
         const fs::path dstProjectDir = dstProjectsRoot / name;
 
@@ -45,14 +44,14 @@ struct CmagOsTest : ::testing::Test {
         copyDir(srcProjectDir, dstProjectDir);
         createDir(dstProjectDir / "build");
 
-        // Return project description
-        ProjectInfo project = {};
-        project.valid = !::testing::Test::HasFailure();
-        project.sourcePath = dstProjectDir;
-        project.buildPath = dstProjectDir / "build";
-        project.graphvizPath = dstProjectDir / "build" / "a.dot";
-        projects.push_back(project);
-        return project;
+        // Return workspace description
+        TestWorkspace workspace = {};
+        workspace.valid = !::testing::Test::HasFailure();
+        workspace.sourcePath = dstProjectDir;
+        workspace.buildPath = dstProjectDir / "build";
+        workspace.graphvizPath = dstProjectDir / "build" / "a.dot";
+        workspaces.push_back(workspace);
+        return workspace;
     }
 
     static void createDir(const fs::path &dir) {
@@ -158,7 +157,7 @@ struct CmagOsTest : ::testing::Test {
     }
 
 private:
-    std::vector<ProjectInfo> projects = {};
+    std::vector<TestWorkspace> workspaces = {};
 };
 
 struct RaiiStdoutCapture {

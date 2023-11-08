@@ -10,7 +10,7 @@ struct WhiteboxCmag : Cmag {
 };
 
 struct CmagTest : CmagOsTest, testing::WithParamInterface<CMakeGenerator> {
-    static std::vector<std::string> constructCmakeArgs(const ProjectInfo &workspace) {
+    static std::vector<std::string> constructCmakeArgs(const TestWorkspace &workspace) {
         return {
             "cmake",
             "-S",
@@ -71,7 +71,7 @@ struct CmagTest : CmagOsTest, testing::WithParamInterface<CMakeGenerator> {
 };
 
 TEST_P(CmagTest, givenSimpleProjectWithCustomPropertiesThenProcessItCorrectly) {
-    ProjectInfo workspace = prepareProject("simple");
+    TestWorkspace workspace = prepareWorkspace("simple");
     ASSERT_TRUE(workspace.valid);
 
     WhiteboxCmag cmag{"project"};
@@ -95,7 +95,7 @@ TEST_P(CmagTest, givenSimpleProjectWithCustomPropertiesThenProcessItCorrectly) {
 }
 
 TEST_P(CmagTest, givenProjectWrittenToFileThenItCanBeParsedBack) {
-    ProjectInfo workspace = prepareProject("simple");
+    TestWorkspace workspace = prepareWorkspace("simple");
     ASSERT_TRUE(workspace.valid);
 
     WhiteboxCmag cmag{"test_proj"};
@@ -125,7 +125,7 @@ TEST_P(CmagTest, givenProjectWrittenToFileThenItCanBeParsedBack) {
 }
 
 TEST_P(CmagTest, givenProjectWithAllTargetTypesThenAllTargetsAreDetectedCorrectlyAndGraphPositionsAreParsed) {
-    ProjectInfo workspace = prepareProject("all_types");
+    TestWorkspace workspace = prepareWorkspace("all_types");
     ASSERT_TRUE(workspace.valid);
 
     WhiteboxCmag cmag{"project"};
@@ -182,7 +182,7 @@ TEST_P(CmagTest, givenProjectWithAllTargetTypesThenAllTargetsAreDetectedCorrectl
 }
 
 TEST_P(CmagTest, givenProjectWithTargetsDefinedInSubdirectoriesThenAllTargetAreDetectedCorrectly) {
-    ProjectInfo workspace = prepareProject("with_subdirs");
+    TestWorkspace workspace = prepareWorkspace("with_subdirs");
     ASSERT_TRUE(workspace.valid);
 
     WhiteboxCmag cmag{"project"};
@@ -248,7 +248,7 @@ TEST_P(CmagTest, givenProjectWithTargetsDefinedInSubdirectoriesThenAllTargetAreD
 }
 
 TEST_P(CmagTest, givenGeneratorExpressionsInPropertiesThenResolveThemToActualValues) {
-    ProjectInfo workspace = prepareProject("genex");
+    TestWorkspace workspace = prepareWorkspace("genex");
     ASSERT_TRUE(workspace.valid);
 
     WhiteboxCmag cmag{"project"};
@@ -287,7 +287,7 @@ TEST_P(CmagTest, givenMultiConfigGeneratorCustomConfigNamesSpecifiedThenProcessT
         GTEST_SKIP();
     }
 
-    ProjectInfo workspace = prepareProject("simple");
+    TestWorkspace workspace = prepareWorkspace("simple");
     ASSERT_TRUE(workspace.valid);
 
     WhiteboxCmag cmag{"project"};
@@ -320,7 +320,7 @@ TEST_P(CmagTest, givenSingleConfigGeneratorCustomConfigNameSpecifiedThenProcessI
         GTEST_SKIP();
     }
 
-    ProjectInfo workspace = prepareProject("simple");
+    TestWorkspace workspace = prepareWorkspace("simple");
     ASSERT_TRUE(workspace.valid);
 
     WhiteboxCmag cmag{"project"};
