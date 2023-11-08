@@ -132,8 +132,7 @@ const char *ArgumentParser::parseKeyValueArgument(std::string_view prefix, int &
     }
 
     // Check for two args form, e.g. "cmake -S sourceDir"
-    const char nextChar = currentArg[prefix.length()];
-    if (nextChar == '\0') {
+    if (currentArg.length() == prefix.length()) {
         if (nextArg != nullptr) {
             argIndex++;
             return nextArg;
@@ -144,7 +143,7 @@ const char *ArgumentParser::parseKeyValueArgument(std::string_view prefix, int &
     }
 
     // Check for one arg form with equal sign, e.g. "cmake -S=sourceDir"
-    if (nextChar == '=') {
+    if (currentArg[prefix.length()] == '=') {
         // Equal sign form, value is in current arg, after the equals sign
         if (currentArg.length() > prefix.length() + 1) {
             return currentArg.substr(prefix.length() + 1).data();
