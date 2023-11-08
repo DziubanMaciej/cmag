@@ -6,7 +6,7 @@ struct CMakeListsShimmerTests : CmagOsTest {
     void SetUp() override {
         CmagOsTest::SetUp();
 
-        workspace = prepareWorkspace("simple");
+        workspace = TestWorkspace::prepare("simple");
         ASSERT_TRUE(workspace.valid);
     }
 

@@ -1,0 +1,2 @@
+target_find_sources_and_add(cmag_os_tests)
+add_subdirectories()

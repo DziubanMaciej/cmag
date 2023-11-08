@@ -71,7 +71,7 @@ struct CmagTest : CmagOsTest, testing::WithParamInterface<CMakeGenerator> {
 };
 
 TEST_P(CmagTest, givenSimpleProjectWithCustomPropertiesThenProcessItCorrectly) {
-    TestWorkspace workspace = prepareWorkspace("simple");
+    TestWorkspace workspace = TestWorkspace::prepare("simple");
     ASSERT_TRUE(workspace.valid);
 
     WhiteboxCmag cmag{"project"};
@@ -95,7 +95,7 @@ TEST_P(CmagTest, givenSimpleProjectWithCustomPropertiesThenProcessItCorrectly) {
 }
 
 TEST_P(CmagTest, givenProjectWrittenToFileThenItCanBeParsedBack) {
-    TestWorkspace workspace = prepareWorkspace("simple");
+    TestWorkspace workspace = TestWorkspace::prepare("simple");
     ASSERT_TRUE(workspace.valid);
 
     WhiteboxCmag cmag{"test_proj"};
@@ -125,7 +125,7 @@ TEST_P(CmagTest, givenProjectWrittenToFileThenItCanBeParsedBack) {
 }
 
 TEST_P(CmagTest, givenProjectWithAllTargetTypesThenAllTargetsAreDetectedCorrectlyAndGraphPositionsAreParsed) {
-    TestWorkspace workspace = prepareWorkspace("all_types");
+    TestWorkspace workspace = TestWorkspace::prepare("all_types");
     ASSERT_TRUE(workspace.valid);
 
     WhiteboxCmag cmag{"project"};
@@ -187,7 +187,7 @@ TEST_P(CmagTest, givenProjectWithAllTargetTypesThenAllTargetsAreDetectedCorrectl
 }
 
 TEST_P(CmagTest, givenProjectWithTargetsDefinedInSubdirectoriesThenAllTargetAreDetectedCorrectly) {
-    TestWorkspace workspace = prepareWorkspace("with_subdirs");
+    TestWorkspace workspace = TestWorkspace::prepare("with_subdirs");
     ASSERT_TRUE(workspace.valid);
 
     WhiteboxCmag cmag{"project"};
@@ -253,7 +253,7 @@ TEST_P(CmagTest, givenProjectWithTargetsDefinedInSubdirectoriesThenAllTargetAreD
 }
 
 TEST_P(CmagTest, givenGeneratorExpressionsInPropertiesThenResolveThemToActualValues) {
-    TestWorkspace workspace = prepareWorkspace("genex");
+    TestWorkspace workspace = TestWorkspace::prepare("genex");
     ASSERT_TRUE(workspace.valid);
 
     WhiteboxCmag cmag{"project"};
@@ -292,7 +292,7 @@ TEST_P(CmagTest, givenMultiConfigGeneratorCustomConfigNamesSpecifiedThenProcessT
         GTEST_SKIP();
     }
 
-    TestWorkspace workspace = prepareWorkspace("simple");
+    TestWorkspace workspace = TestWorkspace::prepare("simple");
     ASSERT_TRUE(workspace.valid);
 
     WhiteboxCmag cmag{"project"};
@@ -325,7 +325,7 @@ TEST_P(CmagTest, givenSingleConfigGeneratorCustomConfigNameSpecifiedThenProcessI
         GTEST_SKIP();
     }
 
-    TestWorkspace workspace = prepareWorkspace("simple");
+    TestWorkspace workspace = TestWorkspace::prepare("simple");
     ASSERT_TRUE(workspace.valid);
 
     WhiteboxCmag cmag{"project"};
