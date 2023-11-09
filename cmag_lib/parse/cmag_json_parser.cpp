@@ -119,7 +119,7 @@ ParseResult CmagJsonParser::parseGlobalValues(const nlohmann::json &node, CmagGl
     return ParseResult::Success;
 }
 
-ParseResult CmagJsonParser::parseTargets(const nlohmann::json &node, std::vector<CmagTarget> &outTargets, bool requireGraphical) {
+ParseResult CmagJsonParser::parseTargets(const nlohmann::json &node, std::vector<CmagTarget> &outTargets, bool isProjectFile) {
     if (!node.is_object()) {
         return ParseResult::InvalidNodeType;
     }
@@ -131,7 +131,7 @@ ParseResult CmagJsonParser::parseTargets(const nlohmann::json &node, std::vector
             return ParseResult::InvalidValue;
         }
 
-        ParseResult result = parseTarget(*targetNodeIt, target, requireGraphical);
+        ParseResult result = parseTarget(*targetNodeIt, target, isProjectFile);
         if (result != ParseResult::Success) {
             return result;
         }
@@ -142,7 +142,7 @@ ParseResult CmagJsonParser::parseTargets(const nlohmann::json &node, std::vector
     return ParseResult::Success;
 }
 
-ParseResult CmagJsonParser::parseTarget(const nlohmann::json &node, CmagTarget &outTarget, bool requireGraphical) {
+ParseResult CmagJsonParser::parseTarget(const nlohmann::json &node, CmagTarget &outTarget, bool isProjectFile) {
     FATAL_ERROR_IF(outTarget.name.empty(), "Parsing target with empty name");
 
     if (!node.is_object()) {
@@ -160,7 +160,7 @@ ParseResult CmagJsonParser::parseTarget(const nlohmann::json &node, CmagTarget &
     }
 
     if (auto configsNodeIt = node.find("configs"); configsNodeIt != node.end()) {
-        result = parseConfigs(*configsNodeIt, outTarget);
+        result = parseConfigs(*configsNodeIt, outTarget, isProjectFile);
         if (result != ParseResult::Success) {
             return result;
         }
@@ -173,14 +173,14 @@ ParseResult CmagJsonParser::parseTarget(const nlohmann::json &node, CmagTarget &
         if (result != ParseResult::Success) {
             return result;
         }
-    } else if (requireGraphical) {
+    } else if (isProjectFile) {
         return ParseResult::MissingField;
     }
 
     return ParseResult::Success;
 }
 
-ParseResult CmagJsonParser::parseConfigs(const nlohmann::json &node, CmagTarget &outTarget) {
+ParseResult CmagJsonParser::parseConfigs(const nlohmann::json &node, CmagTarget &outTarget, bool isProjectFile) {
     if (!node.is_object()) {
         return ParseResult::InvalidNodeType;
     }
@@ -191,7 +191,13 @@ ParseResult CmagJsonParser::parseConfigs(const nlohmann::json &node, CmagTarget 
 
     for (auto configIt = node.begin(); configIt != node.end(); configIt++) {
         CmagTargetConfig &config = outTarget.getOrCreateConfig(configIt.key());
-        ParseResult result = parseConfig(*configIt, config);
+        ParseResult result = ParseResult::Success;
+        if (isProjectFile) {
+            result = parseConfigInProjectFile(*configIt, config);
+        } else {
+            result = parseConfigInTargetsFile(*configIt, config);
+        }
+
         if (result != ParseResult::Success) {
             return result;
         }
@@ -200,7 +206,7 @@ ParseResult CmagJsonParser::parseConfigs(const nlohmann::json &node, CmagTarget 
     return ParseResult::Success;
 }
 
-ParseResult CmagJsonParser::parseConfig(const nlohmann::json &node, CmagTargetConfig &outConfig) {
+ParseResult CmagJsonParser::parseConfigInProjectFile(const nlohmann::json &node, CmagTargetConfig &outConfig) {
     if (!node.is_object()) {
         return ParseResult::InvalidNodeType;
     }
@@ -208,6 +214,30 @@ ParseResult CmagJsonParser::parseConfig(const nlohmann::json &node, CmagTargetCo
     for (auto it = node.begin(); it != node.end(); it++) {
         CmagTargetProperty property = {it.key(), it.value()};
         outConfig.properties.push_back(std::move(property));
+    }
+    return ParseResult::Success;
+}
+ParseResult CmagJsonParser::parseConfigInTargetsFile(const nlohmann::json &node, CmagTargetConfig &outConfig) {
+    if (!node.is_object()) {
+        return ParseResult::InvalidNodeType;
+    }
+
+    if (auto propertiesNodeIt = node.find("non_genexable"); propertiesNodeIt != node.end()) {
+        for (auto it = propertiesNodeIt->begin(); it != propertiesNodeIt->end(); it++) {
+            CmagTargetProperty property = {it.key(), it.value()};
+            outConfig.properties.push_back(std::move(property));
+        }
+    } else {
+        return ParseResult::MissingField;
+    }
+
+    if (auto propertiesNodeIt = node.find("genexable_evaled"); propertiesNodeIt != node.end()) {
+        for (auto it = propertiesNodeIt->begin(); it != propertiesNodeIt->end(); it++) {
+            CmagTargetProperty property = {it.key(), it.value()};
+            outConfig.properties.push_back(std::move(property));
+        }
+    } else {
+        return ParseResult::MissingField;
     }
 
     return ParseResult::Success;

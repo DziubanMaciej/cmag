@@ -483,7 +483,11 @@ TEST(CmagTargetsFileParseTest, givenTargetWithNoPropertesThenParseCorrectly) {
         "myTarget" : {
             "type": "EXECUTABLE",
             "configs": {
-                "Debug": {}
+                "Debug": {
+                    "non_genexable": {},
+                    "genexable": {},
+                    "genexable_evaled": {}
+                }
             }
         }
     }
@@ -504,15 +508,19 @@ TEST(CmagTargetsFileParseTest, givenTargetWithNoPropertesThenParseCorrectly) {
     compareTargetProperties(expectedProperties, target.configs[0]);
 }
 
-TEST(CmagTargetsFileParseTest, givenTargetWithPropertesThenParseCorrectly) {
+TEST(CmagTargetsFileParseTest, givenTargetWithNonGenexablePropertesThenParseCorrectly) {
     const char *json = R"DELIMETER(
     {
         "myTarget": {
             "type": "EXECUTABLE",
             "configs": {
                 "Debug": {
-                    "one": "1",
-                    "two": "2"
+                    "non_genexable": {
+                        "one": "1",
+                        "two": "2"
+                    },
+                    "genexable": {},
+                    "genexable_evaled": {}
                 }
             }
         }
@@ -544,8 +552,12 @@ TEST(CmagTargetsFileParseTest, givenMultipleTargetsThenParseCorrectly) {
             "type": "EXECUTABLE",
             "configs": {
                 "Debug": {
-                    "one": "1",
-                    "two": "2"
+                    "non_genexable": {
+                        "one": "1",
+                        "two": "2"
+                    },
+                    "genexable": {},
+                    "genexable_evaled": {}
                 }
             }
         },
@@ -553,8 +565,12 @@ TEST(CmagTargetsFileParseTest, givenMultipleTargetsThenParseCorrectly) {
             "type": "EXECUTABLE",
             "configs": {
                 "Debug": {
-                    "three": "3",
-                    "zfour": "4"
+                    "non_genexable": {
+                        "three": "3",
+                        "zfour": "4"
+                    },
+                    "genexable": {},
+                    "genexable_evaled": {}
                 }
             }
         }
@@ -594,4 +610,44 @@ TEST(CmagTargetsFileParseTest, givenMultipleTargetsThenParseCorrectly) {
         ASSERT_EQ(1u, target.configs.size());
         compareTargetProperties(expectedProperties, target.configs[0]);
     }
+}
+
+TEST(CmagTargetsFileParseTest, givenTargetWithGenexablePropertesThenParseCorrectly) {
+    const char *json = R"DELIMETER(
+    {
+        "myTarget": {
+            "type": "EXECUTABLE",
+            "configs": {
+                "Debug": {
+                    "non_genexable": {},
+                    "genexable": {
+                        "one": "1",
+                        "two": "2"
+                    },
+                    "genexable_evaled": {
+                        "one": "1",
+                        "two": "2"
+                    }
+                }
+            }
+        }
+    }
+    )DELIMETER";
+    std::vector<CmagTarget> targets{};
+    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseTargetsFile(json, targets));
+    ASSERT_EQ(1u, targets.size());
+
+    const CmagTarget &target = targets[0];
+    EXPECT_STREQ("myTarget", target.name.c_str());
+    EXPECT_EQ(CmagTargetType::Executable, target.type);
+
+    CmagTargetConfig expectedProperties = {
+        "Debug",
+        {
+            {"one", "1"},
+            {"two", "2"},
+        },
+    };
+    ASSERT_EQ(1u, target.configs.size());
+    compareTargetProperties(expectedProperties, target.configs[0]);
 }

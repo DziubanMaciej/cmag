@@ -30,11 +30,12 @@ public:
 private:
     static ParseResult parseGlobalValues(const nlohmann::json &node, CmagGlobals &outGlobals);
 
-    static ParseResult parseTargets(const nlohmann::json &node, std::vector<CmagTarget> &outTargets, bool requireGraphical);
-    static ParseResult parseTarget(const nlohmann::json &node, CmagTarget &outTarget, bool requireGraphical);
+    static ParseResult parseTargets(const nlohmann::json &node, std::vector<CmagTarget> &outTargets, bool isProjectFile);
+    static ParseResult parseTarget(const nlohmann::json &node, CmagTarget &outTarget, bool isProjectFile);
 
-    static ParseResult parseConfigs(const nlohmann::json &node, CmagTarget &outTarget);
-    static ParseResult parseConfig(const nlohmann::json &node, CmagTargetConfig &outConfig);
+    static ParseResult parseConfigs(const nlohmann::json &node, CmagTarget &outTarget, bool isProjectFile);
+    static ParseResult parseConfigInProjectFile(const nlohmann::json &node, CmagTargetConfig &outConfig);
+    static ParseResult parseConfigInTargetsFile(const nlohmann::json &node, CmagTargetConfig &outConfig);
 
     static ParseResult parseTargetGraphical(const nlohmann::json &node, CmagTargetGraphicalData &outGraphical);
 

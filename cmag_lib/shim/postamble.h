@@ -12,59 +12,142 @@ macro(json_append_line OUT_VARIABLE LINE INDENT)
     string(APPEND ${OUT_VARIABLE} "${INDENT}${LINE}\n")
 endmacro()
 
-function(json_append_line_comma OUT_VARIABLE LINE INDENT IS_LAST)
-    if(NOT ${IS_LAST})
-        set(LINE "${LINE},")
-    endif()
-    string(APPEND ${OUT_VARIABLE} "${INDENT}${LINE}\n")
+function(json_append_key_value OUT_VARIABLE KEY VALUE INDENT)
+    json_append_key_value_unquoted(${OUT_VARIABLE} ${KEY} "\"${VALUE}\"" ${INDENT})
 
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
 endfunction()
 
-function(json_append_key_value OUT_VARIABLE KEY VALUE INDENT IS_LAST)
-    json_append_key_value_unquoted(${OUT_VARIABLE} ${KEY} "\"${VALUE}\"" ${INDENT} ${IS_LAST})
-
-    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
-endfunction()
-
-function(json_append_key_value_unquoted OUT_VARIABLE KEY VALUE INDENT IS_LAST)
-    set(LINE "\"${KEY}\": ${VALUE}")
-    if(NOT ${IS_LAST})
-        set(LINE "${LINE},")
-    endif()
-
+function(json_append_key_value_unquoted OUT_VARIABLE KEY VALUE INDENT)
+    set(LINE "\"${KEY}\": ${VALUE},")
     json_append_line(${OUT_VARIABLE} ${LINE} ${INDENT})
 
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
 endfunction()
 
+macro(json_strip_trailing_comma)
+    string(REGEX REPLACE ",\n$" "\n" ${OUT_VARIABLE} "${${OUT_VARIABLE}}")
+endmacro()
 
+function(json_append_object_begin OUT_VARIABLE NAME INDENT)
+    string(APPEND ${OUT_VARIABLE} "${INDENT}\"${NAME}\": {\n")
+    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
+endfunction()
 
+function(json_append_object_end OUT_VARIABLE INDENT)
+    json_strip_trailing_comma()
+    string(APPEND ${OUT_VARIABLE} "${INDENT}},\n")
+    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
+endfunction()
 
 
 # -------------------------------------------------------------------- Assembling JSON for .cmag-targets file
-macro(json_append_target_property OUT_VARIABLE TGT PROPERTY INDENT IS_LAST)
-    json_append_target_named_property(${OUT_VARIABLE} ${TGT} ${PROPERTY} ${PROPERTY} ${INDENT} ${IS_LAST})
-endmacro()
-
-macro(json_append_target_named_property OUT_VARIABLE TGT NAME PROPERTY INDENT IS_LAST)
+macro(json_append_target_property OUT_VARIABLE TGT NAME PROPERTY INDENT GENEX_EVAL)
     set(VALUE "$<TARGET_PROPERTY:${TGT},${PROPERTY}>")
-    if("${PROPERTY}" STREQUAL "LINK_LIBRARIES")
-        set(VALUE "$<GENEX_EVAL:${VALUE}>")
-    endif()
-    if("${PROPERTY}" STREQUAL "INTERFACE_LINK_LIBRARIES")
-        # TODO: this is incorrect. When a library have an PRIVATE dependency X, it will appear in
-        # INTERFACE_LINK_LIBRARIES as $<LINK_ONLY:X> and will be resolved to "X" instead of "".
-        # Possible WA: dump both non-genex-evaled and genex-evaled property, parse expressions with
-        # $<LINK_ONLY> in the former, and remove them from the latter.
+    if(${GENEX_EVAL})
         set(VALUE "$<TARGET_GENEX_EVAL:${TGT},${VALUE}>")
     endif()
 
     # Escape quotes in property values
     set(VALUE "$<LIST:TRANSFORM,${VALUE},REPLACE,\",\\\\\\\\\">")
 
-    json_append_key_value(${OUT_VARIABLE} "${NAME}" "${VALUE}" ${INDENT} ${IS_LAST})
+    json_append_key_value(${OUT_VARIABLE} "${NAME}" "${VALUE}" ${INDENT})
 endmacro()
+
+function (json_append_target_properties OUT_VARIABLE TGT INDENT INDENT_INCREMENT)
+    set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
+    set(INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
+
+    # This is a list of properties which may contain generator expressions (genexes) after querying
+    # with $<TARGET_PROPERTY>. We have to manually wrap them with genex eval to resolve to actual
+    # values.
+    set(GENEXABLE_PROPERTIES
+        LINK_LIBRARIES
+        INTERFACE_LINK_LIBRARIES
+    )
+
+    # This is a list of all properties we will be querying. We will treat them differently depending
+    # whether they are genexable or not.
+    set(PROPERTIES_TO_QUERY
+        LINK_DIRECTORIES
+        LINK_LIBRARIES
+        INCLUDE_DIRECTORIES
+        COMPILE_DEFINITIONS
+        COMPILE_FEATURES
+        COMPILE_OPTIONS
+        COMPILE_FLAGS
+        LINK_OPTIONS
+        INTERFACE_LINK_DIRECTORIES
+        INTERFACE_LINK_LIBRARIES
+        INTERFACE_INCLUDE_DIRECTORIES
+        INTERFACE_COMPILE_DEFINITIONS
+        INTERFACE_COMPILE_FEATURES
+        INTERFACE_COMPILE_OPTIONS
+        INTERFACE_LINK_OPTIONS
+        SOURCES
+        MANUALLY_ADDED_DEPENDENCIES
+        ${CMAG_EXTRA_TARGET_PROPERTIES}
+    )
+
+    # Write non-genexable properties
+    json_append_object_begin(${OUT_VARIABLE} "non_genexable" ${INDENT})
+    foreach(PROP ${PROPERTIES_TO_QUERY})
+        list(FIND GENEXABLE_PROPERTIES ${PROP} INDEX)
+        if(NOT INDEX EQUAL -1)
+            continue()
+        endif()
+
+        json_append_target_property(${OUT_VARIABLE} ${TGT} ${PROP} ${PROP} ${INNER_INDENT} FALSE FALSE)
+    endforeach()
+    json_append_object_end(${OUT_VARIABLE} ${INDENT})
+
+    # Write genexable properties without evaluation
+    json_append_object_begin(${OUT_VARIABLE} "genexable" ${INDENT})
+    foreach(PROP ${PROPERTIES_TO_QUERY})
+        list(FIND GENEXABLE_PROPERTIES ${PROP} INDEX)
+        if(INDEX EQUAL -1)
+            continue()
+        endif()
+
+        json_append_target_property(${OUT_VARIABLE} ${TGT} ${PROP} ${PROP} ${INNER_INDENT} FALSE FALSE)
+    endforeach()
+    json_append_object_end(${OUT_VARIABLE} ${INDENT})
+
+    # Write genexable properties with evaluation
+    json_append_object_begin(${OUT_VARIABLE} "genexable_evaled" ${INDENT})
+    foreach(PROP ${PROPERTIES_TO_QUERY})
+        list(FIND GENEXABLE_PROPERTIES ${PROP} INDEX)
+        if(INDEX EQUAL -1)
+            continue()
+        endif()
+
+        json_append_target_property(${OUT_VARIABLE} ${TGT} ${PROP} ${PROP} ${INNER_INDENT} TRUE FALSE)
+    endforeach()
+    json_append_object_end(${OUT_VARIABLE} ${INDENT})
+
+    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
+endfunction()
+
+function(json_append_target OUT_VARIABLE TGT CONFIG INDENT INDENT_INCREMENT)
+    set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
+    set(INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
+    set(INNER_INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
+    set(INNER_INNER_INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
+
+    json_append_object_begin(${OUT_VARIABLE} "${TGT}" ${INDENT})
+    json_append_target_property(${OUT_VARIABLE} ${TGT} type TYPE ${INNER_INDENT} FALSE FALSE)
+    json_append_target_property(${OUT_VARIABLE} ${TGT} listDir CMAG_CMAKE_LIST_DIR ${INNER_INDENT} FALSE FALSE)
+    json_append_object_begin(${OUT_VARIABLE} "configs" ${INNER_INDENT})
+    json_append_object_begin(${OUT_VARIABLE} "${CONFIG}" ${INNER_INNER_INDENT})
+
+    json_append_target_properties(${OUT_VARIABLE} ${TGT} ${INNER_INNER_INNER_INNER_INDENT} ${INDENT_INCREMENT})
+
+    json_append_object_end(${OUT_VARIABLE} ${INNER_INNER_INDENT})
+    json_append_object_end(${OUT_VARIABLE} ${INNER_INDENT})
+    json_append_object_end(${OUT_VARIABLE} ${INDENT})
+
+    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
+endfunction()
 
 function (get_all_targets OUT_VARIABLE DIR)
     # Call for this directory
@@ -84,68 +167,16 @@ function (get_all_targets OUT_VARIABLE DIR)
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
 endfunction()
 
-function(json_append_target OUT_VARIABLE TGT CONFIG INDENT INDENT_INCREMENT IS_LAST)
-    set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
-    set(INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
-    set(INNER_INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
-
-    json_append_line(${OUT_VARIABLE} "\"${TGT}\": {" ${INDENT})
-    json_append_target_named_property(${OUT_VARIABLE} ${TGT} type TYPE ${INNER_INDENT} FALSE)
-    json_append_target_named_property(${OUT_VARIABLE} ${TGT} listDir CMAG_CMAKE_LIST_DIR ${INNER_INDENT} FALSE)
-
-    json_append_line(${OUT_VARIABLE} "\"configs\": {" ${INNER_INDENT})
-    json_append_line(${OUT_VARIABLE} "\"${CONFIG}\": {" ${INNER_INNER_INDENT})
-    set(PROPERTIES_TO_QUERY
-        LINK_DIRECTORIES
-        LINK_LIBRARIES
-        INCLUDE_DIRECTORIES
-        COMPILE_DEFINITIONS
-        COMPILE_FEATURES
-        COMPILE_OPTIONS
-        COMPILE_FLAGS
-        LINK_OPTIONS
-        INTERFACE_LINK_DIRECTORIES
-        INTERFACE_LINK_LIBRARIES
-        INTERFACE_INCLUDE_DIRECTORIES
-        INTERFACE_COMPILE_DEFINITIONS
-        INTERFACE_COMPILE_FEATURES
-        INTERFACE_COMPILE_OPTIONS
-        INTERFACE_LINK_OPTIONS
-        SOURCES
-        ${CMAG_EXTRA_TARGET_PROPERTIES}
-    )
-    foreach(PROP ${PROPERTIES_TO_QUERY})
-        json_append_target_property(${OUT_VARIABLE} ${TGT} ${PROP} ${INNER_INNER_INNER_INDENT} FALSE)
-    endforeach()
-    json_append_target_property(${OUT_VARIABLE} ${TGT} MANUALLY_ADDED_DEPENDENCIES ${INNER_INNER_INNER_INDENT} TRUE)
-    json_append_line_comma(${OUT_VARIABLE} "}" ${INNER_INNER_INDENT} TRUE)
-    json_append_line_comma(${OUT_VARIABLE} "}" ${INNER_INDENT} TRUE)
-
-    json_append_line_comma(${OUT_VARIABLE} "}" ${INDENT} ${IS_LAST})
-    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
-endfunction()
-
 function(json_append_targets OUT_VARIABLE CONFIG INDENT INDENT_INCREMENT)
     set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
 
-    json_append_line(${OUT_VARIABLE} "{" ${INDENT})
-
     get_all_targets(ALL_TARGETS ${CMAKE_CURRENT_SOURCE_DIR})
 
-    list(LENGTH ALL_TARGETS LAST_TARGET_INDEX)
-    math(EXPR LAST_TARGET_INDEX "${LAST_TARGET_INDEX} - 1")
-    set(COUNTER 0)
-    foreach(TGT IN LISTS ALL_TARGETS)
-        if(LAST_TARGET_INDEX EQUAL COUNTER)
-            set(IS_LAST TRUE)
-        else()
-            set(IS_LAST FALSE)
-        endif()
-        math(EXPR COUNTER "${COUNTER}+1")
-
-        json_append_target(${OUT_VARIABLE} ${TGT} ${CONFIG} ${INNER_INDENT} ${INDENT_INCREMENT} ${IS_LAST})
+    json_append_line(${OUT_VARIABLE} "{" ${INDENT})
+    foreach(TGT ${ALL_TARGETS})
+        json_append_target(${OUT_VARIABLE} ${TGT} ${CONFIG} ${INNER_INDENT} ${INDENT_INCREMENT})
     endforeach()
-
+    json_strip_trailing_comma()
     json_append_line(${OUT_VARIABLE} "}" ${INDENT})
 
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
@@ -183,17 +214,17 @@ function(json_append_globals OUT_VARIABLE INDENT INDENT_INCREMENT)
     set(INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
 
     json_append_line(${OUT_VARIABLE} "{" ${INDENT})
-    json_append_key_value_unquoted(${OUT_VARIABLE} darkMode true ${INNER_INDENT} FALSE)
-    json_append_key_value(${OUT_VARIABLE} cmagVersion "${CMAG_VERSION}" ${INNER_INDENT} FALSE)
-    json_append_key_value(${OUT_VARIABLE} cmakeVersion "${CMAKE_VERSION}" ${INNER_INDENT} FALSE)
-    json_append_key_value(${OUT_VARIABLE} cmakeProjectName "${CMAKE_PROJECT_NAME}" ${INNER_INDENT} FALSE)
-    json_append_key_value(${OUT_VARIABLE} cmagProjectName "${CMAG_PROJECT_NAME}" ${INNER_INDENT} FALSE)
-    json_append_key_value(${OUT_VARIABLE} sourceDir "${CMAKE_SOURCE_DIR}" ${INNER_INDENT} FALSE)
-    json_append_key_value(${OUT_VARIABLE} buildDir "${CMAKE_BINARY_DIR}" ${INNER_INDENT} FALSE)
-    json_append_key_value(${OUT_VARIABLE} generator "${CMAKE_GENERATOR}" ${INNER_INDENT} FALSE)
-    json_append_key_value(${OUT_VARIABLE} compilerId "${CMAKE_CXX_COMPILER_ID}" ${INNER_INDENT} FALSE)
-    json_append_key_value(${OUT_VARIABLE} compilerVersion "${CMAKE_CXX_COMPILER_VERSION}" ${INNER_INDENT} FALSE)
-    json_append_key_value(${OUT_VARIABLE} os "${CMAKE_SYSTEM_NAME}" ${INNER_INDENT} FALSE)
+    json_append_key_value_unquoted(${OUT_VARIABLE} darkMode true ${INNER_INDENT})
+    json_append_key_value(${OUT_VARIABLE} cmagVersion "${CMAG_VERSION}" ${INNER_INDENT})
+    json_append_key_value(${OUT_VARIABLE} cmakeVersion "${CMAKE_VERSION}" ${INNER_INDENT})
+    json_append_key_value(${OUT_VARIABLE} cmakeProjectName "${CMAKE_PROJECT_NAME}" ${INNER_INDENT})
+    json_append_key_value(${OUT_VARIABLE} cmagProjectName "${CMAG_PROJECT_NAME}" ${INNER_INDENT})
+    json_append_key_value(${OUT_VARIABLE} sourceDir "${CMAKE_SOURCE_DIR}" ${INNER_INDENT})
+    json_append_key_value(${OUT_VARIABLE} buildDir "${CMAKE_BINARY_DIR}" ${INNER_INDENT})
+    json_append_key_value(${OUT_VARIABLE} generator "${CMAKE_GENERATOR}" ${INNER_INDENT})
+    json_append_key_value(${OUT_VARIABLE} compilerId "${CMAKE_CXX_COMPILER_ID}" ${INNER_INDENT})
+    json_append_key_value(${OUT_VARIABLE} compilerVersion "${CMAKE_CXX_COMPILER_VERSION}" ${INNER_INDENT})
+    json_append_key_value(${OUT_VARIABLE} os "${CMAKE_SYSTEM_NAME}" ${INNER_INDENT})
 
     json_append_line(${OUT_VARIABLE} "\"listFiles\": {" ${INNER_INDENT})
     json_append_lists_files(${OUT_VARIABLE} "" ${CMAKE_CURRENT_SOURCE_DIR} ${INNER_INNER_INDENT})
@@ -213,22 +244,11 @@ function(json_append_configs OUT_VARIABLE CONFIGS INDENT INDENT_INCREMENT)
     set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
 
     json_append_line(${OUT_VARIABLE} "[" ${INDENT})
-
-    list(LENGTH CONFIGS LAST_CONFIG_INDEX)
-    math(EXPR LAST_CONFIG_INDEX "${LAST_CONFIG_INDEX} - 1")
-    set(COUNTER 0)
-    foreach(CONFIG IN LISTS CONFIGS)
-        if(LAST_CONFIG_INDEX EQUAL COUNTER)
-            set(IS_LAST TRUE)
-        else()
-            set(IS_LAST FALSE)
-        endif()
-        math(EXPR COUNTER "${COUNTER}+1")
-
+    foreach(CONFIG ${CONFIGS})
         set(LINE "${CMAG_PROJECT_NAME}_${CONFIG}.cmag-targets")
-        json_append_line_comma(${OUT_VARIABLE} "\"${LINE}\"" ${INNER_INDENT} ${IS_LAST})
+        json_append_line(${OUT_VARIABLE} "\"${LINE}\"," ${INNER_INDENT})
     endforeach()
-
+    json_strip_trailing_comma()
     json_append_line(${OUT_VARIABLE} "]" ${INDENT})
 
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
@@ -282,7 +302,7 @@ message(STATUS "cmag: generating file ${GLOBALS_FILE}")
 message(STATUS "cmag: generating file ${TARGETS_LIST_FILE}")
 
 if (CMAG_JSON_DEBUG)
-    set(TARGETS_LIST_DEBUG_FILE "${TARGETS_LIST_FILE}.debug")
+    set(TARGETS_LIST_DEBUG_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-targets.debug")
     message(STATUS "cmag: writing debug file ${TARGETS_LIST_DEBUG_FILE}")
     file(WRITE "${TARGETS_LIST_DEBUG_FILE}" "${TARGETS_JSON}")
 endif()
