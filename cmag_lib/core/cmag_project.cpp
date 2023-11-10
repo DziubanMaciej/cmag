@@ -64,26 +64,77 @@ void CmagProject::addConfig(std::string_view config) {
 
 void CmagTargetConfig::fixupWithNonEvaled(std::string_view propertyName, std::string_view nonEvaledValue) {
     if (propertyName == "LINK_LIBRARIES" || propertyName == "INTERFACE_LINK_LIBRARIES") {
-        fixupLinkLibraries(propertyName, nonEvaledValue);
+        // Find the property
+        auto it = std::find_if(properties.begin(), properties.end(), [propertyName](const CmagTargetProperty &p) {
+            return p.name == propertyName;
+        });
+        if (it == properties.end()) {
+            // Technically this should never happen and we should crash, but let's be liberal and ignore this.
+            return;
+        }
+
+        // Remove directory id from our property.
+        fixupLinkLibrariesDirectoryId(it->value);
+
+        // Remove directory id from evaled property value, so we can use it for genex fixup.
+        std::string nonEvaledValueFixed = std::string{nonEvaledValue};
+        fixupLinkLibrariesDirectoryId(nonEvaledValueFixed);
+
+        // Finaly fixup genexes
+        fixupLinkLibrariesGenex(*it, nonEvaledValueFixed);
     }
 }
 
-void CmagTargetConfig::fixupLinkLibraries(std::string_view propertyName, std::string_view nonEvaledValue) {
+void CmagTargetConfig::fixupLinkLibrariesDirectoryId(std::string &value) {
+    // When target_link_libraries() is called in a different directory than add_libraries(), CMake
+    // will wrap target XXX with following syntax: ::@(000002F0C2555640);XXX;::@. We have to extract
+    // XXX from every instance of this string and remove the wrapping characters.
+
+    size_t currentOffset = 0;
+
+    while (true) {
+        const size_t directoryIdStartPos = value.find("::@(", currentOffset);
+        if (directoryIdStartPos == std::string::npos) {
+            break;
+        }
+
+        constexpr const char *directoryIdEndPattern = ");";
+        constexpr size_t directoryIdEndPatternLength = std::char_traits<char>::length(directoryIdEndPattern);
+        const size_t directoryIdEndPos = value.find(directoryIdEndPattern, directoryIdStartPos);
+        if (directoryIdEndPos == std::string::npos) {
+            // Unclosed pattern, give up and ignore
+            break;
+        }
+
+        constexpr const char *entryEndPattern = ";::@";
+        constexpr size_t entryEndPatternLength = std::char_traits<char>::length(entryEndPattern);
+        const size_t entryEndPos = value.find(entryEndPattern, directoryIdEndPos);
+        if (entryEndPos == std::string::npos) {
+            // Unclosed pattern, give up and ignore
+            break;
+        }
+
+        {
+            size_t removeStart = entryEndPos;
+            size_t removeEnd = entryEndPatternLength;
+            value.erase(removeStart, removeEnd);
+        }
+        {
+            size_t removeStart = directoryIdStartPos;
+            size_t removeEnd = directoryIdEndPos - directoryIdStartPos + directoryIdEndPatternLength;
+            value.erase(removeStart, removeEnd);
+        }
+    }
+}
+
+void CmagTargetConfig::fixupLinkLibrariesGenex(CmagTargetProperty &property, std::string_view nonEvaledValue) {
     // LINK_LIBRARIES and INTERFACE_LINK_LIBRARIES may contain a generator expression $<LINK_ONLY:XXX>.
     // This resolves to XXX, when evaluating with $<GENEX_EVAL>, even though we would expect it
     // to be empty. As a workaround we dump both evaled and non-evaled versions. Non evaled version can
     // to look up which entries are in form $<LINK_ONLY:XXX>. Then we can remove these entries from
     // evaled version.
 
-    // Find the property
-    auto it = std::find_if(properties.begin(), properties.end(), [propertyName](const CmagTargetProperty &p) {
-        return p.name == propertyName;
-    });
-    if (it == properties.end()) {
-        // Technically this should never happen and we should crash, but let's be liberal and ignore this.
-        return;
-    }
-    std::string &evaledValue = it->value;
+    std::string &evaledValue = property.value;
 
     // Early return if we have no genexes
     if (nonEvaledValue.find('$') == std::string::npos) {
