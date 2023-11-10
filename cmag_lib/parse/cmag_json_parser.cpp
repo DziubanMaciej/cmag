@@ -240,6 +240,15 @@ ParseResult CmagJsonParser::parseConfigInTargetsFile(const nlohmann::json &node,
         return ParseResult::MissingField;
     }
 
+    if (auto propertiesNodeIt = node.find("genexable"); propertiesNodeIt != node.end()) {
+        for (auto it = propertiesNodeIt->begin(); it != propertiesNodeIt->end(); it++) {
+            std::string propertyValue = it.value();
+            outConfig.fixupWithNonEvaled(it.key(), propertyValue);
+        }
+    } else {
+        return ParseResult::MissingField;
+    }
+
     return ParseResult::Success;
 }
 

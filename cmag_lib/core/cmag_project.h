@@ -39,6 +39,7 @@ struct CmagTargetConfig {
     std::string name;
     std::vector<CmagTargetProperty> properties;
 
+    void fixupWithNonEvaled(std::string_view propertyName, std::string_view nonEvaledValue);
     void fixupLinkLibraries(std::string_view propertyName, std::string_view nonEvaledValue);
 };
 

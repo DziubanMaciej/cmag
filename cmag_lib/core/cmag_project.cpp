@@ -62,6 +62,12 @@ void CmagProject::addConfig(std::string_view config) {
     }
 }
 
+void CmagTargetConfig::fixupWithNonEvaled(std::string_view propertyName, std::string_view nonEvaledValue) {
+    if (propertyName == "LINK_LIBRARIES" || propertyName == "INTERFACE_LINK_LIBRARIES") {
+        fixupLinkLibraries(propertyName, nonEvaledValue);
+    }
+}
+
 void CmagTargetConfig::fixupLinkLibraries(std::string_view propertyName, std::string_view nonEvaledValue) {
     // LINK_LIBRARIES and INTERFACE_LINK_LIBRARIES may contain a generator expression $<LINK_ONLY:XXX>.
     // This resolves to XXX, when evaluating with $<GENEX_EVAL>, even though we would expect it

@@ -651,3 +651,43 @@ TEST(CmagTargetsFileParseTest, givenTargetWithGenexablePropertesThenParseCorrect
     ASSERT_EQ(1u, target.configs.size());
     compareTargetProperties(expectedProperties, target.configs[0]);
 }
+
+TEST(CmagTargetsFileParseTest, givenTargetWithLinkOnlyGenexPropertesThenParseAndStripIt) {
+    const char *json = R"DELIMETER(
+    {
+        "myTarget": {
+            "type": "EXECUTABLE",
+            "configs": {
+                "Debug": {
+                    "non_genexable": {},
+                    "genexable": {
+                        "INTERFACE_LINK_LIBRARIES": "Lib1;Lib2;$<LINK_ONLY:Lib3>",
+                        "LINK_LIBRARIES": "$<LINK_ONLY:Lib1>;Lib2;Lib3"
+                    },
+                    "genexable_evaled": {
+                        "INTERFACE_LINK_LIBRARIES": "Lib1;Lib2;Lib3",
+                        "LINK_LIBRARIES": "Lib1;Lib2;Lib3"
+                    }
+                }
+            }
+        }
+    }
+    )DELIMETER";
+    std::vector<CmagTarget> targets{};
+    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseTargetsFile(json, targets));
+    ASSERT_EQ(1u, targets.size());
+
+    const CmagTarget &target = targets[0];
+    EXPECT_STREQ("myTarget", target.name.c_str());
+    EXPECT_EQ(CmagTargetType::Executable, target.type);
+
+    CmagTargetConfig expectedProperties = {
+        "Debug",
+        {
+            {"INTERFACE_LINK_LIBRARIES", "Lib1;Lib2"},
+            {"LINK_LIBRARIES", "Lib2;Lib3"},
+        },
+    };
+    ASSERT_EQ(1u, target.configs.size());
+    compareTargetProperties(expectedProperties, target.configs[0]);
+}
