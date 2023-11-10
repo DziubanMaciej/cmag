@@ -197,8 +197,6 @@ TEST_P(CmagTest, givenProjectWithTargetsDefinedInSubdirectoriesThenAllTargetAreD
         ASSERT_EQ(CmagResult::Success, cmag.readCmagProjectFromGeneration(workspace.buildPath));
     }
 
-    ASSERT_EQ(6u, cmag.project.getTargets().size());
-
     auto targets = getSortedTargets(cmag.project);
     ASSERT_EQ(6u, targets.size());
 
@@ -249,6 +247,41 @@ TEST_P(CmagTest, givenProjectWithTargetsDefinedInSubdirectoriesThenAllTargetAreD
         verifyPropertyForEachConfig(target, "INTERFACE_LINK_LIBRARIES", "");
         verifyPropertyForEachConfig(target, "INCLUDE_DIRECTORIES", "/DirE");
         verifyPropertyForEachConfig(target, "INTERFACE_INCLUDE_DIRECTORIES", "/DirE");
+    }
+}
+
+TEST_P(CmagTest, givenProjectWithTargetLinkLibrariesUsedInDifferentDirectoryThanAddLibraryThenProcessCorrectly) {
+    TestWorkspace workspace = TestWorkspace::prepare("target_link_libraries_in_different_dir");
+    ASSERT_TRUE(workspace.valid);
+
+    WhiteboxCmag cmag{"project"};
+    {
+        RaiiStdoutCapture capture{};
+        ASSERT_EQ(CmagResult::Success, cmag.generateCmake(workspace.sourcePath, workspace.buildPath, constructCmakeArgs(workspace), "", false));
+        ASSERT_EQ(CmagResult::Success, cmag.readCmagProjectFromGeneration(workspace.buildPath));
+    }
+
+    auto targets = getSortedTargets(cmag.project);
+    ASSERT_EQ(3u, targets.size());
+
+    {
+        const CmagTarget &target = targets[0];
+        EXPECT_STREQ("LibA", target.name.c_str());
+        EXPECT_EQ(CmagTargetType::StaticLibrary, target.type);
+        verifyPropertyForEachConfig(target, "LINK_LIBRARIES", "");
+    }
+    {
+        const CmagTarget &target = targets[1];
+        EXPECT_STREQ("LibB", target.name.c_str());
+        EXPECT_EQ(CmagTargetType::StaticLibrary, target.type);
+        verifyPropertyForEachConfig(target, "LINK_LIBRARIES", "");
+    }
+    {
+        const CmagTarget &target = targets[2];
+        EXPECT_STREQ("MainLib", target.name.c_str());
+        EXPECT_EQ(CmagTargetType::StaticLibrary, target.type);
+        verifyPropertyForEachConfig(target, "LINK_LIBRARIES", "LibA;LibB");
+        verifyPropertyForEachConfig(target, "INTERFACE_LINK_LIBRARIES", "LibA");
     }
 }
 

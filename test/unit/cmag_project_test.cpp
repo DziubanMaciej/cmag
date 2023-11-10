@@ -222,6 +222,10 @@ TEST(CmagTargetTest, givenConfigDoesNotExistWhenGetOrCreateConfigIsCalledThenCre
 }
 
 struct CmagTargetConfigTest : ::testing::Test {
+    void executeTest(const char *evaledValue, const char *expectedValue) {
+        executeTest(evaledValue, evaledValue, expectedValue);
+    }
+
     void executeTest(const char *evaledValue, const char *nonEvaledValue, const char *expectedValue) {
         CmagTargetConfig config = {
             "Debug",
@@ -229,7 +233,7 @@ struct CmagTargetConfigTest : ::testing::Test {
                 {"LINK_LIBRARIES", evaledValue},
             },
         };
-        config.fixupLinkLibraries("LINK_LIBRARIES", nonEvaledValue);
+        config.fixupWithNonEvaled("LINK_LIBRARIES", nonEvaledValue);
         EXPECT_STREQ(expectedValue, config.properties[0].value.c_str());
     }
 };
@@ -240,8 +244,8 @@ TEST_F(CmagTargetConfigTest, givenNoGenexesWhenFixingLinkLibrariesThenDoNotChang
 }
 
 TEST_F(CmagTargetConfigTest, givenSingleGenexWhenFixingLinkLibrariesThenStripIt) {
-    executeTest("Lib1;Lib2;Lib3", "Lib1;$<LINK_ONLY:Lib2>;Lib3", "Lib1;Lib3");
     executeTest("Lib1;Lib2;Lib3", "$<LINK_ONLY:Lib1>;Lib2;Lib3", "Lib2;Lib3");
+    executeTest("Lib1;Lib2;Lib3", "Lib1;$<LINK_ONLY:Lib2>;Lib3", "Lib1;Lib3");
     executeTest("Lib1;Lib2;Lib3", "Lib1;Lib2;$<LINK_ONLY:Lib3>", "Lib1;Lib2");
     executeTest("Lib2", "$<LINK_ONLY:Lib2>", "");
 }
@@ -254,4 +258,21 @@ TEST_F(CmagTargetConfigTest, givenMultipleGenexesWhenFixingLinkLibrariesThenStri
 TEST_F(CmagTargetConfigTest, givenNestedGenexesWhenFixingLinkLibrariesThenStripThem) {
     executeTest("Lib1;LibDebug;Lib3", "Lib1;$<LINK_ONLY:Lib$<CONFIG>>", "Lib1;Lib3");
     executeTest("Lib1;LibDebug;Lib3", "Lib1;$<LINK_ONLY:$<$<CONFIG:Debug>:LibDebug>>;Lib3", "Lib1;Lib3");
+}
+
+TEST_F(CmagTargetConfigTest, givenSingleDirectoryIdWhenFixingLinkLibrariesThenStripIt) {
+    executeTest("::@(000002AAB227D1E0);Lib1;::@;Lib2;Lib3", "Lib1;Lib2;Lib3");
+    executeTest("Lib1;::@(0000020E930CFDB0);Lib2;::@;Lib3", "Lib1;Lib2;Lib3");
+    executeTest("Lib1;Lib2;::@(0000024CEE12F490);Lib3;::@", "Lib1;Lib2;Lib3");
+    executeTest("::@(00000219A31F64F0);Lib1;::@", "Lib1");
+}
+
+TEST_F(CmagTargetConfigTest, givenMultipleeDirectoryIdsWhenFixingLinkLibrariesThenStripAllOfThem) {
+    executeTest("::@(000002AAB227D1E0);Lib1;::@;Lib2;::@(000002AAB227D1E0);Lib3;::@", "Lib1;Lib2;Lib3");
+    executeTest("::@(000002AAB227D1E0);Lib1;::@;::@(000002AAB227D1E0);Lib2;::@;Lib3", "Lib1;Lib2;Lib3");
+}
+
+TEST_F(CmagTargetConfigTest, givenDirectoryIdAndLinkOnlyWhenFixingLinkLibrariesThenStripBoth) {
+    executeTest("::@(000002F0C2555640);Lib1;::@", "::@(000002F0C2555640);$<LINK_ONLY:Lib1>;::@", "");
+    executeTest("::@(000002F0C2555640);Lib1;::@;Lib2", "::@(000002F0C2555640);$<LINK_ONLY:Lib1>;::@;Lib2", "Lib2");
 }
