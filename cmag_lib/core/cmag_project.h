@@ -38,6 +38,8 @@ struct CmagTargetProperty {
 struct CmagTargetConfig {
     std::string name;
     std::vector<CmagTargetProperty> properties;
+
+    void fixupLinkLibraries(std::string_view propertyName, std::string_view nonEvaledValue);
 };
 
 struct CmagTargetGraphicalData {

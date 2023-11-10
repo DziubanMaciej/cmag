@@ -220,3 +220,38 @@ TEST(CmagTargetTest, givenConfigDoesNotExistWhenGetOrCreateConfigIsCalledThenCre
     EXPECT_STREQ("RelWithDebInfo", queriedConfig.name.c_str());
     EXPECT_EQ(0u, queriedConfig.properties.size());
 }
+
+struct CmagTargetConfigTest : ::testing::Test {
+    void executeTest(const char *evaledValue, const char *nonEvaledValue, const char *expectedValue) {
+        CmagTargetConfig config = {
+            "Debug",
+            {
+                {"LINK_LIBRARIES", evaledValue},
+            },
+        };
+        config.fixupLinkLibraries("LINK_LIBRARIES", nonEvaledValue);
+        EXPECT_STREQ(expectedValue, config.properties[0].value.c_str());
+    }
+};
+
+TEST_F(CmagTargetConfigTest, givenNoGenexesWhenFixingLinkLibrariesThenDoNotChangeAnything) {
+    executeTest("", "", "");
+    executeTest("Lib1;Lib2;Lib3", "Lib1;Lib2;Lib3", "Lib1;Lib2;Lib3");
+}
+
+TEST_F(CmagTargetConfigTest, givenSingleGenexWhenFixingLinkLibrariesThenStripIt) {
+    executeTest("Lib1;Lib2;Lib3", "Lib1;$<LINK_ONLY:Lib2>;Lib3", "Lib1;Lib3");
+    executeTest("Lib1;Lib2;Lib3", "$<LINK_ONLY:Lib1>;Lib2;Lib3", "Lib2;Lib3");
+    executeTest("Lib1;Lib2;Lib3", "Lib1;Lib2;$<LINK_ONLY:Lib3>", "Lib1;Lib2");
+    executeTest("Lib2", "$<LINK_ONLY:Lib2>", "");
+}
+
+TEST_F(CmagTargetConfigTest, givenMultipleGenexesWhenFixingLinkLibrariesThenStripThem) {
+    executeTest("Lib1;Lib2", "$<LINK_ONLY:Lib1>;$<LINK_ONLY:Lib2>", "");
+    executeTest("Lib1;Lib2;Lib3;Lib4", "$<LINK_ONLY:Lib1>;Lib2;$<LINK_ONLY:Lib3>;Lib4", "Lib2;Lib4");
+}
+
+TEST_F(CmagTargetConfigTest, givenNestedGenexesWhenFixingLinkLibrariesThenStripThem) {
+    executeTest("Lib1;LibDebug;Lib3", "Lib1;$<LINK_ONLY:Lib$<CONFIG>>", "Lib1;Lib3");
+    executeTest("Lib1;LibDebug;Lib3", "Lib1;$<LINK_ONLY:$<$<CONFIG:Debug>:LibDebug>>;Lib3", "Lib1;Lib3");
+}
