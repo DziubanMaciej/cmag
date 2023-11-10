@@ -219,7 +219,7 @@ TEST_P(CmagTest, givenProjectWithTargetsDefinedInSubdirectoriesThenAllTargetAreD
         EXPECT_STREQ("LibB", target.name.c_str());
         EXPECT_EQ(CmagTargetType::StaticLibrary, target.type);
         verifyPropertyForEachConfig(target, "LINK_LIBRARIES", "LibC;LibD");
-        // verifyPropertyForEachConfig(target, "INTERFACE_LINK_LIBRARIES", "LibC;LibE"); // TODO remove $<LINK_ONLY:...>
+        verifyPropertyForEachConfig(target, "INTERFACE_LINK_LIBRARIES", "LibC;LibE");
         verifyPropertyForEachConfig(target, "INCLUDE_DIRECTORIES", "/DirC;/DirD");
         verifyPropertyForEachConfig(target, "INTERFACE_INCLUDE_DIRECTORIES", "/DirC;/DirE");
     }
