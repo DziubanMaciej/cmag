@@ -1,7 +1,7 @@
 #include "main_window.h"
 
 #include "cmag_lib/core/cmag_project.h"
-#include "cmag_lib/json/cmag_json_parser.h"
+#include "cmag_lib/parse/cmag_json_parser.h"
 
 #include <QApplication>
 #include <fstream>
