@@ -40,7 +40,7 @@ void TargetPropertiesWidget::setSelectedTarget(CmagTarget *newTarget) {
     }
 }
 
-void TargetPropertiesWidget::clearLayout(QLayout* layout) {
+void TargetPropertiesWidget::clearLayout(QLayout *layout) {
 
     while (layout->count() > 0) {
         QLayoutItem *item = layout->takeAt(0);
