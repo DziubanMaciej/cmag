@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.15.0)
 project(cmag)
 
+# Option settable by user
+set(CMAG_BUILD_BROWSER ON CACHE BOOL "If enabled, cmag-browser, a QT application for visualizing cmag projects will be built.")
+set(CMAG_BUILD_TESTS ON CACHE BOOL "If enabled, tests for cmag will be built.")
+
 # Configure some global options
 include(CMakeGlobalSetup.cmake)
 setup_binary_locations()
@@ -14,7 +18,11 @@ include(CMakeUtils.cmake)
 # Add actual code
 add_subdirectory(cmag_lib)
 add_subdirectory(cmag_exe)
-add_subdirectory(cmag_browser)
+if (CMAG_BUILD_BROWSER)
+    add_subdirectory(cmag_browser)
+endif()
 add_subdirectory(third_party)
-enable_testing()
-add_subdirectory(test)
+if (CMAG_BUILD_TESTS)
+    enable_testing()
+    add_subdirectory(test)
+endif()
