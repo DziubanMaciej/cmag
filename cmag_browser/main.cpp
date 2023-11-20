@@ -1,7 +1,10 @@
 #include "target_graph.h"
 
 #include "cmag_browser/gl_extensions.h"
+#include "cmag_lib/core/cmag_project.h"
+#include "cmag_lib/parse/cmag_json_parser.h"
 #include "cmag_lib/utils/error.h"
+#include "cmag_lib/utils/file_utils.h"
 
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 #include <imgui/backends/imgui_impl_glfw.h>
@@ -52,7 +55,13 @@ void initializeImgui(GLFWwindow *window, const char *glslVersion) {
     FATAL_ERROR_IF(!ImGui_ImplOpenGL3_Init(glslVersion), "failed to initialized Imgui for OpenGL");
 }
 
-int main(int, char **) {
+int main(int argc, char **argv) {
+    FATAL_ERROR_IF(argc < 2, "Specify cmag project file.");
+    const char *cmagProjectJsonPath = argv[1];
+    const auto cmagProjectJson = readFile(cmagProjectJsonPath);
+    FATAL_ERROR_IF(!cmagProjectJson.has_value(), "could not read ", cmagProjectJsonPath);
+    CmagProject cmagProject = {};
+    FATAL_ERROR_IF(CmagJsonParser::parseProject(cmagProjectJson.value(), cmagProject) != ParseResult::Success, "could not parse ", cmagProjectJsonPath);
     const char *glslVersion = {};
     GLFWwindow *window = initializeWindow(true, &glslVersion);
     FATAL_ERROR_IF(window == nullptr, "failed to initialize graphics context")
@@ -60,9 +69,9 @@ int main(int, char **) {
     glext::GetProcAddressFn getProcAddress = +[](const char *name) { return reinterpret_cast<void *>(::glfwGetProcAddress(name)); };
     FATAL_ERROR_IF(!glext::initialize(getProcAddress), "failed to initialize OpenGL extensions");
 
-    TargetGraph targetGraph = {};
-
     initializeImgui(window, glslVersion);
+
+    TargetGraph targetGraph{cmagProject.getTargets()};
 
     // Our state
     bool show_demo_window = false;

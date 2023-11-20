@@ -22,7 +22,7 @@
     expression;             \
     CHECK_GL_ERRORS(#expression)
 
-TargetGraph::TargetGraph() {
+TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
     allocateBuffers();
     allocateProgram();
 }
@@ -47,8 +47,13 @@ void TargetGraph::render(size_t currentWidth, size_t currentHeight) {
     SAFE_GL(glViewport(0, 0, currentWidth, currentHeight));
     SAFE_GL(glClearColor(1, 0, 0, 1));
     SAFE_GL(glClear(GL_COLOR_BUFFER_BIT));
-    SAFE_GL(glDrawArrays(GL_LINE_LOOP, 0, 4));
-    SAFE_GL(glDrawArrays(GL_LINE_LOOP, 4, 3));
+
+    const GLint location = glGetUniformLocation(gl.program, "positionOffset");
+    CHECK_GL_ERRORS("glGetUniformLocation");
+    for (const CmagTarget &target : targets) {
+        SAFE_GL(glUniform2f(location, target.graphical.x / width, target.graphical.y / height));
+        SAFE_GL(glDrawArrays(GL_LINE_LOOP, 0, 5));
+    }
 
     SAFE_GL(glUseProgram(0));
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -88,14 +93,11 @@ void TargetGraph::allocateBuffers() {
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, gl.shapeVbo));
 
     float data[1024] = {
-        0.1, 0.1, // v0
-        0.9, 0.1, // v1
-        0.4, 0.4, // v1
-        0.0, 0.9, // v2
-
         -0.1, -0.1, // v0
-        -0.9, -0.1, // v1
-        -0.0, -0.9, // v2
+        +0.1, -0.1, // v1
+        +0.2, +0.0, // v2
+        +0.1, +0.1, // v3
+        -0.1, +0.1, // v4
     };
 
     SAFE_GL(glBufferData(GL_ARRAY_BUFFER, sizeof(data), data, GL_DYNAMIC_DRAW));
@@ -136,9 +138,11 @@ GLuint TargetGraph::compileShader(const char *source, GLenum shaderType) {
 void TargetGraph::allocateProgram() {
     const char *vertexShaderSource = R"(
     #version 330 core
+    uniform vec2 positionOffset;
     layout(location = 0) in vec3 aPos;
     void main() {
         gl_Position = vec4(aPos, 1.0);
+        gl_Position.xy += positionOffset;
     }
 )";
     const char *fragmentShaderSource = R"(

@@ -1,11 +1,13 @@
 #pragma once
 
+#include "cmag_lib/core/cmag_project.h"
+
 #include <Windows.h>
 #include <gl/GL.h>
 
 class TargetGraph {
 public:
-    TargetGraph();
+    TargetGraph(std::vector<CmagTarget> &targets);
     ~TargetGraph();
     void render(size_t currentWidth, size_t currentHeight);
 
@@ -20,12 +22,15 @@ private:
     static GLuint compileShader(const char *source, GLenum shaderType);
     void deallocateProgram();
 
+    std::vector<CmagTarget> &targets;
+
     size_t width;
     size_t height;
 
     struct {
         GLuint shapeVbo;
         GLuint shapeVao;
+
         GLuint program;
 
         GLuint texture;
