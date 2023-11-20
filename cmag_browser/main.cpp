@@ -1,4 +1,5 @@
-#include "cmag_browser/ui/target_graph.h"
+
+#include "cmag_browser/ui/target_graph_tab.h"
 #include "cmag_browser/util/gl_extensions.h"
 #include "cmag_lib/core/cmag_project.h"
 #include "cmag_lib/parse/cmag_json_parser.h"
@@ -71,17 +72,9 @@ int main(int argc, char **argv) {
     initializeImgui(window, glslVersion);
     ImGuiIO &io = ImGui::GetIO();
 
-    TargetGraph targetGraph{cmagProject.getTargets()};
-
-    // Our state
-    bool show_demo_window = false;
+    TargetGraphTab targetGraphTab = {cmagProject.getTargets()};
 
     while (!glfwWindowShouldClose(window)) {
-        // Poll and handle events (inputs, window resize, etc.)
-        // You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-        // - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
-        // - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
-        // Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
         glfwPollEvents();
 
         // Start the Dear ImGui frame
@@ -89,68 +82,15 @@ int main(int argc, char **argv) {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        if (show_demo_window) {
-            ImGui::ShowDemoWindow(&show_demo_window);
-        }
-
+        // Record ImGui commands to render our window
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
         ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
         ImGui::Begin("Hello, world!", nullptr, windowFlags);
-        {
-            const ImVec2 windowSize = ImGui::GetContentRegionAvail();
-            const float sidePaneWidth = windowSize.x * 0.2f;
-
-            ImGui::BeginGroup();
-            {
-                ImGui::Checkbox("Demo Window", &show_demo_window);
-                ImGui::Button("Dummy button 1");
-                ImGui::Button("Dummy button 2");
-                ImGui::Button("Dummy button 3");
-
-                ImVec2 propertyTableSize = ImGui::GetContentRegionAvail();
-                propertyTableSize.x = sidePaneWidth;
-                const ImGuiTableFlags tableFlags = ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders;
-                if (ImGui::BeginTable("Table populating", 2, tableFlags, propertyTableSize)) {
-                    CmagTarget *selectedTarget = targetGraph.getSelectedTarget();
-                    if (selectedTarget != nullptr) {
-                        for (const CmagTargetProperty &property : selectedTarget->configs[0].properties) {
-                            ImGui::TableNextRow();
-                            ImGui::TableNextColumn();
-                            ImGui::Text(property.name.c_str());
-                            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-                                ImGui::SetTooltip(property.name.c_str());
-                            }
-                            ImGui::TableNextColumn();
-                            ImGui::Text(property.value.c_str());
-                            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-                                ImGui::SetTooltip(property.value.c_str());
-                            }
-                        }
-                    }
-                }
-                ImGui::EndTable();
-            }
-            ImGui::EndGroup();
-
-            ImGui::SameLine();
-
-            ImVec2 space = ImGui::GetContentRegionAvail();
-            if (space.x > 0 && space.y > 0) {
-                int targetGraphW = static_cast<int>(space.x);
-                int targetGraphH = static_cast<int>(space.y);
-
-                targetGraph.update(io);
-                targetGraph.render(targetGraphW, targetGraphH);
-                ImGui::Image((void *)(intptr_t)targetGraph.getTexture(), space);
-                const ImVec2 pos = ImGui::GetItemRectMin();
-                targetGraph.savePosition(static_cast<size_t>(pos.x), static_cast<size_t>(pos.y));
-            }
-        }
+        targetGraphTab.render(io);
         ImGui::End();
 
-        // Rendering
+        // Actual rendering
         ImGui::Render();
         int display_w, display_h;
         glfwGetFramebufferSize(window, &display_w, &display_h);
