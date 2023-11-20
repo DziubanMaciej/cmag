@@ -34,6 +34,8 @@ private:
     const float *vertices[static_cast<int>(CmagTargetType::COUNT)] = {};
     size_t verticesCounts[static_cast<int>(CmagTargetType::COUNT)] = {};
 
+    const float nodeScale = 0.04;
+
     struct {
         size_t x;
         size_t y;
