@@ -62,7 +62,7 @@ void TargetGraph::update(ImGuiIO &io) {
     float verticesTransformed[maxVerticesSize];
 
     focusedTarget = nullptr;
-    for (const CmagTarget &target : targets) {
+    for (CmagTarget &target : targets) {
         const float *targetVertices = vertices[static_cast<int>(target.type)];
         const size_t targetVerticesSize = verticesCounts[static_cast<int>(target.type)];
 
@@ -82,8 +82,34 @@ void TargetGraph::update(ImGuiIO &io) {
         }
     }
 
+    if (io.MousePos.x != io.MousePosPrev.x || io.MousePos.y != io.MousePosPrev.y) {
+        if (targetDrag.active) {
+            glm::vec4 offset{mouseX - targetDrag.startPoint.x, mouseY- targetDrag.startPoint.y, 0, 0};
+            offset = glm::inverse(camera.viewMatrix) * offset;
+            targetDrag.offset.x += offset.x;
+            targetDrag.offset.y += offset.y;
+            targetDrag.startPoint.x = mouseX;
+            targetDrag.startPoint.y = mouseY;
+        }
+    }
+
     if (io.MouseClicked[ImGuiMouseButton_Left]) {
+        if (focusedTarget) {
+            targetDrag.active = true;
+            targetDrag.target = focusedTarget;
+            targetDrag.startPoint = {mouseX, mouseY};
+            targetDrag.offset = {};
+        }
+
         selectedTarget = focusedTarget;
+    }
+
+    if (io.MouseReleased[ImGuiMouseButton_Left]) {
+        if (targetDrag.active) {
+            targetDrag.target->graphical.x += targetDrag.offset.x;
+            targetDrag.target->graphical.y += targetDrag.offset.y;
+            targetDrag = {};
+        }
     }
 }
 
@@ -292,7 +318,11 @@ void TargetGraph::initializeViewMatrix() {
 
 glm::mat4 TargetGraph::initializeModelMatrix(const CmagTarget &target) {
     glm::mat4 result = glm::identity<glm::mat4>();
+    if (targetDrag.active && targetDrag.target == &target) {
+        result = glm::translate(result, targetDrag.offset);
+    }
     result = glm::translate(result, glm::vec3(target.graphical.x, target.graphical.y, 0));
     result = glm::scale(result, glm::vec3(nodeScale, nodeScale, nodeScale));
+
     return result;
 }
