@@ -1,6 +1,5 @@
-#include "target_graph.h"
-
-#include "cmag_browser/gl_extensions.h"
+#include "cmag_browser/ui/target_graph.h"
+#include "cmag_browser/util/gl_extensions.h"
 #include "cmag_lib/core/cmag_project.h"
 #include "cmag_lib/parse/cmag_json_parser.h"
 #include "cmag_lib/utils/error.h"
