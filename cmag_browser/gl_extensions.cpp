@@ -33,6 +33,9 @@ bool initialize(GetProcAddressFn getProcAddressFn) {
     FUNCTION(glGetProgramInfoLog)
     FUNCTION(glUseProgram)
 
+    FUNCTION(glGetUniformLocation)
+    FUNCTION(glUniform2f)
+
     FUNCTION(glGenFramebuffers)
     FUNCTION(glBindFramebuffer)
     FUNCTION(glFramebufferTexture2D)
@@ -66,6 +69,9 @@ PFNGLLINKPROGRAMPROC glLinkProgram;
 PFNGLGETPROGRAMIVPROC glGetProgramiv;
 PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog;
 PFNGLUSEPROGRAMPROC glUseProgram;
+
+PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
+PFNGLUNIFORM2FPROC glUniform2f;
 
 PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers;
 PFNGLBINDFRAMEBUFFEREXTPROC glBindFramebuffer;
