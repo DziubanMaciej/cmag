@@ -4,6 +4,7 @@ add_subdirectory(googletest)
 set_target_properties(gtest gtest_main gmock gmock_main PROPERTIES FOLDER ThirdParty)
 
 add_subdirectory(gl)
+add_subdirectory(glm)
 
 set(GLFW_BUILD_DOCS OFF)
 set(GLFW_INSTALL OFF)

@@ -4,6 +4,8 @@
 #include "cmag_browser/math_utils.h"
 #include "cmag_lib/utils/error.h"
 
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <imgui/imgui.h>
 
 #define CHECK_GL_ERRORS(message)                                                \
@@ -39,6 +41,8 @@ TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
 
     allocateBuffers();
     allocateProgram();
+
+    initializeViewMatrix();
 }
 
 TargetGraph ::~TargetGraph() {
@@ -50,31 +54,31 @@ TargetGraph ::~TargetGraph() {
 void TargetGraph::update(ImGuiIO &io) {
     const float mouseX = 2 * (io.MousePos.x - bounds.x) / bounds.width - 1;
     const float mouseY = 2 * (io.MousePos.y - bounds.y) / bounds.height - 1;
-    if (0 > mouseX || mouseX > 1 || 0 > mouseY || mouseY > 1) {
+    if (-1 > mouseX || mouseX > 1 || -1 > mouseY || mouseY > 1) {
         return;
     }
 
     constexpr size_t maxVerticesSize = 20;
     float verticesTransformed[maxVerticesSize];
 
-    printf("Mouse: %f, %f\n", mouseX, mouseY);
     focusedTarget = nullptr;
     for (const CmagTarget &target : targets) {
         const float *targetVertices = vertices[static_cast<int>(target.type)];
         const size_t targetVerticesSize = verticesCounts[static_cast<int>(target.type)];
 
         // Transform vertices
-        const float offsetX = target.graphical.x / bounds.width;
-        const float offsetY = target.graphical.y / bounds.height;
+        glm::mat4 modelMatrix = initializeModelMatrix(target);
+        glm::mat4 viewModelMatrix = camera.viewMatrix * modelMatrix;
         for (int i = 0; i < targetVerticesSize; i += 2) {
-            verticesTransformed[i + 0] = targetVertices[i + 0] * nodeScale + offsetX;
-            verticesTransformed[i + 1] = targetVertices[i + 1] * nodeScale + offsetY;
+            glm::vec4 vertex{targetVertices[i], targetVertices[i + 1], 0, 1};
+            vertex = viewModelMatrix * vertex;
+            verticesTransformed[i + 0] = vertex.x;
+            verticesTransformed[i + 1] = vertex.y;
         }
 
         // Check focus
         if (isPointInsidePolygon(mouseX, mouseY, verticesTransformed, targetVerticesSize)) {
             focusedTarget = &target;
-            printf("  Inside %s\n", target.name.c_str());
         }
     }
 
@@ -98,15 +102,18 @@ void TargetGraph::render(size_t currentWidth, size_t currentHeight) {
     SAFE_GL(glClearColor(1, 0, 0, 1));
     SAFE_GL(glClear(GL_COLOR_BUFFER_BIT));
 
-    const GLint locationOffset = glGetUniformLocation(gl.program, "positionOffset");
+    const GLint locationTransform = glGetUniformLocation(gl.program, "transform");
     CHECK_GL_ERRORS("glGetUniformLocation");
     const GLint locationColor = glGetUniformLocation(gl.program, "color");
     CHECK_GL_ERRORS("glGetUniformLocation");
     const GLint locationNodeScale = glGetUniformLocation(gl.program, "nodeScale");
     CHECK_GL_ERRORS("glGetUniformLocation"); // TODO check if location is -1
+
     for (const CmagTarget &target : targets) {
+        glm::mat4 modelMatrix = initializeModelMatrix(target);
+
         SAFE_GL(glUniform1f(locationNodeScale, nodeScale));
-        SAFE_GL(glUniform2f(locationOffset, target.graphical.x / bounds.width, target.graphical.y / bounds.height));
+        SAFE_GL(glUniformMatrix4fv(locationTransform, 1, GL_FALSE, glm::value_ptr(camera.viewMatrix * modelMatrix)));
 
         if (&target == selectedTarget) {
             SAFE_GL(glUniform3f(locationColor, 0, 0, 1));
@@ -203,12 +210,11 @@ void TargetGraph::allocateProgram() {
     const char *vertexShaderSource = R"(
     #version 330 core
     uniform float nodeScale;
-    uniform vec2 positionOffset;
+    uniform mat4 transform;
     layout(location = 0) in vec3 aPos;
     void main() {
         gl_Position = vec4(aPos, 1.0);
-        gl_Position.xy *= nodeScale;
-        gl_Position.xy += positionOffset;
+        gl_Position = transform * gl_Position;
     }
 )";
     const char *fragmentShaderSource = R"(
@@ -246,4 +252,47 @@ void TargetGraph::allocateProgram() {
 }
 void TargetGraph::deallocateProgram() {
     glDeleteProgram(gl.program);
+}
+
+void TargetGraph::initializeViewMatrix() {
+    constexpr float paddingPercentage = 0.1f;
+
+    float minX = std::numeric_limits<float>::max();
+    float maxX = std::numeric_limits<float>::min();
+    float minY = std::numeric_limits<float>::max();
+    float maxY = std::numeric_limits<float>::min();
+    for (const CmagTarget &target : targets) {
+        minX = std::min(minX, target.graphical.x);
+        maxX = std::max(maxX, target.graphical.x);
+
+        minY = std::min(minY, target.graphical.y);
+        maxY = std::max(maxY, target.graphical.y);
+    }
+
+    minX -= nodeScale;
+    maxX += nodeScale;
+
+    minY -= nodeScale;
+    maxY += nodeScale;
+
+    const float paddingX = (maxX - minX) * paddingPercentage / 2;
+    minX -= paddingX;
+    maxX += paddingX;
+
+    const float paddingY = (maxY - minY) * paddingPercentage / 2;
+    minY -= paddingY;
+    maxY += paddingY;
+
+    camera.viewMatrix = glm::ortho(minX, maxX, minY, maxY);
+
+    glm::vec4 a = {minX, minY, 0, 1};
+    auto b = camera.viewMatrix * a;
+    auto c = camera.viewMatrix * a;
+}
+
+glm::mat4 TargetGraph::initializeModelMatrix(const CmagTarget &target) {
+    glm::mat4 result = glm::identity<glm::mat4>();
+    result = glm::translate(result, glm::vec3(target.graphical.x, target.graphical.y, 0));
+    result = glm::scale(result, glm::vec3(nodeScale, nodeScale, nodeScale));
+    return result;
 }

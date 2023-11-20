@@ -4,6 +4,7 @@
 
 #include <Windows.h>
 #include <gl/GL.h>
+#include <glm/glm.hpp>
 
 struct ImGuiIO;
 
@@ -27,6 +28,9 @@ private:
     static GLuint compileShader(const char *source, GLenum shaderType);
     void deallocateProgram();
 
+    void initializeViewMatrix();
+    glm::mat4 initializeModelMatrix(const CmagTarget &target);
+
     std::vector<CmagTarget> &targets;
     const CmagTarget *selectedTarget = nullptr;
     const CmagTarget *focusedTarget = nullptr;
@@ -34,7 +38,7 @@ private:
     const float *vertices[static_cast<int>(CmagTargetType::COUNT)] = {};
     size_t verticesCounts[static_cast<int>(CmagTargetType::COUNT)] = {};
 
-    const float nodeScale = 0.04;
+    const float nodeScale = 25;
 
     struct {
         size_t x;
@@ -42,6 +46,10 @@ private:
         size_t width;
         size_t height;
     } bounds;
+
+    struct {
+        glm::mat4 viewMatrix;
+    } camera;
 
     struct {
         GLuint shapeVbo;
