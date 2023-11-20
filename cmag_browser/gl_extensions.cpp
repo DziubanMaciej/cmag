@@ -35,6 +35,7 @@ bool initialize(GetProcAddressFn getProcAddressFn) {
 
     FUNCTION(glGetUniformLocation)
     FUNCTION(glUniform2f)
+    FUNCTION(glUniform3f)
 
     FUNCTION(glGenFramebuffers)
     FUNCTION(glBindFramebuffer)
@@ -72,6 +73,7 @@ PFNGLUSEPROGRAMPROC glUseProgram;
 
 PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
 PFNGLUNIFORM2FPROC glUniform2f;
+PFNGLUNIFORM3FPROC glUniform3f;
 
 PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers;
 PFNGLBINDFRAMEBUFFEREXTPROC glBindFramebuffer;
