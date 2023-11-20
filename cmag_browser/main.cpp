@@ -1,4 +1,6 @@
 
+#include "cmag_browser/ui/listfile_tab.h"
+#include "cmag_browser/ui/summary_tab.h"
 #include "cmag_browser/ui/target_graph_tab.h"
 #include "cmag_browser/util/gl_extensions.h"
 #include "cmag_lib/core/cmag_project.h"
@@ -73,6 +75,8 @@ int main(int argc, char **argv) {
     ImGuiIO &io = ImGui::GetIO();
 
     TargetGraphTab targetGraphTab = {cmagProject.getTargets()};
+    ListFileTab listFileTab = {};
+    SummaryTab summaryTab = {};
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -87,7 +91,24 @@ int main(int argc, char **argv) {
         ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
         ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
         ImGui::Begin("Hello, world!", nullptr, windowFlags);
-        targetGraphTab.render(io);
+        if (ImGui::BeginTabBar("root")) {
+            if (ImGui::BeginTabItem("Target graph")) {
+                targetGraphTab.render(io);
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("List files")) {
+                listFileTab.render();
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("Summary")) {
+                summaryTab.render();
+                ImGui::EndTabItem();
+            }
+        }
+        ImGui::EndTabBar();
+
         ImGui::End();
 
         // Actual rendering
