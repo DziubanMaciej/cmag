@@ -100,14 +100,40 @@ int main(int argc, char **argv) {
         ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
         ImGui::Begin("Hello, world!", nullptr, windowFlags);
         {
+            const ImVec2 windowSize = ImGui::GetContentRegionAvail();
+            const float sidePaneWidth = windowSize.x * 0.2;
+
             ImGui::BeginGroup();
             {
                 ImGui::Checkbox("Demo Window", &show_demo_window);
                 ImGui::Button("Dummy button 1");
                 ImGui::Button("Dummy button 2");
                 ImGui::Button("Dummy button 3");
-                ImGui::EndGroup();
+
+                ImVec2 propertyTableSize = ImGui::GetContentRegionAvail();
+                propertyTableSize.x = sidePaneWidth;
+                const ImGuiTableFlags tableFlags = ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders;
+                if (ImGui::BeginTable("Table populating", 2, tableFlags, propertyTableSize)) {
+                    CmagTarget *selectedTarget = targetGraph.getSelectedTarget();
+                    if (selectedTarget != nullptr) {
+                        for (const CmagTargetProperty &property : selectedTarget->configs[0].properties) {
+                            ImGui::TableNextRow();
+                            ImGui::TableNextColumn();
+                            ImGui::Text(property.name.c_str());
+                            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+                                ImGui::SetTooltip(property.name.c_str());
+                            }
+                            ImGui::TableNextColumn();
+                            ImGui::Text(property.value.c_str());
+                            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+                                ImGui::SetTooltip(property.value.c_str());
+                            }
+                        }
+                    }
+                }
+                ImGui::EndTable();
             }
+            ImGui::EndGroup();
 
             ImGui::SameLine();
 
