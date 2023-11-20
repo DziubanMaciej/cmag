@@ -12,8 +12,7 @@ bool isPointInsidePolygon(float pointX, float pointY, const float *polygon, size
     FATAL_ERROR_IF(length < 6, "Invalid polygon, length=", length);
     FATAL_ERROR_IF(length % 2 == 1, "Invalid polygon, length=", length);
 
-    bool isInside = false;
-    int windingNumber = 0.0f;
+    int windingNumber = 0;
 
     Point point{pointX, pointY};
 
