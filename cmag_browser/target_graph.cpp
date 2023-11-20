@@ -26,11 +26,11 @@
     CHECK_GL_ERRORS(#expression)
 
 const float verticesStaticLib[] = {
-    -0.1, -0.1, // v0
-    +0.1, -0.1, // v1
-    +0.2, +0.0, // v2
-    +0.1, +0.1, // v3
-    -0.1, +0.1, // v4
+    -0.5, -0.5, // v0
+    +0.5, -0.5, // v1
+    +1.0, +0.0, // v2
+    +0.5, +0.5, // v3
+    -0.5, +0.5, // v4
 };
 
 TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
@@ -67,8 +67,8 @@ void TargetGraph::update(ImGuiIO &io) {
         const float offsetX = target.graphical.x / bounds.width;
         const float offsetY = target.graphical.y / bounds.height;
         for (int i = 0; i < targetVerticesSize; i += 2) {
-            verticesTransformed[i + 0] = targetVertices[i + 0] / 5 + offsetX;
-            verticesTransformed[i + 1] = targetVertices[i + 1] / 5 + offsetY;
+            verticesTransformed[i + 0] = targetVertices[i + 0] * nodeScale + offsetX;
+            verticesTransformed[i + 1] = targetVertices[i + 1] * nodeScale + offsetY;
         }
 
         // Check focus
@@ -102,7 +102,10 @@ void TargetGraph::render(size_t currentWidth, size_t currentHeight) {
     CHECK_GL_ERRORS("glGetUniformLocation");
     const GLint locationColor = glGetUniformLocation(gl.program, "color");
     CHECK_GL_ERRORS("glGetUniformLocation");
+    const GLint locationNodeScale = glGetUniformLocation(gl.program, "nodeScale");
+    CHECK_GL_ERRORS("glGetUniformLocation"); // TODO check if location is -1
     for (const CmagTarget &target : targets) {
+        SAFE_GL(glUniform1f(locationNodeScale, nodeScale));
         SAFE_GL(glUniform2f(locationOffset, target.graphical.x / bounds.width, target.graphical.y / bounds.height));
 
         if (&target == selectedTarget) {
@@ -199,11 +202,12 @@ GLuint TargetGraph::compileShader(const char *source, GLenum shaderType) {
 void TargetGraph::allocateProgram() {
     const char *vertexShaderSource = R"(
     #version 330 core
+    uniform float nodeScale;
     uniform vec2 positionOffset;
     layout(location = 0) in vec3 aPos;
     void main() {
         gl_Position = vec4(aPos, 1.0);
-        gl_Position.xy /= 5;
+        gl_Position.xy *= nodeScale;
         gl_Position.xy += positionOffset;
     }
 )";

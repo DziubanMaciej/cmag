@@ -34,6 +34,7 @@ bool initialize(GetProcAddressFn getProcAddressFn) {
     FUNCTION(glUseProgram)
 
     FUNCTION(glGetUniformLocation)
+    FUNCTION(glUniform1f)
     FUNCTION(glUniform2f)
     FUNCTION(glUniform3f)
 
@@ -72,6 +73,7 @@ PFNGLGETPROGRAMINFOLOGPROC glGetProgramInfoLog;
 PFNGLUSEPROGRAMPROC glUseProgram;
 
 PFNGLGETUNIFORMLOCATIONPROC glGetUniformLocation;
+PFNGLUNIFORM1FPROC glUniform1f;
 PFNGLUNIFORM2FPROC glUniform2f;
 PFNGLUNIFORM3FPROC glUniform3f;
 
