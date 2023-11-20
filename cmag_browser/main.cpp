@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
         ImGui::Begin("Hello, world!", nullptr, windowFlags);
         {
             const ImVec2 windowSize = ImGui::GetContentRegionAvail();
-            const float sidePaneWidth = windowSize.x * 0.2;
+            const float sidePaneWidth = windowSize.x * 0.2f;
 
             ImGui::BeginGroup();
             {

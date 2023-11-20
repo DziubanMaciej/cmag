@@ -124,7 +124,7 @@ void TargetGraph::render(size_t currentWidth, size_t currentHeight) {
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, gl.shapeVbo));
     SAFE_GL(glUseProgram(gl.program));
 
-    SAFE_GL(glViewport(0, 0, currentWidth, currentHeight));
+    SAFE_GL(glViewport(0, 0, static_cast<GLsizei>(currentWidth), static_cast<GLsizei>(currentHeight)));
     SAFE_GL(glClearColor(1, 0, 0, 1));
     SAFE_GL(glClear(GL_COLOR_BUFFER_BIT));
 
@@ -171,7 +171,7 @@ void TargetGraph::allocateStorage(size_t newWidth, size_t newHeight) {
     SAFE_GL(glBindTexture(GL_TEXTURE_2D, gl.texture));
     SAFE_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     SAFE_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-    SAFE_GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, newWidth, newHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
+    SAFE_GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(newWidth), static_cast<GLsizei>(newHeight), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
 
     SAFE_GL(glGenFramebuffers(1, &gl.framebuffer));
     SAFE_GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl.framebuffer));
