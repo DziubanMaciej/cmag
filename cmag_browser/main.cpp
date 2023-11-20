@@ -94,7 +94,10 @@ int main(int argc, char **argv) {
             ImGui::ShowDemoWindow(&show_demo_window);
         }
 
-        ImGui::Begin("Hello, world!");
+        ImGui::SetNextWindowPos(ImVec2(0, 0));
+        ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
+        ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
+        ImGui::Begin("Hello, world!", nullptr, windowFlags);
         {
             ImGui::BeginGroup();
             {
