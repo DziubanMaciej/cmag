@@ -32,8 +32,8 @@ private:
     glm::mat4 initializeModelMatrix(const CmagTarget &target);
 
     std::vector<CmagTarget> &targets;
-    const CmagTarget *selectedTarget = nullptr;
-    const CmagTarget *focusedTarget = nullptr;
+    CmagTarget *selectedTarget = nullptr;
+    CmagTarget *focusedTarget = nullptr;
 
     const float *vertices[static_cast<int>(CmagTargetType::COUNT)] = {};
     size_t verticesCounts[static_cast<int>(CmagTargetType::COUNT)] = {};
@@ -50,6 +50,13 @@ private:
     struct {
         glm::mat4 viewMatrix;
     } camera;
+
+    struct {
+        bool active = {};
+        glm::vec2 startPoint = {};
+        CmagTarget *target = {};
+        glm::vec3 offset = {};
+    } targetDrag = {};
 
     struct {
         GLuint shapeVbo;
