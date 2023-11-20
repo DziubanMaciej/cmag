@@ -1,7 +1,7 @@
 #include "target_graph.h"
 
-#include "cmag_browser/gl_extensions.h"
-#include "cmag_browser/math_utils.h"
+#include "cmag_browser/util/gl_extensions.h"
+#include "cmag_browser/util/math_utils.h"
 #include "cmag_lib/utils/error.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -84,7 +84,7 @@ void TargetGraph::update(ImGuiIO &io) {
 
     if (io.MousePos.x != io.MousePosPrev.x || io.MousePos.y != io.MousePosPrev.y) {
         if (targetDrag.active) {
-            glm::vec4 offset{mouseX - targetDrag.startPoint.x, mouseY- targetDrag.startPoint.y, 0, 0};
+            glm::vec4 offset{mouseX - targetDrag.startPoint.x, mouseY - targetDrag.startPoint.y, 0, 0};
             offset = glm::inverse(camera.viewMatrix) * offset;
             targetDrag.offset.x += offset.x;
             targetDrag.offset.y += offset.y;
