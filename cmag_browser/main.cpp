@@ -70,6 +70,7 @@ int main(int argc, char **argv) {
     FATAL_ERROR_IF(!glext::initialize(getProcAddress), "failed to initialize OpenGL extensions");
 
     initializeImgui(window, glslVersion);
+    ImGuiIO &io = ImGui::GetIO();
 
     TargetGraph targetGraph{cmagProject.getTargets()};
 
@@ -115,8 +116,11 @@ int main(int argc, char **argv) {
                 int targetGraphW = static_cast<int>(space.x);
                 int targetGraphH = static_cast<int>(space.y);
 
+                targetGraph.update(io);
                 targetGraph.render(targetGraphW, targetGraphH);
                 ImGui::Image((void *)(intptr_t)targetGraph.getTexture(), space);
+                const ImVec2 pos = ImGui::GetItemRectMin();
+                targetGraph.savePosition(static_cast<size_t>(pos.x), static_cast<size_t>(pos.y));
             }
         }
         ImGui::End();

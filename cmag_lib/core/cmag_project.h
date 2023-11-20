@@ -12,8 +12,10 @@ enum class CmagTargetType {
     ObjectLibrary,
     InterfaceLibrary,
     Executable,
-    Utility
+    Utility,
     // TODO ExternalLibrary?
+
+    COUNT,
 };
 
 struct CmagGlobals {
