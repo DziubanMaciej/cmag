@@ -17,6 +17,7 @@ public:
     void render(size_t currentWidth, size_t currentHeight);
     void savePosition(size_t x, size_t y);
 
+    CmagTarget *getSelectedTarget() { return selectedTarget; }
     auto getTexture() { return gl.texture; }
 
 private:
