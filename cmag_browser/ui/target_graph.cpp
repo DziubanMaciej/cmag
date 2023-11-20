@@ -62,23 +62,25 @@ void TargetGraph::update(ImGuiIO &io) {
     float verticesTransformed[maxVerticesSize];
 
     focusedTarget = nullptr;
-    for (CmagTarget &target : targets) {
-        const float *targetVertices = vertices[static_cast<int>(target.type)];
-        const size_t targetVerticesSize = verticesCounts[static_cast<int>(target.type)];
+    if (!targetDrag.active) {
+        for (CmagTarget &target : targets) {
+            const float *targetVertices = vertices[static_cast<int>(target.type)];
+            const size_t targetVerticesSize = verticesCounts[static_cast<int>(target.type)];
 
-        // Transform vertices
-        glm::mat4 modelMatrix = initializeModelMatrix(target);
-        glm::mat4 viewModelMatrix = camera.viewMatrix * modelMatrix;
-        for (int i = 0; i < targetVerticesSize; i += 2) {
-            glm::vec4 vertex{targetVertices[i], targetVertices[i + 1], 0, 1};
-            vertex = viewModelMatrix * vertex;
-            verticesTransformed[i + 0] = vertex.x;
-            verticesTransformed[i + 1] = vertex.y;
-        }
+            // Transform vertices
+            glm::mat4 modelMatrix = initializeModelMatrix(target);
+            glm::mat4 viewModelMatrix = camera.viewMatrix * modelMatrix;
+            for (int i = 0; i < targetVerticesSize; i += 2) {
+                glm::vec4 vertex{targetVertices[i], targetVertices[i + 1], 0, 1};
+                vertex = viewModelMatrix * vertex;
+                verticesTransformed[i + 0] = vertex.x;
+                verticesTransformed[i + 1] = vertex.y;
+            }
 
-        // Check focus
-        if (isPointInsidePolygon(mouseX, mouseY, verticesTransformed, targetVerticesSize)) {
-            focusedTarget = &target;
+            // Check focus
+            if (isPointInsidePolygon(mouseX, mouseY, verticesTransformed, targetVerticesSize)) {
+                focusedTarget = &target;
+            }
         }
     }
 
