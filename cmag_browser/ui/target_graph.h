@@ -28,6 +28,7 @@ private:
     void allocateProgram();
     static GLuint compileShader(const char *source, GLenum shaderType);
     void deallocateProgram();
+    static GLint getUniformLocation(GLuint program, const char *name);
 
     void initializeViewMatrix();
     glm::mat4 initializeModelMatrix(const CmagTarget &target);
@@ -64,6 +65,10 @@ private:
         GLuint shapeVao;
 
         GLuint program;
+        struct {
+            GLint transform;
+            GLint color;
+        } programUniform;
 
         GLuint texture;
         GLuint framebuffer;

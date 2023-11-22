@@ -130,28 +130,20 @@ void TargetGraph::render(size_t currentWidth, size_t currentHeight) {
     SAFE_GL(glClearColor(1, 0, 0, 1));
     SAFE_GL(glClear(GL_COLOR_BUFFER_BIT));
 
-    const GLint locationTransform = glGetUniformLocation(gl.program, "transform");
-    CHECK_GL_ERRORS("glGetUniformLocation");
-    const GLint locationColor = glGetUniformLocation(gl.program, "color");
-    CHECK_GL_ERRORS("glGetUniformLocation");
-    const GLint locationNodeScale = glGetUniformLocation(gl.program, "nodeScale");
-    CHECK_GL_ERRORS("glGetUniformLocation"); // TODO check if location is -1
-
     for (const CmagTarget &target : targets) {
         glm::mat4 modelMatrix = initializeModelMatrix(target);
 
-        SAFE_GL(glUniform1f(locationNodeScale, nodeScale));
-        SAFE_GL(glUniformMatrix4fv(locationTransform, 1, GL_FALSE, glm::value_ptr(camera.viewMatrix * modelMatrix)));
+        SAFE_GL(glUniformMatrix4fv(gl.programUniform.transform, 1, GL_FALSE, glm::value_ptr(camera.viewMatrix * modelMatrix)));
 
         if (&target == selectedTarget) {
-            SAFE_GL(glUniform3f(locationColor, 0, 0, 1));
+            SAFE_GL(glUniform3f(gl.programUniform.color, 0, 0, 1));
             SAFE_GL(glDrawArrays(GL_TRIANGLE_FAN, 0, 5));
         } else if (&target == focusedTarget) {
-            SAFE_GL(glUniform3f(locationColor, 0, 1, 0));
+            SAFE_GL(glUniform3f(gl.programUniform.color, 0, 1, 0));
             SAFE_GL(glDrawArrays(GL_TRIANGLE_FAN, 0, 5));
         }
 
-        SAFE_GL(glUniform3f(locationColor, 0, 0, 0));
+        SAFE_GL(glUniform3f(gl.programUniform.color, 0, 0, 0));
         SAFE_GL(glDrawArrays(GL_LINE_LOOP, 0, 5));
     }
 
@@ -237,7 +229,6 @@ GLuint TargetGraph::compileShader(const char *source, GLenum shaderType) {
 void TargetGraph::allocateProgram() {
     const char *vertexShaderSource = R"(
     #version 330 core
-    uniform float nodeScale;
     uniform mat4 transform;
     layout(location = 0) in vec3 aPos;
     void main() {
@@ -277,9 +268,19 @@ void TargetGraph::allocateProgram() {
         SAFE_GL(glGetProgramInfoLog(gl.program, logSize + 1, nullptr, log.get()));
         FATAL_ERROR("Linking error error: ", log.get());
     }
+
+    gl.programUniform.color = getUniformLocation(gl.program, "color");
+    gl.programUniform.transform = getUniformLocation(gl.program, "transform");
 }
 void TargetGraph::deallocateProgram() {
     glDeleteProgram(gl.program);
+}
+
+GLint TargetGraph::getUniformLocation(GLuint program, const char *name) {
+    GLint location = glGetUniformLocation(program, name);
+    CHECK_GL_ERRORS("glGetUniformLocation");
+    FATAL_ERROR_IF(location == -1, "Invalid uniform location returned for ", name);
+    return location;
 }
 
 void TargetGraph::initializeViewMatrix() {
@@ -312,10 +313,6 @@ void TargetGraph::initializeViewMatrix() {
     maxY += paddingY;
 
     camera.viewMatrix = glm::ortho(minX, maxX, minY, maxY);
-
-    glm::vec4 a = {minX, minY, 0, 1};
-    auto b = camera.viewMatrix * a;
-    auto c = camera.viewMatrix * a;
 }
 
 glm::mat4 TargetGraph::initializeModelMatrix(const CmagTarget &target) {
