@@ -21,10 +21,34 @@ void TargetGraphTab::renderSidePane(float width) {
     ImGui::Button("Dummy button 1");
     ImGui::Button("Dummy button 2");
     ImGui::Button("Dummy button 3");
+
+    renderPropertyPopup();
     renderPropertyTable(width);
 
     if (showDemoWindow) {
         ImGui::ShowDemoWindow(&showDemoWindow);
+    }
+}
+
+void TargetGraphTab::renderPropertyPopup() {
+    constexpr const char *popupName = "propertyPopup";
+
+    if (popup.shouldBeOpen && !popup.isOpen) {
+        ImGui::OpenPopup(popupName);
+        popup.isOpen = true;
+    }
+
+    if (ImGui::BeginPopup(popupName)) {
+        ImGui::Text("Property %s", popup.property->name.c_str());
+        ImGui::Text("%s\n", popup.property->value.c_str());
+
+        for (const auto &entry : popup.propertyValueList) {
+            ImGui::BulletText("%.*s\n", static_cast<int>(entry.length()), entry.data());
+        }
+
+        ImGui::EndPopup();
+    } else {
+        popup = {};
     }
 }
 
@@ -40,11 +64,13 @@ void TargetGraphTab::renderPropertyTable(float width) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 ImGui::Text(property.name.c_str());
+                scheduleOpenPropertyPopupOnClick(property);
                 if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
                     ImGui::SetTooltip(property.name.c_str());
                 }
                 ImGui::TableNextColumn();
                 ImGui::Text(property.value.c_str());
+                scheduleOpenPropertyPopupOnClick(property);
                 if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
                     ImGui::SetTooltip(property.value.c_str());
                 }
@@ -65,5 +91,29 @@ void TargetGraphTab::renderGraph(ImGuiIO &io) {
         ImGui::Image((void *)(intptr_t)targetGraph.getTexture(), space);
         const ImVec2 pos = ImGui::GetItemRectMin();
         targetGraph.savePosition(static_cast<size_t>(pos.x), static_cast<size_t>(pos.y));
+    }
+}
+
+void TargetGraphTab::scheduleOpenPropertyPopupOnClick(const CmagTargetProperty &property) {
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+        popup.shouldBeOpen = true;
+        popup.isOpen = false;
+        popup.property = &property;
+        popup.propertyValueList = {};
+
+        // If property value contains semicolons, most probably it's a list, because CMake delimits list entries with semicolons.
+        // Split the value, so we can display it as a list of bullets in popup.
+        size_t currentPosition = 0;
+        size_t semicolonPosition = 0;
+        while ((semicolonPosition = property.value.find(";", currentPosition)) != std::string::npos) {
+            std::string_view entry = std::string_view{property.value}.substr(currentPosition, semicolonPosition - currentPosition);
+            popup.propertyValueList.push_back(entry);
+
+            currentPosition = semicolonPosition + 1;
+        }
+        if (!popup.propertyValueList.empty()) {
+            std::string_view entry = std::string_view{property.value}.substr(currentPosition);
+            popup.propertyValueList.push_back(entry);
+        }
     }
 }

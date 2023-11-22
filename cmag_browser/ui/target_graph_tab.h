@@ -12,9 +12,18 @@ public:
 
 private:
     void renderSidePane(float width);
+    void renderPropertyPopup();
     void renderPropertyTable(float width);
     void renderGraph(ImGuiIO &io);
 
+    void scheduleOpenPropertyPopupOnClick(const CmagTargetProperty &property);
+
     TargetGraph targetGraph;
     bool showDemoWindow = false;
+    struct {
+        bool shouldBeOpen = false;
+        bool isOpen = false;
+        const CmagTargetProperty *property = nullptr;
+        std::vector<std::string_view> propertyValueList;
+    } popup;
 };
