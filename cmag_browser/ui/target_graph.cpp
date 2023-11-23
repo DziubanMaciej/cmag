@@ -1,31 +1,13 @@
 #include "target_graph.h"
 
 #include "cmag_browser/util/gl_extensions.h"
+#include "cmag_browser/util/gl_helpers.h"
 #include "cmag_browser/util/math_utils.h"
 #include "cmag_lib/utils/error.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui/imgui.h>
-
-#define CHECK_GL_ERRORS(message)                                                \
-    {                                                                           \
-        bool anyGlError = false;                                                \
-        while (true) {                                                          \
-            const GLenum glError = glGetError();                                \
-            if (glError == GL_NO_ERROR) {                                       \
-                break;                                                          \
-            } else {                                                            \
-                dumpLog(std::cerr, "GL error on \"", message, "\", ", glError); \
-                anyGlError = true;                                              \
-            }                                                                   \
-        }                                                                       \
-        FATAL_ERROR_IF(anyGlError, "");                                         \
-    }
-
-#define SAFE_GL(expression) \
-    expression;             \
-    CHECK_GL_ERRORS(#expression)
 
 const float verticesStaticLib[] = {
     -0.5, -0.5, // v0
@@ -130,6 +112,8 @@ void TargetGraph::render(size_t currentWidth, size_t currentHeight) {
     SAFE_GL(glClearColor(1, 0, 0, 1));
     SAFE_GL(glClear(GL_COLOR_BUFFER_BIT));
 
+    SAFE_GL(glBindVertexArray(gl.shapeVao));
+    SAFE_GL(glEnableVertexAttribArray(0));
     for (const CmagTarget &target : targets) {
         glm::mat4 modelMatrix = initializeModelMatrix(target);
 
@@ -183,17 +167,9 @@ void TargetGraph::deallocateStorage() {
 }
 
 void TargetGraph::allocateBuffers() {
-    SAFE_GL(glGenVertexArrays(1, &gl.shapeVao));
-    SAFE_GL(glBindVertexArray(gl.shapeVao));
-
-    SAFE_GL(glGenBuffers(1, &gl.shapeVbo));
-    SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, gl.shapeVbo));
-
     const float *data = vertices[static_cast<int>(CmagTargetType::StaticLibrary)];
     const size_t dataSize = verticesCounts[static_cast<int>(CmagTargetType::StaticLibrary)] * sizeof(float);
-    SAFE_GL(glBufferData(GL_ARRAY_BUFFER, dataSize, data, GL_DYNAMIC_DRAW));
-    SAFE_GL(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GL_FLOAT) * 2, reinterpret_cast<void *>(0)));
-    SAFE_GL(glEnableVertexAttribArray(0));
+    createVertexBuffer(&gl.shapeVao, &gl.shapeVbo, data, dataSize);
 }
 
 void TargetGraph::deallocateBuffers() {
@@ -203,27 +179,6 @@ void TargetGraph::deallocateBuffers() {
     if (gl.shapeVao) {
         glDeleteVertexArrays(1, &gl.shapeVao);
     }
-}
-
-GLuint TargetGraph::compileShader(const char *source, GLenum shaderType) {
-    GLuint shader = glCreateShader(shaderType);
-    CHECK_GL_ERRORS("glCreateShader");
-
-    SAFE_GL(glShaderSource(shader, 1, &source, NULL));
-    glCompileShader(shader);
-
-    GLint success{};
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-
-    if (success == GL_FALSE) {
-        GLint logSize{};
-        SAFE_GL(glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logSize));
-        auto log = std::make_unique<GLchar[]>(logSize);
-        SAFE_GL(glGetShaderInfoLog(shader, logSize, NULL, log.get()));
-        FATAL_ERROR("Compilation error: ", log.get());
-    }
-
-    return shader;
 }
 
 void TargetGraph::allocateProgram() {
@@ -244,43 +199,12 @@ void TargetGraph::allocateProgram() {
         FragColor = vec4(color, 1.0);
     }
 )";
-
-    GLuint vs = compileShader(vertexShaderSource, GL_VERTEX_SHADER);
-    GLuint fs = compileShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
-
-    gl.program = glCreateProgram();
-    CHECK_GL_ERRORS("glCreateProgram");
-
-    SAFE_GL(glAttachShader(gl.program, vs));
-    SAFE_GL(glAttachShader(gl.program, fs));
-    SAFE_GL(glLinkProgram(gl.program));
-    SAFE_GL(glDeleteShader(vs));
-    SAFE_GL(glDeleteShader(fs));
-
-    GLint success;
-    glGetProgramiv(gl.program, GL_LINK_STATUS, &success);
-
-    if (success == GL_FALSE) {
-
-        GLint logSize{};
-        SAFE_GL(glGetProgramInfoLog(gl.program, 0, &logSize, nullptr));
-        auto log = std::make_unique<GLchar[]>(logSize + 1);
-        SAFE_GL(glGetProgramInfoLog(gl.program, logSize + 1, nullptr, log.get()));
-        FATAL_ERROR("Linking error error: ", log.get());
-    }
-
+    gl.program = createProgram(vertexShaderSource, fragmentShaderSource);
     gl.programUniform.color = getUniformLocation(gl.program, "color");
     gl.programUniform.transform = getUniformLocation(gl.program, "transform");
 }
 void TargetGraph::deallocateProgram() {
     glDeleteProgram(gl.program);
-}
-
-GLint TargetGraph::getUniformLocation(GLuint program, const char *name) {
-    GLint location = glGetUniformLocation(program, name);
-    CHECK_GL_ERRORS("glGetUniformLocation");
-    FATAL_ERROR_IF(location == -1, "Invalid uniform location returned for ", name);
-    return location;
 }
 
 void TargetGraph::initializeViewMatrix() {

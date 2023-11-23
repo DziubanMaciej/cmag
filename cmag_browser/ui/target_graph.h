@@ -26,9 +26,8 @@ private:
     void allocateBuffers();
     void deallocateBuffers();
     void allocateProgram();
-    static GLuint compileShader(const char *source, GLenum shaderType);
+
     void deallocateProgram();
-    static GLint getUniformLocation(GLuint program, const char *name);
 
     void initializeViewMatrix();
     glm::mat4 initializeModelMatrix(const CmagTarget &target);
