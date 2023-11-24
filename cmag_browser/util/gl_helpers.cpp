@@ -4,14 +4,24 @@
 
 #include <memory>
 
-void createVertexBuffer(GLuint *outVao, GLuint *outVbo, const void *data, size_t dataSize) {
+void createVertexBuffer(GLuint *outVao, GLuint *outVbo, const void *data, size_t dataSize, const GLint *attribsSizes, size_t attribSizesCount) {
     SAFE_GL(glGenVertexArrays(1, outVao));
     SAFE_GL(glBindVertexArray(*outVao));
 
     SAFE_GL(glGenBuffers(1, outVbo));
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, *outVbo));
     SAFE_GL(glBufferData(GL_ARRAY_BUFFER, dataSize, data, GL_DYNAMIC_DRAW));
-    SAFE_GL(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(GL_FLOAT) * 2, reinterpret_cast<void *>(0)));
+
+    GLsizei stride = 0;
+    for (size_t i = 0; i < attribSizesCount; i++) {
+        stride += attribsSizes[i];
+    }
+
+    GLsizei offset = 0;
+    for (size_t i = 0; i < attribSizesCount; i++) {
+        SAFE_GL(glVertexAttribPointer(i, attribsSizes[i], GL_FLOAT, GL_FALSE, sizeof(GL_FLOAT) * stride, reinterpret_cast<void *>(offset)));
+        offset += attribsSizes[i] * sizeof(GL_FLOAT);
+    }
 
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
     SAFE_GL(glBindVertexArray(0));

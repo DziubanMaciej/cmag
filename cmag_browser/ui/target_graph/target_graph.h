@@ -1,10 +1,12 @@
 #pragma once
 
+#include "cmag_browser/ui/target_graph/text_renderer.h"
 #include "cmag_lib/core/cmag_project.h"
 
 #include <Windows.h>
 #include <gl/GL.h>
 #include <glm/glm.hpp>
+#include <unordered_map>
 
 struct ImGuiIO;
 
@@ -30,24 +32,28 @@ private:
     void allocateBuffers();
     void deallocateBuffers();
     void allocateProgram();
-
     void deallocateProgram();
 
     std::vector<CmagTarget> &targets;
     CmagTarget *selectedTarget = nullptr;
     CmagTarget *focusedTarget = nullptr;
 
+    TextRenderer *getTextRenderer(const std::string &text);
+    std::unordered_map<std::string, TextRenderer> textRenderers;
+
     const float *vertices[static_cast<int>(CmagTargetType::COUNT)] = {};
     size_t verticesCounts[static_cast<int>(CmagTargetType::COUNT)] = {};
 
     const float nodeScale = 25;
+    const float textScale = 3;
 
     // Every target has a void* userData field to track custom, gui-specific data. We allocate a vector of our data structs
     // and bind them to each target.
     struct TargetData {
         glm::mat4 modelMatrix;
+        glm::mat4 textModelMatrix;
 
-        void initializeModelMatrix(CmagTargetGraphicalData graphical, glm::vec3 dragOffset, float nodeScale);
+        void initializeModelMatrix(CmagTargetGraphicalData graphical, glm::vec3 dragOffset, float nodeScale, float textScale);
     };
     std::vector<TargetData> targetData = {};
     TargetData &getTargetData(const CmagTarget &target);

@@ -4,7 +4,6 @@
 #include "cmag_browser/util/gl_extensions.h"
 #include "cmag_browser/util/gl_helpers.h"
 #include "cmag_browser/util/math_utils.h"
-#include "cmag_lib/utils/error.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -78,7 +77,7 @@ void TargetGraph::update(ImGuiIO &io) {
             targetDrag.offset.y += offset.y;
             targetDrag.startPoint.x = mouseX;
             targetDrag.startPoint.y = mouseY;
-            getTargetData(*targetDrag.target).initializeModelMatrix(targetDrag.target->graphical, targetDrag.offset, nodeScale);
+            getTargetData(*targetDrag.target).initializeModelMatrix(targetDrag.target->graphical, targetDrag.offset, nodeScale, textScale);
         }
     }
 
@@ -134,6 +133,12 @@ void TargetGraph::render(size_t currentWidth, size_t currentHeight) {
 
         SAFE_GL(glUniform3f(gl.programUniform.color, 0, 0, 0));
         SAFE_GL(glDrawArrays(GL_LINE_LOOP, 0, 5));
+    }
+
+    for (const CmagTarget &target : targets) {
+        auto modelMatrix = getTargetData(target).textModelMatrix;
+        const auto transform = camera.projectionMatrix * modelMatrix;
+        getTextRenderer(target.name)->render(transform);
     }
 
     SAFE_GL(glUseProgram(0));
@@ -192,7 +197,7 @@ void TargetGraph::initializeTargetData() {
     targetData.resize(targets.size());
     for (size_t i = 0; i < targets.size(); i++) {
         targets[i].userData = &targetData[i];
-        targetData[i].initializeModelMatrix(targets[i].graphical, {}, nodeScale);
+        targetData[i].initializeModelMatrix(targets[i].graphical, {}, nodeScale, textScale);
     }
 }
 
@@ -228,7 +233,8 @@ void TargetGraph::deallocateStorage() {
 void TargetGraph::allocateBuffers() {
     const float *data = vertices[static_cast<int>(CmagTargetType::StaticLibrary)];
     const size_t dataSize = verticesCounts[static_cast<int>(CmagTargetType::StaticLibrary)] * sizeof(float);
-    createVertexBuffer(&gl.shapeVao, &gl.shapeVbo, data, dataSize);
+    const GLint attribSize = 2;
+    createVertexBuffer(&gl.shapeVao, &gl.shapeVbo, data, dataSize, &attribSize, 1);
 }
 
 void TargetGraph::deallocateBuffers() {
@@ -267,13 +273,24 @@ void TargetGraph::deallocateProgram() {
     glDeleteProgram(gl.program);
 }
 
-void TargetGraph::TargetData::initializeModelMatrix(CmagTargetGraphicalData graphical, glm::vec3 dragOffset, float nodeScale) {
-    glm::mat4 result = glm::identity<glm::mat4>();
-    result = glm::translate(result, glm::vec3(graphical.x + dragOffset.x, graphical.y + dragOffset.y, 0));
-    result = glm::scale(result, glm::vec3(nodeScale, nodeScale, nodeScale)); // modelSpace -> worldSpace
-    modelMatrix = result;
+void TargetGraph::TargetData::initializeModelMatrix(CmagTargetGraphicalData graphical, glm::vec3 dragOffset, float nodeScale, float textScale) {
+    glm::mat4 translationMatrix = glm::identity<glm::mat4>();
+    translationMatrix = glm::translate(translationMatrix, glm::vec3(graphical.x + dragOffset.x, graphical.y + dragOffset.y, 0));
+
+    modelMatrix = glm::scale(translationMatrix, glm::vec3(nodeScale, nodeScale, nodeScale));
+    textModelMatrix = glm::scale(translationMatrix, glm::vec3(textScale, textScale, textScale));
 }
 
 TargetGraph::TargetData &TargetGraph::getTargetData(const CmagTarget &target) {
     return *static_cast<TargetData *>(target.userData);
+}
+
+TextRenderer *TargetGraph::getTextRenderer(const std::string &text) {
+    if (auto it = textRenderers.find(text); it != textRenderers.end()) {
+        return &it->second;
+    }
+
+    auto entry = std::pair<std::string, TextRenderer>{text, TextRenderer{text}};
+    auto insertResult = textRenderers.insert(std::move(entry));
+    return &insertResult.first->second;
 }
