@@ -71,13 +71,13 @@ void TargetGraph::update(ImGuiIO &io) {
 
     if (io.MousePos.x != io.MousePosPrev.x || io.MousePos.y != io.MousePosPrev.y) {
         if (targetDrag.active) {
-            glm::vec4 offset{mouseX - targetDrag.startPoint.x, mouseY - targetDrag.startPoint.y, 0, 0};
-            offset = glm::inverse(camera.projectionMatrix) * offset;
-            targetDrag.startPoint.x = mouseX;
-            targetDrag.startPoint.y = mouseY;
+            glm::vec4 mouseWorld{mouseX, mouseY, 0, 1};
+            mouseWorld = glm::inverse(camera.projectionMatrix) * mouseWorld;
 
-            targetDrag.target->graphical.x += offset.x;
-            targetDrag.target->graphical.y += offset.y;
+            targetDrag.target->graphical.x = mouseWorld.x - targetDrag.offsetFromCenter.x;
+            targetDrag.target->graphical.y = mouseWorld.y - targetDrag.offsetFromCenter.y;
+
+            clampTargetPositionToVisibleWorldSpace(targetDrag.target->graphical);
             getTargetData(*targetDrag.target).initializeModelMatrix(targetDrag.target->graphical, nodeScale, textScale);
         }
     }
@@ -86,7 +86,12 @@ void TargetGraph::update(ImGuiIO &io) {
         if (focusedTarget) {
             targetDrag.active = true;
             targetDrag.target = focusedTarget;
-            targetDrag.startPoint = {mouseX, mouseY};
+
+            targetDrag.offsetFromCenter.x = mouseX;
+            targetDrag.offsetFromCenter.y = mouseY;
+            targetDrag.offsetFromCenter = glm::inverse(camera.projectionMatrix) * targetDrag.offsetFromCenter;
+            targetDrag.offsetFromCenter.x -= focusedTarget->graphical.x;
+            targetDrag.offsetFromCenter.y -= focusedTarget->graphical.y;
         }
 
         selectedTarget = focusedTarget;
@@ -153,6 +158,16 @@ void TargetGraph::reinitializeModelMatrices() {
     for (const CmagTarget &target : targets) {
         getTargetData(target).initializeModelMatrix(target.graphical, nodeScale, textScale);
     }
+}
+
+void TargetGraph::clampTargetPositionToVisibleWorldSpace(CmagTargetGraphicalData &graphical) {
+    const float minX = -worldSpaceHalfWidth + nodeScale;
+    const float maxX = +worldSpaceHalfWidth - nodeScale;
+    const float minY = -worldSpaceHalfHeight + nodeScale;
+    const float maxY = +worldSpaceHalfHeight - nodeScale;
+
+    graphical.x = clamp(graphical.x, minX, maxX);
+    graphical.y = clamp(graphical.y, minY, maxY);
 }
 
 void TargetGraph::scaleTargetPositions() {
