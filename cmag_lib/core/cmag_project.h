@@ -58,6 +58,7 @@ struct CmagTarget {
     CmagTargetType type;
     std::vector<CmagTargetConfig> configs;
     CmagTargetGraphicalData graphical;
+    void *userData = nullptr;
 
     CmagTargetConfig &getOrCreateConfig(std::string_view configName);
 };

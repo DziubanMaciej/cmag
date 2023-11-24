@@ -21,6 +21,10 @@ public:
     auto getTexture() { return gl.texture; }
 
 private:
+    void scaleTargetPositions();
+    void initializeTargetData();
+    void initializeProjectionMatrix();
+
     void allocateStorage(size_t newWidth, size_t newHeight);
     void deallocateStorage();
     void allocateBuffers();
@@ -28,9 +32,6 @@ private:
     void allocateProgram();
 
     void deallocateProgram();
-
-    void initializeViewMatrix();
-    glm::mat4 initializeModelMatrix(const CmagTarget &target);
 
     std::vector<CmagTarget> &targets;
     CmagTarget *selectedTarget = nullptr;
@@ -41,6 +42,18 @@ private:
 
     const float nodeScale = 25;
 
+    // Every target has a void* userData field to track custom, gui-specific data. We allocate a vector of our data structs
+    // and bind them to each target.
+    struct TargetData {
+        glm::mat4 modelMatrix;
+
+        void initializeModelMatrix(CmagTargetGraphicalData graphical, glm::vec3 dragOffset, float nodeScale);
+    };
+    std::vector<TargetData> targetData = {};
+    TargetData &getTargetData(const CmagTarget &target);
+
+    // Bounds of our graph in screen space. It determines framebuffer size and the rendering viewport. It is obtained
+    // from higher level interface, which tells this class, how big it should render.
     struct {
         size_t x;
         size_t y;
@@ -49,7 +62,7 @@ private:
     } bounds;
 
     struct {
-        glm::mat4 viewMatrix;
+        glm::mat4 projectionMatrix;
     } camera;
 
     struct {
