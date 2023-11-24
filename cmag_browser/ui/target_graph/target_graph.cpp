@@ -1,5 +1,6 @@
 #include "target_graph.h"
 
+#include "cmag_browser/ui/target_graph/coordinate_space.h"
 #include "cmag_browser/util/gl_extensions.h"
 #include "cmag_browser/util/gl_helpers.h"
 #include "cmag_browser/util/math_utils.h"
@@ -18,10 +19,6 @@ const float verticesStaticLib[] = {
     +0.5, +0.5, // v3
     -0.5, +0.5, // v4
 };
-
-// World space is defined in range <-1000, 1000> for both x and y.
-constexpr float worldSpaceHalfWidth = 100;
-constexpr float worldSpaceHalfHeight = 100;
 
 TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
     vertices[static_cast<int>(CmagTargetType::StaticLibrary)] = verticesStaticLib;
