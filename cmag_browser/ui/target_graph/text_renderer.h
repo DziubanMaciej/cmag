@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cmag_browser/util/movable_primitive.h"
+
 #include <Windows.h>
 #include <gl/GL.h>
 #include <glm/gtc/type_ptr.hpp>
@@ -11,8 +13,8 @@ struct ImFont;
 class TextRenderer {
 public:
     TextRenderer(std::string_view text);
-    TextRenderer(TextRenderer &&other);
-    TextRenderer &operator=(TextRenderer &&other);
+    TextRenderer(TextRenderer &&other) = default;
+    TextRenderer &operator=(TextRenderer &&other) = default;
     ~TextRenderer();
 
     void render(glm::mat4 transform);
@@ -23,15 +25,15 @@ private:
 
     static std::vector<float> prepareVertexData(ImFont *font, std::string_view text);
 
-    GLuint vertexCount;
+    MovablePrimitive<GLuint> vertexCount;
     struct {
-        GLuint texture;
-        GLuint vbo;
-        GLuint vao;
+        MovablePrimitive<GLuint> texture;
+        MovablePrimitive<GLuint> vbo;
+        MovablePrimitive<GLuint> vao;
 
-        GLuint program;
+        MovablePrimitive<GLuint> program;
         struct {
-            GLint transform;
+            MovablePrimitive<GLint> transform;
         } programUniform;
     } gl;
 };

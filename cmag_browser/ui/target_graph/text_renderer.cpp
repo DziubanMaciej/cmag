@@ -21,27 +21,6 @@ TextRenderer::TextRenderer(std::string_view text) {
     allocateProgram();
 }
 
-TextRenderer::TextRenderer(TextRenderer &&other) {
-    *this = std::move(other);
-}
-
-TextRenderer &TextRenderer::operator=(TextRenderer &&other) {
-#define MOVE_PRIMITIVE_FIELD(fieldName) \
-    this->fieldName = other.fieldName;  \
-    other.fieldName = {};
-
-    MOVE_PRIMITIVE_FIELD(vertexCount);
-    MOVE_PRIMITIVE_FIELD(gl.texture);
-    MOVE_PRIMITIVE_FIELD(gl.vbo);
-    MOVE_PRIMITIVE_FIELD(gl.vao);
-    MOVE_PRIMITIVE_FIELD(gl.program);
-    MOVE_PRIMITIVE_FIELD(gl.programUniform);
-
-#undef MOVE_PRIMITIVE_FIELD
-
-    return *this;
-}
-
 TextRenderer::~TextRenderer() {
     if (gl.vbo) {
         glDeleteBuffers(1, &gl.vbo);
