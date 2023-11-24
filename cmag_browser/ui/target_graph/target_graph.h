@@ -28,6 +28,8 @@ public:
     void reinitializeModelMatrices();
 
 private:
+    void clampTargetPositionToVisibleWorldSpace(CmagTargetGraphicalData &graphical);
+
     void scaleTargetPositions();
     void initializeTargetData();
     void initializeProjectionMatrix();
@@ -77,7 +79,7 @@ private:
 
     struct {
         bool active = {};
-        glm::vec2 startPoint = {};
+        glm::vec4 offsetFromCenter = {};
         CmagTarget *target = {};
     } targetDrag = {};
 

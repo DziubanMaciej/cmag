@@ -15,3 +15,14 @@ inline DataType interpolateDifference(DataType arg,
                                       DataType minB, DataType maxB) {
     return arg * (maxB - minB) / (maxA - minA);
 }
+
+template <typename DataType>
+inline DataType clamp(DataType arg, DataType min, DataType max) {
+    if (arg < min) {
+        return min;
+    }
+    if (arg > max) {
+        return max;
+    }
+    return arg;
+}
