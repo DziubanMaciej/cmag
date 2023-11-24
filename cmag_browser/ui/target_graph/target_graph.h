@@ -57,7 +57,7 @@ private:
         glm::mat4 modelMatrix;
         glm::mat4 textModelMatrix;
 
-        void initializeModelMatrix(CmagTargetGraphicalData graphical, glm::vec3 dragOffset, float nodeScale, float textScale);
+        void initializeModelMatrix(CmagTargetGraphicalData graphical, float nodeScale, float textScale);
     };
     std::vector<TargetData> targetData = {};
     TargetData &getTargetData(const CmagTarget &target);
@@ -79,7 +79,6 @@ private:
         bool active = {};
         glm::vec2 startPoint = {};
         CmagTarget *target = {};
-        glm::vec3 offset = {};
     } targetDrag = {};
 
     struct {

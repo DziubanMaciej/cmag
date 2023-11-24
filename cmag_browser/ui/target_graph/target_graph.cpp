@@ -73,11 +73,12 @@ void TargetGraph::update(ImGuiIO &io) {
         if (targetDrag.active) {
             glm::vec4 offset{mouseX - targetDrag.startPoint.x, mouseY - targetDrag.startPoint.y, 0, 0};
             offset = glm::inverse(camera.projectionMatrix) * offset;
-            targetDrag.offset.x += offset.x;
-            targetDrag.offset.y += offset.y;
             targetDrag.startPoint.x = mouseX;
             targetDrag.startPoint.y = mouseY;
-            getTargetData(*targetDrag.target).initializeModelMatrix(targetDrag.target->graphical, targetDrag.offset, nodeScale, textScale);
+
+            targetDrag.target->graphical.x += offset.x;
+            targetDrag.target->graphical.y += offset.y;
+            getTargetData(*targetDrag.target).initializeModelMatrix(targetDrag.target->graphical, nodeScale, textScale);
         }
     }
 
@@ -86,7 +87,6 @@ void TargetGraph::update(ImGuiIO &io) {
             targetDrag.active = true;
             targetDrag.target = focusedTarget;
             targetDrag.startPoint = {mouseX, mouseY};
-            targetDrag.offset = {};
         }
 
         selectedTarget = focusedTarget;
@@ -94,8 +94,6 @@ void TargetGraph::update(ImGuiIO &io) {
 
     if (io.MouseReleased[ImGuiMouseButton_Left]) {
         if (targetDrag.active) {
-            targetDrag.target->graphical.x += targetDrag.offset.x;
-            targetDrag.target->graphical.y += targetDrag.offset.y;
             targetDrag = {};
         }
     }
@@ -153,8 +151,7 @@ void TargetGraph::savePosition(size_t x, size_t y) {
 
 void TargetGraph::reinitializeModelMatrices() {
     for (const CmagTarget &target : targets) {
-        glm::vec3 dragOffset = (targetDrag.active && &target == targetDrag.target) ? targetDrag.offset : glm::vec3{};
-        getTargetData(target).initializeModelMatrix(target.graphical, dragOffset, nodeScale, textScale);
+        getTargetData(target).initializeModelMatrix(target.graphical, nodeScale, textScale);
     }
 }
 
@@ -201,7 +198,7 @@ void TargetGraph::initializeTargetData() {
     targetData.resize(targets.size());
     for (size_t i = 0; i < targets.size(); i++) {
         targets[i].userData = &targetData[i];
-        targetData[i].initializeModelMatrix(targets[i].graphical, {}, nodeScale, textScale);
+        targetData[i].initializeModelMatrix(targets[i].graphical, nodeScale, textScale);
     }
 }
 
@@ -277,9 +274,9 @@ void TargetGraph::deallocateProgram() {
     glDeleteProgram(gl.program);
 }
 
-void TargetGraph::TargetData::initializeModelMatrix(CmagTargetGraphicalData graphical, glm::vec3 dragOffset, float nodeScale, float textScale) {
+void TargetGraph::TargetData::initializeModelMatrix(CmagTargetGraphicalData graphical, float nodeScale, float textScale) {
     glm::mat4 translationMatrix = glm::identity<glm::mat4>();
-    translationMatrix = glm::translate(translationMatrix, glm::vec3(graphical.x + dragOffset.x, graphical.y + dragOffset.y, 0));
+    translationMatrix = glm::translate(translationMatrix, glm::vec3(graphical.x, graphical.y, 0));
 
     modelMatrix = glm::scale(translationMatrix, glm::vec3(nodeScale, nodeScale, nodeScale));
     textModelMatrix = glm::scale(translationMatrix, glm::vec3(textScale, textScale, textScale));
