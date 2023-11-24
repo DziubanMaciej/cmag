@@ -9,6 +9,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui/imgui.h>
 
+// Vertices for shapes are specified in model space.
+// Model space is defined in range <-1, 1> for both x and y.
 const float verticesStaticLib[] = {
     -0.5, -0.5, // v0
     +0.5, -0.5, // v1
@@ -17,6 +19,10 @@ const float verticesStaticLib[] = {
     -0.5, +0.5, // v4
 };
 
+// World space is defined in range <-1000, 1000> for both x and y.
+constexpr float worldSpaceHalfWidth = 100;
+constexpr float worldSpaceHalfHeight = 100;
+
 TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
     vertices[static_cast<int>(CmagTargetType::StaticLibrary)] = verticesStaticLib;
     verticesCounts[static_cast<int>(CmagTargetType::StaticLibrary)] = sizeof(verticesStaticLib) / sizeof(float);
@@ -24,7 +30,9 @@ TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
     allocateBuffers();
     allocateProgram();
 
-    initializeViewMatrix();
+    scaleTargetPositions();
+    initializeProjectionMatrix();
+    initializeTargetData();
 }
 
 TargetGraph ::~TargetGraph() {
@@ -50,8 +58,7 @@ void TargetGraph::update(ImGuiIO &io) {
             const size_t targetVerticesSize = verticesCounts[static_cast<int>(target.type)];
 
             // Transform vertices
-            glm::mat4 modelMatrix = initializeModelMatrix(target);
-            glm::mat4 viewModelMatrix = camera.viewMatrix * modelMatrix;
+            glm::mat4 viewModelMatrix = camera.projectionMatrix * getTargetData(target).modelMatrix;
             for (int i = 0; i < targetVerticesSize; i += 2) {
                 glm::vec4 vertex{targetVertices[i], targetVertices[i + 1], 0, 1};
                 vertex = viewModelMatrix * vertex;
@@ -69,11 +76,12 @@ void TargetGraph::update(ImGuiIO &io) {
     if (io.MousePos.x != io.MousePosPrev.x || io.MousePos.y != io.MousePosPrev.y) {
         if (targetDrag.active) {
             glm::vec4 offset{mouseX - targetDrag.startPoint.x, mouseY - targetDrag.startPoint.y, 0, 0};
-            offset = glm::inverse(camera.viewMatrix) * offset;
+            offset = glm::inverse(camera.projectionMatrix) * offset;
             targetDrag.offset.x += offset.x;
             targetDrag.offset.y += offset.y;
             targetDrag.startPoint.x = mouseX;
             targetDrag.startPoint.y = mouseY;
+            getTargetData(*targetDrag.target).initializeModelMatrix(targetDrag.target->graphical, targetDrag.offset, nodeScale);
         }
     }
 
@@ -115,9 +123,9 @@ void TargetGraph::render(size_t currentWidth, size_t currentHeight) {
     SAFE_GL(glBindVertexArray(gl.shapeVao));
     SAFE_GL(glEnableVertexAttribArray(0));
     for (const CmagTarget &target : targets) {
-        glm::mat4 modelMatrix = initializeModelMatrix(target);
-
-        SAFE_GL(glUniformMatrix4fv(gl.programUniform.transform, 1, GL_FALSE, glm::value_ptr(camera.viewMatrix * modelMatrix)));
+        const auto modelMatrix = getTargetData(target).modelMatrix;
+        const auto transform = camera.projectionMatrix * modelMatrix;
+        SAFE_GL(glUniformMatrix4fv(gl.programUniform.transform, 1, GL_FALSE, glm::value_ptr(transform)));
 
         if (&target == selectedTarget) {
             SAFE_GL(glUniform3f(gl.programUniform.color, 0, 0, 1));
@@ -139,6 +147,60 @@ void TargetGraph::render(size_t currentWidth, size_t currentHeight) {
 void TargetGraph::savePosition(size_t x, size_t y) {
     bounds.x = x;
     bounds.y = y;
+}
+
+void TargetGraph::scaleTargetPositions() {
+    // Target positions were calculated by core cmag and the may be in an arbitrary space. We scale them to our
+    // custom world space.
+
+    // Find out bounds of arbitrary space of the targets.
+    float minX = std::numeric_limits<float>::max();
+    float maxX = std::numeric_limits<float>::min();
+    float minY = std::numeric_limits<float>::max();
+    float maxY = std::numeric_limits<float>::min();
+    for (const CmagTarget &target : targets) {
+        minX = std::min(minX, target.graphical.x);
+        maxX = std::max(maxX, target.graphical.x);
+
+        minY = std::min(minY, target.graphical.y);
+        maxY = std::max(maxY, target.graphical.y);
+    }
+
+    // Our nodes have their size. We have to add it to our bounds, so entire node is always visible.
+    minX -= nodeScale;
+    maxX += nodeScale;
+    minY -= nodeScale;
+    maxY += nodeScale;
+
+    // We add some additional padding.
+    constexpr float paddingPercentage = 0.1f;
+    const float paddingX = (maxX - minX) * paddingPercentage / 2;
+    minX -= paddingX;
+    maxX += paddingX;
+    const float paddingY = (maxY - minY) * paddingPercentage / 2;
+    minY -= paddingY;
+    maxY += paddingY;
+
+    // Linearly transform x and y of all targets to our world space.
+    auto scaleVertex = [minX, maxX, minY, maxY](float &x, float &y) {
+        x = ((x - minX) * 2 * worldSpaceHalfWidth / (maxX - minX)) - worldSpaceHalfWidth;
+        y = ((y - minY) * 2 * worldSpaceHalfHeight / (maxY - minY)) - worldSpaceHalfHeight;
+    };
+    for (CmagTarget &target : targets) {
+        scaleVertex(target.graphical.x, target.graphical.y);
+    }
+}
+
+void TargetGraph::initializeTargetData() {
+    targetData.resize(targets.size());
+    for (size_t i = 0; i < targets.size(); i++) {
+        targets[i].userData = &targetData[i];
+        targetData[i].initializeModelMatrix(targets[i].graphical, {}, nodeScale);
+    }
+}
+
+void TargetGraph::initializeProjectionMatrix() {
+    camera.projectionMatrix = glm::ortho(-worldSpaceHalfWidth, worldSpaceHalfWidth, -worldSpaceHalfHeight, worldSpaceHalfHeight);
 }
 
 void TargetGraph::allocateStorage(size_t newWidth, size_t newHeight) {
@@ -203,49 +265,18 @@ void TargetGraph::allocateProgram() {
     gl.programUniform.color = getUniformLocation(gl.program, "color");
     gl.programUniform.transform = getUniformLocation(gl.program, "transform");
 }
+
 void TargetGraph::deallocateProgram() {
     glDeleteProgram(gl.program);
 }
 
-void TargetGraph::initializeViewMatrix() {
-    constexpr float paddingPercentage = 0.1f;
-
-    float minX = std::numeric_limits<float>::max();
-    float maxX = std::numeric_limits<float>::min();
-    float minY = std::numeric_limits<float>::max();
-    float maxY = std::numeric_limits<float>::min();
-    for (const CmagTarget &target : targets) {
-        minX = std::min(minX, target.graphical.x);
-        maxX = std::max(maxX, target.graphical.x);
-
-        minY = std::min(minY, target.graphical.y);
-        maxY = std::max(maxY, target.graphical.y);
-    }
-
-    minX -= nodeScale;
-    maxX += nodeScale;
-
-    minY -= nodeScale;
-    maxY += nodeScale;
-
-    const float paddingX = (maxX - minX) * paddingPercentage / 2;
-    minX -= paddingX;
-    maxX += paddingX;
-
-    const float paddingY = (maxY - minY) * paddingPercentage / 2;
-    minY -= paddingY;
-    maxY += paddingY;
-
-    camera.viewMatrix = glm::ortho(minX, maxX, minY, maxY);
+void TargetGraph::TargetData::initializeModelMatrix(CmagTargetGraphicalData graphical, glm::vec3 dragOffset, float nodeScale) {
+    glm::mat4 result = glm::identity<glm::mat4>();
+    result = glm::translate(result, glm::vec3(graphical.x + dragOffset.x, graphical.y + dragOffset.y, 0));
+    result = glm::scale(result, glm::vec3(nodeScale, nodeScale, nodeScale)); // modelSpace -> worldSpace
+    modelMatrix = result;
 }
 
-glm::mat4 TargetGraph::initializeModelMatrix(const CmagTarget &target) {
-    glm::mat4 result = glm::identity<glm::mat4>();
-    if (targetDrag.active && targetDrag.target == &target) {
-        result = glm::translate(result, targetDrag.offset);
-    }
-    result = glm::translate(result, glm::vec3(target.graphical.x, target.graphical.y, 0));
-    result = glm::scale(result, glm::vec3(nodeScale, nodeScale, nodeScale));
-
-    return result;
+TargetGraph::TargetData &TargetGraph::getTargetData(const CmagTarget &target) {
+    return *static_cast<TargetData *>(target.userData);
 }
