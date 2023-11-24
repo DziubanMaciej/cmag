@@ -24,6 +24,6 @@
     expression;             \
     CHECK_GL_ERRORS(#expression)
 
-void createVertexBuffer(GLuint *outVao, GLuint *outVbo, const void *data, size_t dataSize);
+void createVertexBuffer(GLuint *outVao, GLuint *outVbo, const void *data, size_t dataSize, const GLint *attribsSizes, size_t attribSizesCount);
 GLuint createProgram(const char *vertexShaderSource, const char *fragmentShaderSource);
 GLint getUniformLocation(GLuint program, const char *name);

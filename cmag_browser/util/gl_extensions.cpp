@@ -13,6 +13,7 @@ bool initialize(GetProcAddressFn getProcAddressFn) {
     FUNCTION(glBufferData)
     FUNCTION(glVertexAttribPointer)
     FUNCTION(glEnableVertexAttribArray)
+    FUNCTION(glDisableVertexAttribArray)
 
     FUNCTION(glGenVertexArrays)
     FUNCTION(glDeleteVertexArrays)
@@ -43,6 +44,9 @@ bool initialize(GetProcAddressFn getProcAddressFn) {
     FUNCTION(glBindFramebuffer)
     FUNCTION(glFramebufferTexture2D)
     FUNCTION(glDeleteFramebuffers)
+
+    FUNCTION(glBlendFuncSeparate)
+
     return true;
 }
 } // namespace glext
@@ -53,6 +57,7 @@ PFNGLBINDBUFFERPROC glBindBuffer;
 PFNGLBUFFERDATAPROC glBufferData;
 PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
 PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray;
+PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray;
 
 PFNGLGENVERTEXARRAYSPROC glGenVertexArrays;
 PFNGLDELETEVERTEXARRAYSPROC glDeleteVertexArrays;
@@ -83,3 +88,5 @@ PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers;
 PFNGLBINDFRAMEBUFFEREXTPROC glBindFramebuffer;
 PFNGLFRAMEBUFFERTEXTURE2DPROC glFramebufferTexture2D;
 PFNGLDELETEFRAMEBUFFERSPROC glDeleteFramebuffers;
+
+PFNGLBLENDFUNCSEPARATEPROC glBlendFuncSeparate;
