@@ -40,15 +40,13 @@ TargetGraph ::~TargetGraph() {
 void TargetGraph::update(ImGuiIO &io) {
     const float mouseX = 2 * (io.MousePos.x - bounds.x) / bounds.width - 1;
     const float mouseY = 2 * (io.MousePos.y - bounds.y) / bounds.height - 1;
-    if (-1 > mouseX || mouseX > 1 || -1 > mouseY || mouseY > 1) {
-        return;
-    }
+    const bool mouseInside = -1 <= mouseX && mouseX <= 1 && -1 <= mouseY && mouseY <= 1;
 
     constexpr size_t maxVerticesSize = 20;
     float verticesTransformed[maxVerticesSize];
 
     focusedTarget = nullptr;
-    if (!targetDrag.active) {
+    if (mouseInside && !targetDrag.active) {
         for (CmagTarget &target : targets) {
             const float *targetVertices = vertices[static_cast<int>(target.type)];
             const size_t targetVerticesSize = verticesCounts[static_cast<int>(target.type)];
@@ -82,7 +80,7 @@ void TargetGraph::update(ImGuiIO &io) {
         }
     }
 
-    if (io.MouseClicked[ImGuiMouseButton_Left]) {
+    if (mouseInside && io.MouseClicked[ImGuiMouseButton_Left]) {
         if (focusedTarget) {
             targetDrag.active = true;
             targetDrag.target = focusedTarget;
@@ -97,10 +95,8 @@ void TargetGraph::update(ImGuiIO &io) {
         selectedTarget = focusedTarget;
     }
 
-    if (io.MouseReleased[ImGuiMouseButton_Left]) {
-        if (targetDrag.active) {
-            targetDrag = {};
-        }
+    if (io.MouseReleased[ImGuiMouseButton_Left] && targetDrag.active) {
+        targetDrag = {};
     }
 }
 
