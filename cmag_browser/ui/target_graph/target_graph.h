@@ -22,6 +22,11 @@ public:
     CmagTarget *getSelectedTarget() { return selectedTarget; }
     auto getTexture() { return gl.texture; }
 
+    auto getNodeScalePtr() { return &nodeScale; }
+    auto getTextScalePtr() { return &textScale; }
+
+    void reinitializeModelMatrices();
+
 private:
     void scaleTargetPositions();
     void initializeTargetData();
@@ -43,8 +48,8 @@ private:
     const float *vertices[static_cast<int>(CmagTargetType::COUNT)] = {};
     size_t verticesCounts[static_cast<int>(CmagTargetType::COUNT)] = {};
 
-    const float nodeScale = 25;
-    const float textScale = 3;
+    float nodeScale = 25;
+    float textScale = 3;
 
     // Every target has a void* userData field to track custom, gui-specific data. We allocate a vector of our data structs
     // and bind them to each target.

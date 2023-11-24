@@ -18,16 +18,23 @@ void TargetGraphTab::render(ImGuiIO &io) {
 
 void TargetGraphTab::renderSidePane(float width) {
     ImGui::Checkbox("Demo Window", &showDemoWindow);
-    ImGui::Button("Dummy button 1");
-    ImGui::Button("Dummy button 2");
-    ImGui::Button("Dummy button 3");
-
-    renderPropertyPopup();
-    renderPropertyTable(width);
-
     if (showDemoWindow) {
         ImGui::ShowDemoWindow(&showDemoWindow);
     }
+
+    // TODO: extract this to a separate function
+    // TODO: do we leave this? Or make sure scales are always correctly calculated?
+    ImGui::PushItemWidth(width - ImGui::CalcTextSize("node size").x);
+    if (ImGui::SliderFloat("node size", targetGraph.getNodeScalePtr(), 5, 40, "%.2f", ImGuiSliderFlags_AlwaysClamp)) {
+        targetGraph.reinitializeModelMatrices();
+    }
+    ImGui::PushItemWidth(width - ImGui::CalcTextSize("text size").x);
+    if (ImGui::SliderFloat("text size", targetGraph.getTextScalePtr(), 3, 12, "%.2f", ImGuiSliderFlags_AlwaysClamp)) {
+        targetGraph.reinitializeModelMatrices();
+    }
+
+    renderPropertyPopup();
+    renderPropertyTable(width);
 }
 
 void TargetGraphTab::renderPropertyPopup() {

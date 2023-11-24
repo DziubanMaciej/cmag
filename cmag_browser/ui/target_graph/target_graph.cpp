@@ -151,6 +151,13 @@ void TargetGraph::savePosition(size_t x, size_t y) {
     bounds.y = y;
 }
 
+void TargetGraph::reinitializeModelMatrices() {
+    for (const CmagTarget &target : targets) {
+        glm::vec3 dragOffset = (targetDrag.active && &target == targetDrag.target) ? targetDrag.offset : glm::vec3{};
+        getTargetData(target).initializeModelMatrix(target.graphical, dragOffset, nodeScale, textScale);
+    }
+}
+
 void TargetGraph::scaleTargetPositions() {
     // Target positions were calculated by core cmag and the may be in an arbitrary space. We scale them to our
     // custom world space.
