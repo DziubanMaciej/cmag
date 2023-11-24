@@ -184,12 +184,9 @@ void TargetGraph::scaleTargetPositions() {
     maxY += paddingY;
 
     // Linearly transform x and y of all targets to our world space.
-    auto scaleVertex = [minX, maxX, minY, maxY](float &x, float &y) {
-        x = ((x - minX) * 2 * worldSpaceHalfWidth / (maxX - minX)) - worldSpaceHalfWidth;
-        y = ((y - minY) * 2 * worldSpaceHalfHeight / (maxY - minY)) - worldSpaceHalfHeight;
-    };
     for (CmagTarget &target : targets) {
-        scaleVertex(target.graphical.x, target.graphical.y);
+        target.graphical.x = interpolate(target.graphical.x, minX, maxX, -worldSpaceHalfWidth, worldSpaceHalfWidth);
+        target.graphical.y = interpolate(target.graphical.y, minY, maxY, -worldSpaceHalfHeight, worldSpaceHalfHeight);
     }
 }
 
