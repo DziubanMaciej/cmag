@@ -10,42 +10,30 @@
 constexpr GLuint verticesInQuad = 6;
 constexpr GLuint componentsInVertex = 4; // x,y,u,v
 
-TextRenderer::TextRenderer(std::string_view text) {
-    ImFont *font = ImGui::GetFont();
-    FATAL_ERROR_IF(font == nullptr, "ImGui font not loaded yet.")
-
-    vertexCount = static_cast<GLuint>(text.length()) * verticesInQuad;
-    gl.texture = static_cast<GLuint>(reinterpret_cast<uintptr_t>(font->ContainerAtlas->TexID));
-
-    allocateVertexBuffer(font, text);
+TextRenderer::TextRenderer() {
     allocateProgram();
 }
 
 TextRenderer::~TextRenderer() {
-    if (gl.vbo) {
-        glDeleteBuffers(1, &gl.vbo);
-    }
-    if (gl.vao) {
-        glDeleteVertexArrays(1, &gl.vao);
-    }
     if (gl.program) {
         glDeleteProgram(gl.program);
     }
 }
 
-void TextRenderer::render(glm::mat4 transform) {
-    SAFE_GL(glBindVertexArray(gl.vao));
+void TextRenderer::render(glm::mat4 transform, std::string_view text, ImFont *font) {
+    const PerStringData &data = getStringData(text, font);
+
+    SAFE_GL(glBindVertexArray(data.gl.vao));
     SAFE_GL(glEnableVertexAttribArray(0));
     SAFE_GL(glEnableVertexAttribArray(1));
-    SAFE_GL(glBindTexture(GL_TEXTURE_2D, gl.texture));
+    SAFE_GL(glBindTexture(GL_TEXTURE_2D, getTextureId(font)));
     SAFE_GL(glUseProgram(gl.program));
     SAFE_GL(glEnable(GL_BLEND));
     SAFE_GL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     SAFE_GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
 
-    //transform = glm::identity<glm::mat4>();
     SAFE_GL(glUniformMatrix4fv(gl.programUniform.transform, 1, GL_FALSE, glm::value_ptr(transform)));
-    SAFE_GL(glDrawArrays(GL_TRIANGLES, 0, vertexCount));
+    SAFE_GL(glDrawArrays(GL_TRIANGLES, 0, data.vertexCount));
 
     SAFE_GL(glDisable(GL_BLEND));
     SAFE_GL(glBindVertexArray(0));
@@ -55,10 +43,24 @@ void TextRenderer::render(glm::mat4 transform) {
     SAFE_GL(glUseProgram(0));
 }
 
-void TextRenderer::allocateVertexBuffer(ImFont *font, std::string_view text) {
-    const std::vector<float> vertexData = prepareVertexData(font, text);
-    GLint attribSizes[] = {2, 2};
-    createVertexBuffer(&gl.vao, &gl.vbo, vertexData.data(), vertexData.size() * sizeof(float), attribSizes, 2u);
+TextRenderer::PerStringData &TextRenderer::getStringData(std::string_view text, ImFont *font) {
+    auto it = std::find_if(strings.begin(), strings.end(), [text](const PerStringData &data) {
+        return data.string == text;
+    });
+    if (it != strings.end()) {
+        return *it;
+    }
+
+    strings.emplace_back(font, text);
+    return strings.back();
+}
+
+GLuint TextRenderer::getTextureId(ImFont *font) {
+    FATAL_ERROR_IF(font == nullptr, "ImGui font not loaded yet.")
+
+    GLuint texture = static_cast<GLuint>(reinterpret_cast<uintptr_t>(font->ContainerAtlas->TexID));
+    FATAL_ERROR_IF(texture == 0, "Invalid texture id");
+    return texture;
 }
 
 void TextRenderer::allocateProgram() {
@@ -95,7 +97,29 @@ void TextRenderer::allocateProgram() {
     gl.programUniform.transform = getUniformLocation(gl.program, "transform");
 }
 
-std::vector<float> TextRenderer::prepareVertexData(ImFont *font, std::string_view text) {
+TextRenderer::PerStringData::PerStringData(ImFont *font, std::string_view text) {
+    string = std::string{text};
+    vertexCount = static_cast<GLuint>(text.length()) * verticesInQuad;
+    allocateVertexBuffer(font, text);
+}
+
+TextRenderer::PerStringData::~PerStringData() {
+    if (gl.vbo) {
+        glDeleteBuffers(1, &gl.vbo);
+    }
+    if (gl.vao) {
+        glDeleteVertexArrays(1, &gl.vao);
+    }
+}
+
+void TextRenderer::PerStringData::allocateVertexBuffer(ImFont *font, std::string_view text) {
+    const std::vector<float> vertexData = prepareVertexData(font, text);
+    GLint attribSizes[] = {2, 2};
+    createVertexBuffer(&gl.vao, &gl.vbo, vertexData.data(), vertexData.size() * sizeof(float), attribSizes, 2u);
+}
+
+std::vector<float> TextRenderer::PerStringData::prepareVertexData(ImFont *font, std::string_view text) {
+
     std::vector<float> result = {};
     result.reserve(text.length() * verticesInQuad * componentsInVertex);
 

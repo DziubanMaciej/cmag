@@ -138,7 +138,7 @@ void TargetGraph::render(size_t currentWidth, size_t currentHeight) {
     for (const CmagTarget &target : targets) {
         auto modelMatrix = getTargetData(target).textModelMatrix;
         const auto transform = camera.projectionMatrix * modelMatrix;
-        getTextRenderer(target.name)->render(transform);
+        textRenderer.render(transform, target.name, ImGui::GetFont());
     }
 
     SAFE_GL(glUseProgram(0));
@@ -280,14 +280,4 @@ void TargetGraph::TargetData::initializeModelMatrix(CmagTargetGraphicalData grap
 
 TargetGraph::TargetData &TargetGraph::getTargetData(const CmagTarget &target) {
     return *static_cast<TargetData *>(target.userData);
-}
-
-TextRenderer *TargetGraph::getTextRenderer(const std::string &text) {
-    if (auto it = textRenderers.find(text); it != textRenderers.end()) {
-        return &it->second;
-    }
-
-    auto entry = std::pair<std::string, TextRenderer>{text, TextRenderer{text}};
-    auto insertResult = textRenderers.insert(std::move(entry));
-    return &insertResult.first->second;
 }

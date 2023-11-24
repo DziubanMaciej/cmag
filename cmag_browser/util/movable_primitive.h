@@ -23,5 +23,5 @@ struct MovablePrimitive {
         return &value;
     }
 
-    operator T() { return value; }
+    operator T() const { return value; }
 };

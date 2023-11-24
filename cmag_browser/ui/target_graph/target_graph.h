@@ -38,8 +38,7 @@ private:
     CmagTarget *selectedTarget = nullptr;
     CmagTarget *focusedTarget = nullptr;
 
-    TextRenderer *getTextRenderer(const std::string &text);
-    std::unordered_map<std::string, TextRenderer> textRenderers;
+    TextRenderer textRenderer = {};
 
     const float *vertices[static_cast<int>(CmagTargetType::COUNT)] = {};
     size_t verticesCounts[static_cast<int>(CmagTargetType::COUNT)] = {};
