@@ -21,7 +21,7 @@ TextRenderer::~TextRenderer() {
     }
 }
 
-void TextRenderer::render(glm::mat4 transform, std::string_view text, ImFont *font) {
+void TextRenderer::render(glm::mat4 transform, float depthValue, std::string_view text, ImFont *font) {
     const PerStringData &data = getStringData(text, font);
 
     SAFE_GL(glBindVertexArray(data.gl.vao));
@@ -33,6 +33,7 @@ void TextRenderer::render(glm::mat4 transform, std::string_view text, ImFont *fo
     SAFE_GL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     SAFE_GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
 
+    SAFE_GL(glUniform1f(gl.programUniform.depthValue, depthValue));
     SAFE_GL(glUniformMatrix4fv(gl.programUniform.transform, 1, GL_FALSE, glm::value_ptr(transform)));
     SAFE_GL(glDrawArrays(GL_TRIANGLES, 0, data.vertexCount));
 
@@ -69,13 +70,14 @@ void TextRenderer::allocateProgram() {
     #version 330 core
     #extension GL_ARB_separate_shader_objects : enable
 
+    uniform float depthValue;
     uniform mat4 transform;
     in vec2 inPos;
     in vec2 inTexCoord;
 
     layout(location = 0) out vec2 outTexCoord;
     void main() {
-        gl_Position = vec4(inPos, 0, 1);
+        gl_Position = vec4(inPos, depthValue, 1);
         gl_Position = transform * gl_Position;
 
         outTexCoord = inTexCoord;
@@ -95,6 +97,7 @@ void TextRenderer::allocateProgram() {
 
 )";
     gl.program = createProgram(vertexShaderSource, fragmentShaderSource);
+    gl.programUniform.depthValue = getUniformLocation(gl.program, "depthValue");
     gl.programUniform.transform = getUniformLocation(gl.program, "transform");
 }
 

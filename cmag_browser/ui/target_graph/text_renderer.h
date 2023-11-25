@@ -17,7 +17,7 @@ public:
     TextRenderer &operator=(TextRenderer &&other) = default;
     ~TextRenderer();
 
-    void render(glm::mat4 transform, std::string_view text, ImFont *font);
+    void render(glm::mat4 transform, float depthValue, std::string_view text, ImFont *font);
 
 private:
     void allocateProgram();
@@ -47,6 +47,7 @@ private:
     struct {
         MovablePrimitive<GLuint> program;
         struct {
+            MovablePrimitive<GLint> depthValue;
             MovablePrimitive<GLint> transform;
         } programUniform;
     } gl;

@@ -104,10 +104,12 @@ void TargetGraph::render(float spaceX, float spaceY) {
 
     SAFE_GL(glViewport(0, 0, static_cast<GLsizei>(bounds.width), static_cast<GLsizei>(bounds.height)));
     SAFE_GL(glClearColor(1, 0, 0, 1));
-    SAFE_GL(glClear(GL_COLOR_BUFFER_BIT));
+    SAFE_GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
     SAFE_GL(glBindVertexArray(gl.shapeVao));
     SAFE_GL(glEnableVertexAttribArray(0));
+    SAFE_GL(glEnable(GL_DEPTH_TEST));
+
     for (const CmagTarget &target : targets) {
         const size_t vbOffset = shapesOffsetsInVertexBuffer[static_cast<int>(target.type)] / 2;
         const size_t vbSize = shapes[static_cast<int>(target.type)]->verticesCount / 2;
@@ -115,6 +117,7 @@ void TargetGraph::render(float spaceX, float spaceY) {
         const auto modelMatrix = getTargetData(target).modelMatrix;
         const auto transform = camera.projectionMatrix * modelMatrix;
         SAFE_GL(glUniformMatrix4fv(gl.programUniform.transform, 1, GL_FALSE, glm::value_ptr(transform)));
+        SAFE_GL(glUniform1f(gl.programUniform.depthValue, calculateDepthValueForTarget(target, false)));
 
         if (&target == selectedTarget) {
             SAFE_GL(glUniform3f(gl.programUniform.color, 0, 0, 1));
@@ -131,9 +134,12 @@ void TargetGraph::render(float spaceX, float spaceY) {
     for (const CmagTarget &target : targets) {
         auto modelMatrix = getTargetData(target).textModelMatrix;
         const auto transform = camera.projectionMatrix * modelMatrix;
-        textRenderer.render(transform, target.name, ImGui::GetFont());
+        const auto depthValue = calculateDepthValueForTarget(target, true);
+        const auto font = ImGui::GetFont();
+        textRenderer.render(transform, depthValue, target.name, font);
     }
 
+    SAFE_GL(glDisable(GL_DEPTH_TEST));
     SAFE_GL(glUseProgram(0));
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
     SAFE_GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
@@ -160,6 +166,26 @@ void TargetGraph::clampTargetPositionToVisibleWorldSpace(CmagTarget &target) con
 
     target.graphical.x = clamp(target.graphical.x, minX, maxX);
     target.graphical.y = clamp(target.graphical.y, minY, maxY);
+}
+
+float TargetGraph::calculateDepthValueForTarget(const CmagTarget &target, bool forText) const {
+    constexpr float valueDefault = 0;
+    constexpr float valueSelected = 0.1;
+    constexpr float valueFocused = 0.2;
+    constexpr float textOffset = 0.01;
+
+    float result = valueDefault;
+    if (&target == selectedTarget) {
+        result = valueSelected;
+    } else if (&target == focusedTarget) {
+        result = valueFocused;
+    }
+
+    if (forText) {
+        result += textOffset;
+    }
+
+    return result;
 }
 
 void TargetGraph::scaleTargetPositions() {
@@ -243,9 +269,16 @@ void TargetGraph::allocateStorage() {
     SAFE_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
     SAFE_GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(bounds.width), static_cast<GLsizei>(bounds.height), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
 
+    SAFE_GL(glGenTextures(1, &gl.depthTexture));
+    SAFE_GL(glBindTexture(GL_TEXTURE_2D, gl.depthTexture));
+    SAFE_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    SAFE_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    SAFE_GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, static_cast<GLsizei>(bounds.width), static_cast<GLsizei>(bounds.height), 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr));
+
     SAFE_GL(glGenFramebuffers(1, &gl.framebuffer));
     SAFE_GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl.framebuffer));
     SAFE_GL(glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gl.texture, 0));
+    SAFE_GL(glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gl.depthTexture, 0));
     SAFE_GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
 }
 
@@ -304,10 +337,11 @@ void TargetGraph::deallocateBuffers() {
 void TargetGraph::allocateProgram() {
     const char *vertexShaderSource = R"(
     #version 330 core
+    uniform float depthValue;
     uniform mat4 transform;
-    layout(location = 0) in vec3 aPos;
+    layout(location = 0) in vec2 aPos;
     void main() {
-        gl_Position = vec4(aPos, 1.0);
+        gl_Position = vec4(aPos, depthValue, 1.0);
         gl_Position = transform * gl_Position;
     }
 )";
@@ -320,6 +354,7 @@ void TargetGraph::allocateProgram() {
     }
 )";
     gl.program = createProgram(vertexShaderSource, fragmentShaderSource);
+    gl.programUniform.depthValue = getUniformLocation(gl.program, "depthValue");
     gl.programUniform.color = getUniformLocation(gl.program, "color");
     gl.programUniform.transform = getUniformLocation(gl.program, "transform");
 }
@@ -333,8 +368,8 @@ void TargetGraph::TargetData::initializeModelMatrix(CmagTargetGraphicalData grap
     auto translationMatrix = glm::identity<glm::mat4>();
     translationMatrix = glm::translate(translationMatrix, glm::vec3(graphical.x, graphical.y, 0));
 
-    modelMatrix = glm::scale(translationMatrix, glm::vec3(nodeScale, nodeScale, nodeScale));
-    textModelMatrix = glm::scale(translationMatrix, glm::vec3(textScale, textScale, textScale));
+    modelMatrix = glm::scale(translationMatrix, glm::vec3(nodeScale, nodeScale, 1));
+    textModelMatrix = glm::scale(translationMatrix, glm::vec3(textScale, textScale, 1));
 }
 
 TargetGraph::TargetData &TargetGraph::getTargetData(const CmagTarget &target) {

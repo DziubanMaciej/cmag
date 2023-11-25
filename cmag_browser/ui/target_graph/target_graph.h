@@ -4,9 +4,9 @@
 #include "cmag_browser/util/gl_extensions.h"
 #include "cmag_lib/core/cmag_project.h"
 
+#include <array>
 #include <glm/glm.hpp>
 #include <unordered_map>
-#include <array>
 
 struct ImGuiIO;
 struct ShapeInfo;
@@ -33,6 +33,8 @@ public:
 private:
     void clampTargetPositionToVisibleWorldSpace(CmagTarget &target) const;
 
+    float calculateDepthValueForTarget(const CmagTarget &target, bool forText) const;
+
     void scaleTargetPositions();
     void initializeTargetData();
     void initializeProjectionMatrix();
@@ -49,7 +51,7 @@ private:
     CmagTarget *selectedTarget = nullptr;
     CmagTarget *focusedTarget = nullptr;
 
-    std::array<const ShapeInfo*, static_cast<int>(CmagTargetType::COUNT)> shapes = {};
+    std::array<const ShapeInfo *, static_cast<int>(CmagTargetType::COUNT)> shapes = {};
     std::array<size_t, static_cast<int>(CmagTargetType::COUNT)> shapesOffsetsInVertexBuffer = {};
 
     TextRenderer textRenderer = {};
@@ -93,11 +95,13 @@ private:
 
         GLuint program = {};
         struct {
+            GLint depthValue = {};
             GLint transform = {};
             GLint color = {};
         } programUniform = {};
 
         GLuint texture = {};
+        GLuint depthTexture = {};
         GLuint framebuffer = {};
     } gl = {};
 };
