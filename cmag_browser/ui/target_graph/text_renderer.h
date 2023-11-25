@@ -4,9 +4,9 @@
 #include "cmag_browser/util/movable_primitive.h"
 
 #include <glm/gtc/type_ptr.hpp>
+#include <string>
 #include <string_view>
 #include <vector>
-#include <string>
 
 struct ImFont;
 

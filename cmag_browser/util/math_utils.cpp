@@ -16,9 +16,9 @@ bool isPointInsidePolygon(float pointX, float pointY, const float *polygon, size
 
     Point point{pointX, pointY};
 
-    for (size_t currentVertexIndex = 0; currentVertexIndex < length; currentVertexIndex+=2) {
+    for (size_t currentVertexIndex = 0; currentVertexIndex < length; currentVertexIndex += 2) {
         const size_t nextVertexIndex = (currentVertexIndex + 2) % length;
-        Point currentVertex = Point{polygon[currentVertexIndex], polygon[currentVertexIndex+1]};
+        Point currentVertex = Point{polygon[currentVertexIndex], polygon[currentVertexIndex + 1]};
         Point nextVertex = Point{polygon[nextVertexIndex], polygon[nextVertexIndex + 1]};
 
         if (currentVertex.y <= point.y) {
