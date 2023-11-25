@@ -131,7 +131,10 @@ XdotParseResult XdotParser::readTargetName(std::string_view &xdot, std::string &
         char nextChar = xdot[charCount];
         // See specification of target name in CMake https://cmake.org/cmake/help/latest/policy/CMP0037.html
         if (!::isalpha(nextChar) && !::isdigit(nextChar) && nextChar != '_' && nextChar != '.' && nextChar != '+' && nextChar != '-') {
-            break;
+            // This can also be a path. Let's allow this.
+            if (nextChar != '/') {
+                break;
+            }
         }
     }
 
