@@ -1,7 +1,6 @@
 #pragma once
 
 #include "cmag_lib/core/cmag_project.h"
-#include "cmag_lib/core/cmag_project.h"
 
 #include <cstddef>
 #include <limits>
@@ -9,7 +8,7 @@
 struct ShapeInfo {
     template <size_t verticesCount>
     ShapeInfo(const float (&vertices)[verticesCount]) : vertices(vertices),
-                                                  verticesCount(verticesCount) {
+                                                        verticesCount(verticesCount) {
         static_assert(verticesCount > 2);
         static_assert(verticesCount % 2 == 0);
 
@@ -33,4 +32,3 @@ struct ShapeInfo {
     const static ShapeInfo postcard;
     const static ShapeInfo square;
 };
-
