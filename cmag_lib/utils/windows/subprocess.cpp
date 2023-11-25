@@ -39,7 +39,7 @@ static SubprocessResult waitForResult(PROCESS_INFORMATION &processInfo) {
     }
 
     DWORD exitCode{};
-    FATAL_ERROR_IF(::GetExitCodeProcess(processInfo.hProcess, &exitCode) == 0)
+    FATAL_ERROR_IF(::GetExitCodeProcess(processInfo.hProcess, &exitCode) == 0);
 
     return exitCode == 0 ? SubprocessResult::Success : SubprocessResult::ProcessFailed;
 }
