@@ -39,7 +39,7 @@ void TargetGraph::update(ImGuiIO &io) {
     focusedTarget = nullptr;
     if (mouseInside && !targetDrag.active) {
         for (CmagTarget &target : targets) {
-            const ShapeInfo* shapeInfo = shapes[static_cast<int>(target.type)];
+            const ShapeInfo *shapeInfo = shapes[static_cast<int>(target.type)];
             const float *targetVertices = shapeInfo->vertices;
             const size_t targetVerticesSize = shapeInfo->verticesCount;
 
@@ -68,7 +68,7 @@ void TargetGraph::update(ImGuiIO &io) {
             targetDrag.target->graphical.x = mouseWorld.x - targetDrag.offsetFromCenter.x;
             targetDrag.target->graphical.y = mouseWorld.y - targetDrag.offsetFromCenter.y;
 
-            clampTargetPositionToVisibleWorldSpace(targetDrag.target->graphical);
+            clampTargetPositionToVisibleWorldSpace(*targetDrag.target);
             getTargetData(*targetDrag.target).initializeModelMatrix(targetDrag.target->graphical, nodeScale, textScale);
         }
     }
@@ -150,14 +150,16 @@ void TargetGraph::reinitializeModelMatrices() {
     }
 }
 
-void TargetGraph::clampTargetPositionToVisibleWorldSpace(CmagTargetGraphicalData &graphical) const {
-    const float minX = -worldSpaceHalfWidth + nodeScale;
-    const float maxX = +worldSpaceHalfWidth - nodeScale;
-    const float minY = -worldSpaceHalfHeight + nodeScale;
-    const float maxY = +worldSpaceHalfHeight - nodeScale;
+void TargetGraph::clampTargetPositionToVisibleWorldSpace(CmagTarget &target) const {
+    const ShapeInfo *shape = shapes[static_cast<int>(target.type)];
 
-    graphical.x = clamp(graphical.x, minX, maxX);
-    graphical.y = clamp(graphical.y, minY, maxY);
+    const float minX = -shape->bounds.minX * nodeScale - worldSpaceHalfWidth;
+    const float maxX = -shape->bounds.maxX * nodeScale + worldSpaceHalfWidth;
+    const float minY = -shape->bounds.minY * nodeScale - worldSpaceHalfHeight;
+    const float maxY = -shape->bounds.maxY * nodeScale + worldSpaceHalfHeight;
+
+    target.graphical.x = clamp(target.graphical.x, minX, maxX);
+    target.graphical.y = clamp(target.graphical.y, minY, maxY);
 }
 
 void TargetGraph::scaleTargetPositions() {
@@ -263,7 +265,7 @@ void TargetGraph::allocateBuffers() {
 
     // Sum up all vertices counts of all shapes
     size_t verticesCount = 0;
-    for(const ShapeInfo *shapeInfo : shapes) {
+    for (const ShapeInfo *shapeInfo : shapes) {
         if (shapeInfo == nullptr) {
             continue;
         }
@@ -273,7 +275,7 @@ void TargetGraph::allocateBuffers() {
     // Allocate one big array that will contain all the shapes and copy the vertices.
     auto data = std::make_unique<float[]>(verticesCount);
     size_t dataSize = 0;
-    for(size_t i=0; i < static_cast<int>(CmagTargetType::COUNT); i++) {
+    for (size_t i = 0; i < static_cast<int>(CmagTargetType::COUNT); i++) {
         const ShapeInfo *shapeInfo = shapes[i];
         if (shapeInfo == nullptr) {
             continue;

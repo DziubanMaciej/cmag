@@ -31,7 +31,7 @@ public:
     void reinitializeModelMatrices();
 
 private:
-    void clampTargetPositionToVisibleWorldSpace(CmagTargetGraphicalData &graphical) const;
+    void clampTargetPositionToVisibleWorldSpace(CmagTarget &target) const;
 
     void scaleTargetPositions();
     void initializeTargetData();
