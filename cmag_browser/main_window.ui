@@ -34,6 +34,9 @@
         <string>Graph</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout" stretch="4,1">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetDefaultConstraint</enum>
+        </property>
         <item>
          <widget class="QWidget" name="graph_container" native="true">
           <layout class="QVBoxLayout" name="verticalLayout_2"/>

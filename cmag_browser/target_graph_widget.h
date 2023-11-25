@@ -11,8 +11,6 @@ class TargetGraphWidget : public QWidget {
 public:
     TargetGraphWidget(QWidget *parent, CmagProject &project);
 
-    QSize sizeHint() const override;
-    QSize minimumSizeHint() const override;
 
 signals:
     void setSelectedTarget(CmagTarget *target);

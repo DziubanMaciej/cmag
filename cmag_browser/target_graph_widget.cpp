@@ -13,14 +13,6 @@ TargetGraphWidget::TargetGraphWidget(QWidget *parent, CmagProject &cmagProject)
     setMouseTracking(true);
 }
 
-QSize TargetGraphWidget::sizeHint() const {
-    return {100, 100};
-}
-
-QSize TargetGraphWidget::minimumSizeHint() const {
-    return {100, 100};
-}
-
 void TargetGraphWidget::paintEvent(QPaintEvent *) {
     QPainter painter(this);
     painter.setTransform(camera.transform);

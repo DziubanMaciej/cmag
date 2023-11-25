@@ -18,8 +18,7 @@ TargetPropertiesWidget::TargetPropertiesWidget(QWidget *parent)
     w->setLayout(propertiesFormLayout);
     this->layout()->addWidget(w);
 
-    // this->layout()->addItem(propertiesFormLayout);
-    // this->layout()->addItem(new QSpacerItem(0, 0, QSizePolicy::Policy::Preferred, QSizePolicy::Policy::Expanding));
+    setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Maximum);
 }
 
 void TargetPropertiesWidget::setSelectedTarget(CmagTarget *newTarget) {
