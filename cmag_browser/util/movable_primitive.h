@@ -7,11 +7,14 @@ struct MovablePrimitive {
     MovablePrimitive(T const &init) : value(init) {}
 
     MovablePrimitive(MovablePrimitive const &) = default;
-    MovablePrimitive(MovablePrimitive &&other) : value(std::exchange(other.value, empty_value)) {}
+    MovablePrimitive(MovablePrimitive &&other) : value(other.value) {
+        other.value = empty_value;
+    }
 
     MovablePrimitive &operator=(MovablePrimitive const &) = default;
     MovablePrimitive &operator=(MovablePrimitive &&other) {
-        value = std::exchange(other.value, empty_value);
+        value = other.value;
+        other.value = empty_value;
         return *this;
     }
 

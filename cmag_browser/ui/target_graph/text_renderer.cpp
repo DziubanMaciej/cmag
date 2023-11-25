@@ -4,6 +4,7 @@
 #include "cmag_browser/util/gl_helpers.h"
 #include "cmag_browser/util/math_utils.h"
 
+#include <algorithm>
 #include <cstdint>
 #include <imgui/imgui.h>
 

@@ -1,6 +1,9 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
+#if _WIN32
+#include <Windows.h>
+#endif
+#include <GL/gl.h>
 #include <gl/glext.h>
 
 namespace glext {
