@@ -89,13 +89,21 @@ void TargetGraphTab::renderPropertyTable(float width) {
 
 void TargetGraphTab::renderGraph(ImGuiIO &io) {
     ImVec2 space = ImGui::GetContentRegionAvail();
-    if (space.x > 0 && space.y > 0) {
-        int targetGraphW = static_cast<int>(space.x);
-        int targetGraphH = static_cast<int>(space.y);
 
+    if (space.x > 0 && space.y > 0) {
         targetGraph.update(io);
-        targetGraph.render(targetGraphW, targetGraphH);
-        ImGui::Image((void *)(intptr_t)targetGraph.getTexture(), space);
+        targetGraph.render(space.x, space.y);
+
+        // We passed available space to the target graph, but actually used space may be different,
+        // because the graph tries to maintain aspect ratio. Hence, we have to query the size before
+        // displaying the image.
+        const auto texture = (void *)(intptr_t)targetGraph.getTexture();
+        const auto textureWidth = static_cast<float>(targetGraph.getTextureWidth());
+        const auto textureHeight = static_cast<float>(targetGraph.getTextureHeight());
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (space.x - textureWidth) / 2);
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + (space.y - textureHeight) / 2);
+        ImGui::Image(texture, ImVec2(textureWidth, textureHeight));
+
         const ImVec2 pos = ImGui::GetItemRectMin();
         targetGraph.savePosition(static_cast<size_t>(pos.x), static_cast<size_t>(pos.y));
     }

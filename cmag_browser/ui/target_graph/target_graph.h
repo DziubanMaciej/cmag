@@ -15,11 +15,13 @@ public:
     ~TargetGraph();
 
     void update(ImGuiIO &io);
-    void render(size_t currentWidth, size_t currentHeight);
+    void render(float spaceX, float spaceY);
     void savePosition(size_t x, size_t y);
 
     CmagTarget *getSelectedTarget() { return selectedTarget; }
     auto getTexture() { return gl.texture; }
+    auto getTextureWidth() const { return bounds.width; }
+    auto getTextureHeight() const { return bounds.height; }
 
     auto getNodeScalePtr() { return &nodeScale; }
     auto getTextScalePtr() { return &textScale; }
@@ -33,7 +35,8 @@ private:
     void initializeTargetData();
     void initializeProjectionMatrix();
 
-    void allocateStorage(size_t newWidth, size_t newHeight);
+    bool calculateScreenSpaceSize(float spaceX, float spaceY);
+    void allocateStorage();
     void deallocateStorage();
     void allocateBuffers();
     void deallocateBuffers();

@@ -100,18 +100,16 @@ void TargetGraph::update(ImGuiIO &io) {
     }
 }
 
-void TargetGraph::render(size_t currentWidth, size_t currentHeight) {
-    if (currentWidth != bounds.width || currentHeight != bounds.height) {
-        allocateStorage(currentWidth, currentHeight);
-        bounds.width = currentWidth;
-        bounds.height = currentHeight;
+void TargetGraph::render(float spaceX, float spaceY) {
+    if (calculateScreenSpaceSize(spaceX, spaceY)) {
+        allocateStorage();
     }
 
     SAFE_GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl.framebuffer));
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, gl.shapeVbo));
     SAFE_GL(glUseProgram(gl.program));
 
-    SAFE_GL(glViewport(0, 0, static_cast<GLsizei>(currentWidth), static_cast<GLsizei>(currentHeight)));
+    SAFE_GL(glViewport(0, 0, static_cast<GLsizei>(bounds.width), static_cast<GLsizei>(bounds.height)));
     SAFE_GL(glClearColor(1, 0, 0, 1));
     SAFE_GL(glClear(GL_COLOR_BUFFER_BIT));
 
@@ -217,15 +215,35 @@ void TargetGraph::initializeProjectionMatrix() {
     camera.projectionMatrix = glm::ortho(-worldSpaceHalfWidth, worldSpaceHalfWidth, -worldSpaceHalfHeight, worldSpaceHalfHeight);
 }
 
-void TargetGraph::allocateStorage(size_t newWidth, size_t newHeight) {
-    FATAL_ERROR_IF(newWidth == 0 || newHeight == 0, "Zero dimensions");
+bool TargetGraph::calculateScreenSpaceSize(float spaceX, float spaceY) {
+
+    if (spaceX > spaceY * screenSpaceAspectRatio) {
+        spaceX = spaceY * screenSpaceAspectRatio;
+    }
+    if (spaceY > spaceX / screenSpaceAspectRatio) {
+        spaceY = spaceX / screenSpaceAspectRatio;
+    }
+
+    const auto newWidth = static_cast<size_t>(spaceX);
+    const auto newHeight = static_cast<size_t>(spaceY);
+
+    if (newWidth != bounds.width || newHeight != bounds.height) {
+        bounds.width = newWidth;
+        bounds.height = newHeight;
+        return true;
+    }
+    return false;
+}
+
+void TargetGraph::allocateStorage() {
+    FATAL_ERROR_IF(bounds.width == 0 || bounds.height == 0, "Zero dimensions");
     deallocateStorage();
 
     SAFE_GL(glGenTextures(1, &gl.texture));
     SAFE_GL(glBindTexture(GL_TEXTURE_2D, gl.texture));
     SAFE_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     SAFE_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-    SAFE_GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(newWidth), static_cast<GLsizei>(newHeight), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
+    SAFE_GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(bounds.width), static_cast<GLsizei>(bounds.height), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
 
     SAFE_GL(glGenFramebuffers(1, &gl.framebuffer));
     SAFE_GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl.framebuffer));
