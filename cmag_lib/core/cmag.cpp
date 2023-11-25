@@ -157,7 +157,7 @@ CmagResult Cmag::generateGraphPositionsForProject(const fs::path &buildPath, con
         }
         XdotParseResult parseResult = XdotParser::parse(xdotContent.value(), xdotData);
         if (parseResult != XdotParseResult::Success) {
-            LOG_ERROR("failed to parse ", xdotPath);
+            LOG_ERROR("failed to parse ", xdotPath, " (errorCode=", static_cast<int>(parseResult), ")");
             return CmagResult::XdotParseError;
         }
     }
