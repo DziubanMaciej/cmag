@@ -1,6 +1,7 @@
 #include "target_graph.h"
 
 #include "cmag_browser/ui/target_graph/coordinate_space.h"
+#include "cmag_browser/ui/target_graph/shapes.h"
 #include "cmag_browser/util/gl_extensions.h"
 #include "cmag_browser/util/gl_helpers.h"
 #include "cmag_browser/util/math_utils.h"
@@ -8,21 +9,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui/imgui.h>
-
-// Vertices for shapes are specified in model space.
-// Model space is defined in range <-1, 1> for both x and y.
-const float verticesStaticLib[] = {
-    -0.5, -0.5, // v0
-    +0.5, -0.5, // v1
-    +1.0, +0.0, // v2
-    +0.5, +0.5, // v3
-    -0.5, +0.5, // v4
-};
+#include <memory>
 
 TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
-    vertices[static_cast<int>(CmagTargetType::StaticLibrary)] = verticesStaticLib;
-    verticesCounts[static_cast<int>(CmagTargetType::StaticLibrary)] = sizeof(verticesStaticLib) / sizeof(float);
-
     allocateBuffers();
     allocateProgram();
 
@@ -38,6 +27,8 @@ TargetGraph ::~TargetGraph() {
 }
 
 void TargetGraph::update(ImGuiIO &io) {
+    // ImGuiIO gives us mouse position global to the whole window. We have to transform it so it's relative
+    // to our graph that we're rendering.
     const float mouseX = 2 * (io.MousePos.x - static_cast<float>(bounds.x)) / static_cast<float>(bounds.width) - 1;
     const float mouseY = 2 * (io.MousePos.y - static_cast<float>(bounds.y)) / static_cast<float>(bounds.height) - 1;
     const bool mouseInside = -1 <= mouseX && mouseX <= 1 && -1 <= mouseY && mouseY <= 1;
@@ -48,10 +39,12 @@ void TargetGraph::update(ImGuiIO &io) {
     focusedTarget = nullptr;
     if (mouseInside && !targetDrag.active) {
         for (CmagTarget &target : targets) {
-            const float *targetVertices = vertices[static_cast<int>(target.type)];
-            const size_t targetVerticesSize = verticesCounts[static_cast<int>(target.type)];
+            const ShapeInfo* shapeInfo = shapes[static_cast<int>(target.type)];
+            const float *targetVertices = shapeInfo->vertices;
+            const size_t targetVerticesSize = shapeInfo->verticesCount;
 
-            // Transform vertices
+            // Transform vertices from local space to screen space, so we're able to compare it with mouse position.
+            // TODO wouldn't it be possible/better to transform mouse position to local space of each target?
             glm::mat4 viewModelMatrix = camera.projectionMatrix * getTargetData(target).modelMatrix;
             for (size_t i = 0; i < targetVerticesSize; i += 2) {
                 glm::vec4 vertex{targetVertices[i], targetVertices[i + 1], 0, 1};
@@ -116,20 +109,23 @@ void TargetGraph::render(float spaceX, float spaceY) {
     SAFE_GL(glBindVertexArray(gl.shapeVao));
     SAFE_GL(glEnableVertexAttribArray(0));
     for (const CmagTarget &target : targets) {
+        const size_t vbOffset = shapesOffsetsInVertexBuffer[static_cast<int>(target.type)] / 2;
+        const size_t vbSize = shapes[static_cast<int>(target.type)]->verticesCount / 2;
+
         const auto modelMatrix = getTargetData(target).modelMatrix;
         const auto transform = camera.projectionMatrix * modelMatrix;
         SAFE_GL(glUniformMatrix4fv(gl.programUniform.transform, 1, GL_FALSE, glm::value_ptr(transform)));
 
         if (&target == selectedTarget) {
             SAFE_GL(glUniform3f(gl.programUniform.color, 0, 0, 1));
-            SAFE_GL(glDrawArrays(GL_TRIANGLE_FAN, 0, 5));
+            SAFE_GL(glDrawArrays(GL_TRIANGLE_FAN, vbOffset, vbSize));
         } else if (&target == focusedTarget) {
             SAFE_GL(glUniform3f(gl.programUniform.color, 0, 1, 0));
-            SAFE_GL(glDrawArrays(GL_TRIANGLE_FAN, 0, 5));
+            SAFE_GL(glDrawArrays(GL_TRIANGLE_FAN, vbOffset, vbSize));
         }
 
         SAFE_GL(glUniform3f(gl.programUniform.color, 0, 0, 0));
-        SAFE_GL(glDrawArrays(GL_LINE_LOOP, 0, 5));
+        SAFE_GL(glDrawArrays(GL_LINE_LOOP, vbOffset, vbSize));
     }
 
     for (const CmagTarget &target : targets) {
@@ -261,10 +257,35 @@ void TargetGraph::deallocateStorage() {
 }
 
 void TargetGraph::allocateBuffers() {
-    const float *data = vertices[static_cast<int>(CmagTargetType::StaticLibrary)];
-    const size_t dataSize = verticesCounts[static_cast<int>(CmagTargetType::StaticLibrary)] * sizeof(float);
+    // Assign shapes to target types
+    shapes[static_cast<int>(CmagTargetType::StaticLibrary)] = &ShapeInfo::postcard;
+    shapes[static_cast<int>(CmagTargetType::Executable)] = &ShapeInfo::square;
+
+    // Sum up all vertices counts of all shapes
+    size_t verticesCount = 0;
+    for(const ShapeInfo *shapeInfo : shapes) {
+        if (shapeInfo == nullptr) {
+            continue;
+        }
+        verticesCount += shapeInfo->verticesCount;
+    }
+
+    // Allocate one big array that will contain all the shapes and copy the vertices.
+    auto data = std::make_unique<float[]>(verticesCount);
+    size_t dataSize = 0;
+    for(size_t i=0; i < static_cast<int>(CmagTargetType::COUNT); i++) {
+        const ShapeInfo *shapeInfo = shapes[i];
+        if (shapeInfo == nullptr) {
+            continue;
+        }
+        memcpy(data.get() + dataSize, shapeInfo->vertices, shapeInfo->verticesCount * sizeof(float));
+        shapesOffsetsInVertexBuffer[i] = dataSize;
+        dataSize += shapeInfo->verticesCount;
+    }
+    dataSize *= sizeof(float);
+
     const GLint attribSize = 2;
-    createVertexBuffer(&gl.shapeVao, &gl.shapeVbo, data, dataSize, &attribSize, 1);
+    createVertexBuffer(&gl.shapeVao, &gl.shapeVbo, data.get(), dataSize, &attribSize, 1);
 }
 
 void TargetGraph::deallocateBuffers() {

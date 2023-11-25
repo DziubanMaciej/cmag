@@ -6,8 +6,10 @@
 
 #include <glm/glm.hpp>
 #include <unordered_map>
+#include <array>
 
 struct ImGuiIO;
+struct ShapeInfo;
 
 class TargetGraph {
 public:
@@ -47,10 +49,10 @@ private:
     CmagTarget *selectedTarget = nullptr;
     CmagTarget *focusedTarget = nullptr;
 
-    TextRenderer textRenderer = {};
+    std::array<const ShapeInfo*, static_cast<int>(CmagTargetType::COUNT)> shapes = {};
+    std::array<size_t, static_cast<int>(CmagTargetType::COUNT)> shapesOffsetsInVertexBuffer = {};
 
-    const float *vertices[static_cast<int>(CmagTargetType::COUNT)] = {};
-    size_t verticesCounts[static_cast<int>(CmagTargetType::COUNT)] = {};
+    TextRenderer textRenderer = {};
 
     float nodeScale = 25;
     float textScale = 3;

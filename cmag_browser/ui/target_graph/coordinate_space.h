@@ -1,6 +1,10 @@
 #pragma once
 
-// World space is defined in range <-100, 100> for both x and y.
+// Local space is defined in range <-1, 1> for both x and y
+constexpr float localSpaceHalfWidth = 1;
+constexpr float localSpaceHalfHeight = 1;
+
+// World space is defined in our arbitrary range.
 constexpr float worldSpaceHalfWidth = 200;
 constexpr float worldSpaceHalfHeight = 100;
 constexpr float worldSpaceAspectRatio = worldSpaceHalfWidth / worldSpaceHalfHeight;
