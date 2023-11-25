@@ -1,8 +1,8 @@
 #include "gl_extensions.h"
 
-#define FUNCTION(name)                                           \
+#define FUNCTION(name)                                                \
     name = reinterpret_cast<decltype(name)>(getProcAddressFn(#name)); \
-    if (name == nullptr)                                         \
+    if (name == nullptr)                                              \
         return false;
 
 namespace glext {
