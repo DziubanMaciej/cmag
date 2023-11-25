@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
     FATAL_ERROR_IF(CmagJsonParser::parseProject(cmagProjectJson.value(), cmagProject) != ParseResult::Success, "could not parse ", cmagProjectJsonPath);
     const char *glslVersion = {};
     GLFWwindow *window = initializeWindow(true, &glslVersion);
-    FATAL_ERROR_IF(window == nullptr, "failed to initialize graphics context")
+    FATAL_ERROR_IF(window == nullptr, "failed to initialize graphics context");
 
     glext::GetProcAddressFn getProcAddress = +[](const char *name) { return reinterpret_cast<void *>(::glfwGetProcAddress(name)); };
     FATAL_ERROR_IF(!glext::initialize(getProcAddress), "failed to initialize OpenGL extensions");

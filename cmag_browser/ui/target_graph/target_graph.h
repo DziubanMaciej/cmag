@@ -19,7 +19,7 @@ public:
     void savePosition(size_t x, size_t y);
 
     CmagTarget *getSelectedTarget() { return selectedTarget; }
-    auto getTexture() { return gl.texture; }
+    auto getTexture() const { return gl.texture; }
     auto getTextureWidth() const { return bounds.width; }
     auto getTextureHeight() const { return bounds.height; }
 
@@ -29,7 +29,7 @@ public:
     void reinitializeModelMatrices();
 
 private:
-    void clampTargetPositionToVisibleWorldSpace(CmagTargetGraphicalData &graphical);
+    void clampTargetPositionToVisibleWorldSpace(CmagTargetGraphicalData &graphical) const;
 
     void scaleTargetPositions();
     void initializeTargetData();
@@ -64,20 +64,20 @@ private:
         void initializeModelMatrix(CmagTargetGraphicalData graphical, float nodeScale, float textScale);
     };
     std::vector<TargetData> targetData = {};
-    TargetData &getTargetData(const CmagTarget &target);
+    static TargetData &getTargetData(const CmagTarget &target);
 
     // Bounds of our graph in screen space. It determines framebuffer size and the rendering viewport. It is obtained
     // from higher level interface, which tells this class, how big it should render.
     struct {
-        size_t x;
-        size_t y;
-        size_t width;
-        size_t height;
-    } bounds;
+        size_t x = {};
+        size_t y = {};
+        size_t width = {};
+        size_t height = {};
+    } bounds = {};
 
     struct {
-        glm::mat4 projectionMatrix;
-    } camera;
+        glm::mat4 projectionMatrix = {};
+    } camera = {};
 
     struct {
         bool active = {};
@@ -86,16 +86,16 @@ private:
     } targetDrag = {};
 
     struct {
-        GLuint shapeVbo;
-        GLuint shapeVao;
+        GLuint shapeVbo = {};
+        GLuint shapeVao = {};
 
-        GLuint program;
+        GLuint program = {};
         struct {
-            GLint transform;
-            GLint color;
-        } programUniform;
+            GLint transform = {};
+            GLint color = {};
+        } programUniform = {};
 
-        GLuint texture;
-        GLuint framebuffer;
-    } gl;
+        GLuint texture = {};
+        GLuint framebuffer = {};
+    } gl = {};
 };

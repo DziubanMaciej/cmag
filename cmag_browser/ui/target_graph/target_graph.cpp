@@ -38,8 +38,8 @@ TargetGraph ::~TargetGraph() {
 }
 
 void TargetGraph::update(ImGuiIO &io) {
-    const float mouseX = 2 * (io.MousePos.x - bounds.x) / bounds.width - 1;
-    const float mouseY = 2 * (io.MousePos.y - bounds.y) / bounds.height - 1;
+    const float mouseX = 2 * (io.MousePos.x - static_cast<float>(bounds.x)) / static_cast<float>(bounds.width) - 1;
+    const float mouseY = 2 * (io.MousePos.y - static_cast<float>(bounds.y)) / static_cast<float>(bounds.height) - 1;
     const bool mouseInside = -1 <= mouseX && mouseX <= 1 && -1 <= mouseY && mouseY <= 1;
 
     constexpr size_t maxVerticesSize = 20;
@@ -154,7 +154,7 @@ void TargetGraph::reinitializeModelMatrices() {
     }
 }
 
-void TargetGraph::clampTargetPositionToVisibleWorldSpace(CmagTargetGraphicalData &graphical) {
+void TargetGraph::clampTargetPositionToVisibleWorldSpace(CmagTargetGraphicalData &graphical) const {
     const float minX = -worldSpaceHalfWidth + nodeScale;
     const float maxX = +worldSpaceHalfWidth - nodeScale;
     const float minY = -worldSpaceHalfHeight + nodeScale;
@@ -270,9 +270,11 @@ void TargetGraph::allocateBuffers() {
 void TargetGraph::deallocateBuffers() {
     if (gl.shapeVbo) {
         glDeleteBuffers(1, &gl.shapeVbo);
+        gl.shapeVbo = {};
     }
     if (gl.shapeVao) {
         glDeleteVertexArrays(1, &gl.shapeVao);
+        gl.shapeVao = {};
     }
 }
 
@@ -301,10 +303,11 @@ void TargetGraph::allocateProgram() {
 
 void TargetGraph::deallocateProgram() {
     glDeleteProgram(gl.program);
+    gl.program = {};
 }
 
 void TargetGraph::TargetData::initializeModelMatrix(CmagTargetGraphicalData graphical, float nodeScale, float textScale) {
-    glm::mat4 translationMatrix = glm::identity<glm::mat4>();
+    auto translationMatrix = glm::identity<glm::mat4>();
     translationMatrix = glm::translate(translationMatrix, glm::vec3(graphical.x, graphical.y, 0));
 
     modelMatrix = glm::scale(translationMatrix, glm::vec3(nodeScale, nodeScale, nodeScale));

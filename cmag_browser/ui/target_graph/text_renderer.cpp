@@ -57,7 +57,7 @@ TextRenderer::PerStringData &TextRenderer::getStringData(std::string_view text, 
 }
 
 GLuint TextRenderer::getTextureId(ImFont *font) {
-    FATAL_ERROR_IF(font == nullptr, "ImGui font not loaded yet.")
+    FATAL_ERROR_IF(font == nullptr, "ImGui font not loaded yet.");
 
     GLuint texture = static_cast<GLuint>(reinterpret_cast<uintptr_t>(font->ContainerAtlas->TexID));
     FATAL_ERROR_IF(texture == 0, "Invalid texture id");

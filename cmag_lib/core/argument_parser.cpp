@@ -122,9 +122,9 @@ ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(a
 
 const char *ArgumentParser::parseKeyValueArgument(std::string_view prefix, int &argIndex, std::string_view currentArg,
                                                   const char *nextArg) {
-    FATAL_ERROR_IF(prefix[0] != '-', "Prefix must start with a dash")
+    FATAL_ERROR_IF(prefix[0] != '-', "Prefix must start with a dash");
     const bool isLongArgName = prefix[1] == '-';
-    FATAL_ERROR_IF(isLongArgName && prefix[2] == '-', "Prefix cannot have three dashes")
+    FATAL_ERROR_IF(isLongArgName && prefix[2] == '-', "Prefix cannot have three dashes");
 
     // Early return if our prefix doesn't match
     if (currentArg.find(prefix) != 0) {

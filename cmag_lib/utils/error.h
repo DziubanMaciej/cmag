@@ -21,9 +21,11 @@ inline void dumpLog(std::ostream &out, Arg &&arg, Args &&...args) {
     performAbort();
 
 #define FATAL_ERROR_IF(condition, ...) \
-    if (condition) {                   \
-        FATAL_ERROR(__VA_ARGS__);      \
-    }
+    do {                               \
+        if (condition) {               \
+            FATAL_ERROR(__VA_ARGS__);  \
+        }                              \
+    } while (false)
 
 #ifdef _DEBUG
 #define DEBUG_ERROR(...) FATAL_ERROR(__VA_ARGS__)

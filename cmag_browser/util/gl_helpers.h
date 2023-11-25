@@ -18,9 +18,11 @@
         FATAL_ERROR_IF(anyGlError, "");                                         \
     }
 
-#define SAFE_GL(expression) \
-    expression;             \
-    CHECK_GL_ERRORS(#expression)
+#define SAFE_GL(expression)          \
+    do {                             \
+        expression;                  \
+        CHECK_GL_ERRORS(#expression) \
+    } while (false)
 
 void createVertexBuffer(GLuint *outVao, GLuint *outVbo, const void *data, size_t dataSize, const GLint *attribsSizes, size_t attribSizesCount);
 GLuint createProgram(const char *vertexShaderSource, const char *fragmentShaderSource);
