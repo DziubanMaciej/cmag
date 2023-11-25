@@ -53,7 +53,7 @@ void TargetGraph::update(ImGuiIO &io) {
 
             // Transform vertices
             glm::mat4 viewModelMatrix = camera.projectionMatrix * getTargetData(target).modelMatrix;
-            for (int i = 0; i < targetVerticesSize; i += 2) {
+            for (size_t i = 0; i < targetVerticesSize; i += 2) {
                 glm::vec4 vertex{targetVertices[i], targetVertices[i + 1], 0, 1};
                 vertex = viewModelMatrix * vertex;
                 verticesTransformed[i + 0] = vertex.x;

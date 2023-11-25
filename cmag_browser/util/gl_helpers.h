@@ -1,9 +1,7 @@
 #pragma once
 
+#include "cmag_browser/util/gl_extensions.h"
 #include "cmag_lib/utils/error.h"
-
-#include <Windows.h>
-#include <gl/GL.h>
 
 #define CHECK_GL_ERRORS(message)                                                \
     {                                                                           \

@@ -1,12 +1,12 @@
 #pragma once
 
+#include "cmag_browser/util/gl_extensions.h"
 #include "cmag_browser/util/movable_primitive.h"
 
-#include <Windows.h>
-#include <gl/GL.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <string_view>
 #include <vector>
+#include <string>
 
 struct ImFont;
 

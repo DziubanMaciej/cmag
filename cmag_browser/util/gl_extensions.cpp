@@ -1,7 +1,7 @@
 #include "gl_extensions.h"
 
 #define FUNCTION(name)                                           \
-    name = static_cast<decltype(name)>(getProcAddressFn(#name)); \
+    name = reinterpret_cast<decltype(name)>(getProcAddressFn(#name)); \
     if (name == nullptr)                                         \
         return false;
 
