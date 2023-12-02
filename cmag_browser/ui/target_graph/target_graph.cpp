@@ -12,7 +12,7 @@
 #include <memory>
 
 TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
-    allocateShapeVertexBuffer();
+    shapes.allocate();
     allocateConnectionVertexBuffer();
     allocateProgram();
 
@@ -23,7 +23,7 @@ TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
 
 TargetGraph ::~TargetGraph() {
     framebuffer.deallocate();
-    deallocateShapeVertexBuffer();
+    shapes.deallocate();
     deallocateConnectionVertexBuffer();
     deallocateProgram();
 }
@@ -41,7 +41,7 @@ void TargetGraph::update(ImGuiIO &io) {
     focusedTarget = nullptr;
     if (mouseInside && !targetDrag.active) {
         for (CmagTarget &target : targets) {
-            const ShapeInfo *shapeInfo = shapes[static_cast<int>(target.type)];
+            const ShapeInfo *shapeInfo = shapes.shapeInfos[static_cast<int>(target.type)];
             const float *targetVertices = shapeInfo->vertices;
             const size_t targetVerticesSize = shapeInfo->verticesCount;
 
@@ -110,11 +110,11 @@ void TargetGraph::render(float spaceX, float spaceY) {
 
     // Render targets
     SAFE_GL(glUseProgram(gl.program));
-    SAFE_GL(glBindVertexArray(gl.shapeVao));
+    SAFE_GL(glBindVertexArray(shapes.gl.vao));
     SAFE_GL(glEnableVertexAttribArray(0));
     for (const CmagTarget &target : targets) {
-        const size_t vbOffset = shapesOffsetsInVertexBuffer[static_cast<int>(target.type)] / 2;
-        const size_t vbSize = shapes[static_cast<int>(target.type)]->verticesCount / 2;
+        const size_t vbOffset = shapes.offsets[static_cast<int>(target.type)] / 2;
+        const size_t vbSize = shapes.shapeInfos[static_cast<int>(target.type)]->verticesCount / 2;
 
         const auto modelMatrix = getTargetData(target).modelMatrix;
         const auto transform = camera.projectionMatrix * modelMatrix;
@@ -170,7 +170,7 @@ void TargetGraph::reinitializeModelMatrices() {
 }
 
 void TargetGraph::clampTargetPositionToVisibleWorldSpace(CmagTarget &target) const {
-    const ShapeInfo *shape = shapes[static_cast<int>(target.type)];
+    const ShapeInfo *shape = shapes.shapeInfos[static_cast<int>(target.type)];
 
     const float minX = -shape->bounds.minX * nodeScale - worldSpaceHalfWidth;
     const float maxX = -shape->bounds.maxX * nodeScale + worldSpaceHalfWidth;
@@ -300,6 +300,44 @@ bool TargetGraph::calculateScreenSpaceSize(float spaceX, float spaceY) {
     return false;
 }
 
+
+void TargetGraph::Shapes::allocate() {
+    // Assign shapes to target types
+    shapeInfos[static_cast<int>(CmagTargetType::StaticLibrary)] = &ShapeInfo::postcard;
+    shapeInfos[static_cast<int>(CmagTargetType::Executable)] = &ShapeInfo::square;
+
+    // Sum up all vertices counts of all shapes
+    size_t verticesCount = 0;
+    for (const ShapeInfo *shapeInfo : shapeInfos) {
+        if (shapeInfo == nullptr) {
+            continue;
+        }
+        verticesCount += shapeInfo->verticesCount;
+    }
+
+    // Allocate one big array that will contain all the shapes and copy the vertices.
+    auto data = std::make_unique<float[]>(verticesCount);
+    size_t dataSize = 0;
+    for (size_t i = 0; i < static_cast<int>(CmagTargetType::COUNT); i++) {
+        const ShapeInfo *shapeInfo = shapeInfos[i];
+        if (shapeInfo == nullptr) {
+            continue;
+        }
+        memcpy(data.get() + dataSize, shapeInfo->vertices, shapeInfo->verticesCount * sizeof(float));
+        offsets[i] = dataSize;
+        dataSize += shapeInfo->verticesCount;
+    }
+    dataSize *= sizeof(float);
+
+    const GLint attribSize = 2;
+    createVertexBuffer(&gl.vao, &gl.vbo, data.get(), dataSize, &attribSize, 1);
+}
+
+void TargetGraph::Shapes::deallocate() {
+    GL_DELETE_OBJECT(gl.vbo, Buffers);
+    GL_DELETE_OBJECT(gl.vao, VertexArrays);
+}
+
 void TargetGraph::Framebuffer::allocate(size_t width, size_t height) {
     FATAL_ERROR_IF(width == 0 || height == 0, "Zero dimensions");
     deallocate();
@@ -327,49 +365,6 @@ void TargetGraph::Framebuffer::deallocate() {
     GL_DELETE_OBJECT(fbo, Framebuffers)
     GL_DELETE_OBJECT(colorTex, Textures)
     GL_DELETE_OBJECT(depthTex, Textures)
-}
-
-void TargetGraph::allocateShapeVertexBuffer() {
-    // Assign shapes to target types
-    shapes[static_cast<int>(CmagTargetType::StaticLibrary)] = &ShapeInfo::postcard;
-    shapes[static_cast<int>(CmagTargetType::Executable)] = &ShapeInfo::square;
-
-    // Sum up all vertices counts of all shapes
-    size_t verticesCount = 0;
-    for (const ShapeInfo *shapeInfo : shapes) {
-        if (shapeInfo == nullptr) {
-            continue;
-        }
-        verticesCount += shapeInfo->verticesCount;
-    }
-
-    // Allocate one big array that will contain all the shapes and copy the vertices.
-    auto data = std::make_unique<float[]>(verticesCount);
-    size_t dataSize = 0;
-    for (size_t i = 0; i < static_cast<int>(CmagTargetType::COUNT); i++) {
-        const ShapeInfo *shapeInfo = shapes[i];
-        if (shapeInfo == nullptr) {
-            continue;
-        }
-        memcpy(data.get() + dataSize, shapeInfo->vertices, shapeInfo->verticesCount * sizeof(float));
-        shapesOffsetsInVertexBuffer[i] = dataSize;
-        dataSize += shapeInfo->verticesCount;
-    }
-    dataSize *= sizeof(float);
-
-    const GLint attribSize = 2;
-    createVertexBuffer(&gl.shapeVao, &gl.shapeVbo, data.get(), dataSize, &attribSize, 1);
-}
-
-void TargetGraph::deallocateShapeVertexBuffer() {
-    if (gl.shapeVbo) {
-        glDeleteBuffers(1, &gl.shapeVbo);
-        gl.shapeVbo = {};
-    }
-    if (gl.shapeVao) {
-        glDeleteVertexArrays(1, &gl.shapeVao);
-        gl.shapeVao = {};
-    }
 }
 
 void TargetGraph::allocateConnectionVertexBuffer() {

@@ -42,8 +42,7 @@ private:
     void initializeProjectionMatrix();
 
     bool calculateScreenSpaceSize(float spaceX, float spaceY);
-    void allocateShapeVertexBuffer();
-    void deallocateShapeVertexBuffer();
+
     void allocateConnectionVertexBuffer();
     void deallocateConnectionVertexBuffer();
     void allocateProgram();
@@ -52,10 +51,6 @@ private:
     std::vector<CmagTarget> &targets;
     CmagTarget *selectedTarget = nullptr;
     CmagTarget *focusedTarget = nullptr;
-
-    std::array<const ShapeInfo *, static_cast<int>(CmagTargetType::COUNT)> shapes = {};
-    std::array<size_t, static_cast<int>(CmagTargetType::COUNT)> shapesOffsetsInVertexBuffer = {};
-
     TextRenderer textRenderer = {};
 
     float nodeScale = 25;
@@ -91,6 +86,20 @@ private:
         CmagTarget *target = {};
     } targetDrag = {};
 
+    // Each target type may have different shape associated with it. We keep them all in a shared vertex buffer and store
+    // offsets at which they start.
+    struct Shapes {
+        std::array<const ShapeInfo *, static_cast<int>(CmagTargetType::COUNT)> shapeInfos = {};
+        std::array<size_t, static_cast<int>(CmagTargetType::COUNT)> offsets = {};
+        struct {
+            GLuint vbo = {};
+            GLuint vao = {};
+        } gl = {};
+
+        void allocate();
+        void deallocate();
+    } shapes;
+
     // There are connections between the targets, which graphically represent dependencies. We keep a vertex buffer and
     // rebuild it when necessary (e.g. when nodes are moved).
     struct {
@@ -113,9 +122,6 @@ private:
     } framebuffer;
 
     struct {
-        GLuint shapeVbo = {};
-        GLuint shapeVao = {};
-
         GLuint program = {};
         struct {
             GLint depthValue = {};
