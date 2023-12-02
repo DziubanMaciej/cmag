@@ -14,7 +14,7 @@
 TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
     shapes.allocate();
     connections.allocate(targets);
-    allocateProgram();
+    program.allocate();
 
     scaleTargetPositions();
     initializeProjectionMatrix();
@@ -24,9 +24,9 @@ TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
 TargetGraph ::~TargetGraph() {
     framebuffer.deallocate();
 
-    shapes.deallocate();
+    program.deallocate();
     connections.deallocate();
-    deallocateProgram();
+    shapes.deallocate();
 }
 
 void TargetGraph::update(ImGuiIO &io) {
@@ -110,7 +110,7 @@ void TargetGraph::render(float spaceX, float spaceY) {
     SAFE_GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
     // Render targets
-    SAFE_GL(glUseProgram(gl.program));
+    SAFE_GL(glUseProgram(program.gl.program));
     SAFE_GL(glBindVertexArray(shapes.gl.vao));
     SAFE_GL(glEnableVertexAttribArray(0));
     for (const CmagTarget &target : targets) {
@@ -119,28 +119,28 @@ void TargetGraph::render(float spaceX, float spaceY) {
 
         const auto modelMatrix = getTargetData(target).modelMatrix;
         const auto transform = camera.projectionMatrix * modelMatrix;
-        SAFE_GL(glUniformMatrix4fv(gl.programUniform.transform, 1, GL_FALSE, glm::value_ptr(transform)));
-        SAFE_GL(glUniform1f(gl.programUniform.depthValue, calculateDepthValueForTarget(target, false)));
+        SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(transform)));
+        SAFE_GL(glUniform1f(program.uniformLocation.depthValue, calculateDepthValueForTarget(target, false)));
 
         if (&target == selectedTarget) {
-            SAFE_GL(glUniform3f(gl.programUniform.color, 0, 0, 1));
+            SAFE_GL(glUniform3f(program.uniformLocation.color, 0, 0, 1));
             SAFE_GL(glDrawArrays(GL_TRIANGLE_FAN, vbOffset, vbSize));
         } else if (&target == focusedTarget) {
-            SAFE_GL(glUniform3f(gl.programUniform.color, 0, 1, 0));
+            SAFE_GL(glUniform3f(program.uniformLocation.color, 0, 1, 0));
             SAFE_GL(glDrawArrays(GL_TRIANGLE_FAN, vbOffset, vbSize));
         }
 
-        SAFE_GL(glUniform3f(gl.programUniform.color, 0, 0, 0));
+        SAFE_GL(glUniform3f(program.uniformLocation.color, 0, 0, 0));
         SAFE_GL(glDrawArrays(GL_LINE_LOOP, vbOffset, vbSize));
     }
     SAFE_GL(glUseProgram(0));
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     // Render connections
-    SAFE_GL(glUseProgram(gl.program));
+    SAFE_GL(glUseProgram(program.gl.program));
     SAFE_GL(glBindVertexArray(connections.gl.vao));
     SAFE_GL(glEnableVertexAttribArray(0));
-    SAFE_GL(glUniformMatrix4fv(gl.programUniform.transform, 1, GL_FALSE, glm::value_ptr(camera.projectionMatrix)));
+    SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(camera.projectionMatrix)));
     SAFE_GL(glDrawArrays(GL_LINES, 0, connections.count * 2));
     SAFE_GL(glUseProgram(0));
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -388,8 +388,7 @@ void TargetGraph::Framebuffer::deallocate() {
     GL_DELETE_OBJECT(colorTex, Textures)
     GL_DELETE_OBJECT(depthTex, Textures)
 }
-
-void TargetGraph::allocateProgram() {
+void TargetGraph::Program::allocate() {
     const char *vertexShaderSource = R"(
     #version 330 core
     uniform float depthValue;
@@ -409,14 +408,16 @@ void TargetGraph::allocateProgram() {
     }
 )";
     gl.program = createProgram(vertexShaderSource, fragmentShaderSource);
-    gl.programUniform.depthValue = getUniformLocation(gl.program, "depthValue");
-    gl.programUniform.color = getUniformLocation(gl.program, "color");
-    gl.programUniform.transform = getUniformLocation(gl.program, "transform");
+    uniformLocation.depthValue = getUniformLocation(gl.program, "depthValue");
+    uniformLocation.color = getUniformLocation(gl.program, "color");
+    uniformLocation.transform = getUniformLocation(gl.program, "transform");
 }
 
-void TargetGraph::deallocateProgram() {
-    glDeleteProgram(gl.program);
-    gl.program = {};
+void TargetGraph::Program::deallocate() {
+    if (gl.program) {
+        glDeleteProgram(gl.program);
+        gl.program = {};
+    }
 }
 
 void TargetGraph::TargetData::initializeModelMatrix(CmagTargetGraphicalData graphical, float nodeScale, float textScale) {

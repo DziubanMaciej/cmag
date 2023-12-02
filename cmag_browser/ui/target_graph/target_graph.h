@@ -41,9 +41,6 @@ private:
 
     bool calculateScreenSpaceSize(float spaceX, float spaceY);
 
-    void allocateProgram();
-    void deallocateProgram();
-
     std::vector<CmagTarget> &targets;
     CmagTarget *selectedTarget = nullptr;
     CmagTarget *focusedTarget = nullptr;
@@ -121,12 +118,18 @@ private:
         void deallocate();
     } framebuffer = {};
 
-    struct {
-        GLuint program = {};
+    // We use a custom vertex shader + fragment shader to rasterize targets and connections onto FBO.
+    struct Program {
+        struct {
+            GLuint program = {};
+        } gl = {};
         struct {
             GLint depthValue = {};
             GLint transform = {};
             GLint color = {};
-        } programUniform = {};
-    } gl = {};
+        } uniformLocation = {};
+
+        void allocate();
+        void deallocate();
+    } program = {};
 };
