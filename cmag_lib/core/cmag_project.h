@@ -44,8 +44,8 @@ struct CmagTargetConfig {
     std::vector<CmagTargetProperty> properties = {};
 
     struct {
-        std::vector<const CmagTarget*> linkDependencies = {}; // based on LINK_LIBRARIES
-        std::vector<const CmagTarget*> buildDependencies = {}; // based on LINK_LIBRARIES + MANUALLY_ADDED_DEPENDENCIES
+        std::vector<const CmagTarget *> linkDependencies = {};  // based on LINK_LIBRARIES
+        std::vector<const CmagTarget *> buildDependencies = {}; // based on LINK_LIBRARIES + MANUALLY_ADDED_DEPENDENCIES
     } derived = {};
 
     void deriveData(const std::vector<CmagTarget> &targets);

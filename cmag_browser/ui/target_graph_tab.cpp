@@ -1,4 +1,5 @@
 #include "target_graph_tab.h"
+
 #include "cmag_lib/utils/string_utils.h"
 
 #include <imgui/imgui.h>

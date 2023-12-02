@@ -191,8 +191,8 @@ TEST(CmagProjectTest, givenTargetsWithDependenciesWhenDerivingDataThenDependenci
     const std::vector<CmagTarget> &targets = project.getTargets();
     ASSERT_EQ(4u, targets.size());
     const CmagTargetConfig &targetConfig = targets[0].configs[0];
-    const std::vector<const CmagTarget*> expectedLinkDependencies = {&targets[1], &targets[2]};
-    const std::vector<const CmagTarget*> expectedBuildDependencies = {&targets[1], &targets[2], &targets[3]};
+    const std::vector<const CmagTarget *> expectedLinkDependencies = {&targets[1], &targets[2]};
+    const std::vector<const CmagTarget *> expectedBuildDependencies = {&targets[1], &targets[2], &targets[3]};
     EXPECT_EQ(expectedLinkDependencies, targetConfig.derived.linkDependencies);
     EXPECT_EQ(expectedBuildDependencies, targetConfig.derived.buildDependencies);
 }
