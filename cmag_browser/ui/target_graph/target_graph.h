@@ -35,16 +35,12 @@ private:
 
     float calculateDepthValueForTarget(const CmagTarget &target, bool forText) const;
 
-    void updateConnections();
-
     void scaleTargetPositions();
     void initializeTargetData();
     void initializeProjectionMatrix();
 
     bool calculateScreenSpaceSize(float spaceX, float spaceY);
 
-    void allocateConnectionVertexBuffer();
-    void deallocateConnectionVertexBuffer();
     void allocateProgram();
     void deallocateProgram();
 
@@ -98,17 +94,21 @@ private:
 
         void allocate();
         void deallocate();
-    } shapes;
+    } shapes = {};
 
     // There are connections between the targets, which graphically represent dependencies. We keep a vertex buffer and
     // rebuild it when necessary (e.g. when nodes are moved).
-    struct {
+    struct Connections {
         size_t count = {};
         struct {
             GLuint vbo = {};
             GLuint vao = {};
-        } gl;
-    } connections;
+        } gl = {};
+
+        void allocate(const std::vector<CmagTarget> &targets);
+        void deallocate();
+        void update(const std::vector<CmagTarget> &targets);
+    } connections = {};
 
     // We are rendering to an offscreen texture that is later passed to ImGui. It has to be allocated with the right size.
     // This size is obtained from ImGui and it is dependent on window size.
@@ -119,7 +119,7 @@ private:
 
         void allocate(size_t width, size_t height);
         void deallocate();
-    } framebuffer;
+    } framebuffer = {};
 
     struct {
         GLuint program = {};

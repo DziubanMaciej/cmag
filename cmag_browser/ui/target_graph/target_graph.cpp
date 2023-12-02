@@ -13,7 +13,7 @@
 
 TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
     shapes.allocate();
-    allocateConnectionVertexBuffer();
+    connections.allocate(targets);
     allocateProgram();
 
     scaleTargetPositions();
@@ -23,8 +23,9 @@ TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
 
 TargetGraph ::~TargetGraph() {
     framebuffer.deallocate();
+
     shapes.deallocate();
-    deallocateConnectionVertexBuffer();
+    connections.deallocate();
     deallocateProgram();
 }
 
@@ -72,7 +73,7 @@ void TargetGraph::update(ImGuiIO &io) {
 
             clampTargetPositionToVisibleWorldSpace(*targetDrag.target);
             getTargetData(*targetDrag.target).initializeModelMatrix(targetDrag.target->graphical, nodeScale, textScale);
-            updateConnections();
+            connections.update(targets);
         }
     }
 
@@ -166,7 +167,7 @@ void TargetGraph::reinitializeModelMatrices() {
     for (const CmagTarget &target : targets) {
         getTargetData(target).initializeModelMatrix(target.graphical, nodeScale, textScale);
     }
-    updateConnections();
+    connections.update(targets);
 }
 
 void TargetGraph::clampTargetPositionToVisibleWorldSpace(CmagTarget &target) const {
@@ -199,33 +200,6 @@ float TargetGraph::calculateDepthValueForTarget(const CmagTarget &target, bool f
     }
 
     return result;
-}
-
-void TargetGraph::updateConnections() {
-    connections.count = 0;
-
-    std::vector<float> data = {};
-    for (const CmagTarget &srcTarget : targets) {
-        const CmagTargetConfig *config = srcTarget.tryGetConfig("Debug"); // TODO make this selectable from gui
-        if (config == nullptr) {
-            continue;
-        }
-
-        for (const CmagTarget *dstTarget : config->derived.linkDependencies) {
-            data.push_back(srcTarget.graphical.x);
-            data.push_back(srcTarget.graphical.y);
-
-            data.push_back(dstTarget->graphical.x);
-            data.push_back(dstTarget->graphical.y);
-
-            connections.count++;
-        }
-    }
-
-    const size_t dataSize = data.size() * sizeof(float);
-    SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, connections.gl.vbo));
-    SAFE_GL(glBufferSubData(GL_ARRAY_BUFFER, 0, dataSize, data.data()));
-    SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
 void TargetGraph::scaleTargetPositions() {
@@ -273,7 +247,7 @@ void TargetGraph::initializeTargetData() {
         targets[i].userData = &targetData[i];
         targetData[i].initializeModelMatrix(targets[i].graphical, nodeScale, textScale);
     }
-    updateConnections();
+    connections.update(targets);
 }
 
 void TargetGraph::initializeProjectionMatrix() {
@@ -299,7 +273,6 @@ bool TargetGraph::calculateScreenSpaceSize(float spaceX, float spaceY) {
     }
     return false;
 }
-
 
 void TargetGraph::Shapes::allocate() {
     // Assign shapes to target types
@@ -338,6 +311,55 @@ void TargetGraph::Shapes::deallocate() {
     GL_DELETE_OBJECT(gl.vao, VertexArrays);
 }
 
+void TargetGraph::Connections::allocate(const std::vector<CmagTarget> &targets) {
+    // First calculate the greatest amount of connections we can have
+    size_t maxConnectionsCount = 0;
+    for (const CmagTarget &target : targets) {
+        for (const CmagTargetConfig &config : target.configs) {
+            auto currentMaxCount = std::max(config.derived.linkDependencies.size(), config.derived.buildDependencies.size());
+            maxConnectionsCount += currentMaxCount;
+        }
+    }
+
+    // Each connection is represented by two vertices
+    const size_t verticesPerConnection = 2; // we're rendering lines
+    const GLint attribsPerVertex = 2;       // x,y
+    const size_t dataSize = maxConnectionsCount * verticesPerConnection * attribsPerVertex;
+    createVertexBuffer(&gl.vao, &gl.vbo, nullptr, dataSize, &attribsPerVertex, 1);
+}
+
+void TargetGraph::Connections::deallocate() {
+    GL_DELETE_OBJECT(gl.vbo, Buffers);
+    GL_DELETE_OBJECT(gl.vao, VertexArrays);
+}
+
+void TargetGraph::Connections::update(const std::vector<CmagTarget> &targets) {
+    count = 0;
+
+    std::vector<float> data = {};
+    for (const CmagTarget &srcTarget : targets) {
+        const CmagTargetConfig *config = srcTarget.tryGetConfig("Debug"); // TODO make this selectable from gui
+        if (config == nullptr) {
+            continue;
+        }
+
+        for (const CmagTarget *dstTarget : config->derived.linkDependencies) {
+            data.push_back(srcTarget.graphical.x);
+            data.push_back(srcTarget.graphical.y);
+
+            data.push_back(dstTarget->graphical.x);
+            data.push_back(dstTarget->graphical.y);
+
+            count++;
+        }
+    }
+
+    const size_t dataSize = data.size() * sizeof(float);
+    SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, gl.vbo));
+    SAFE_GL(glBufferSubData(GL_ARRAY_BUFFER, 0, dataSize, data.data()));
+    SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+}
+
 void TargetGraph::Framebuffer::allocate(size_t width, size_t height) {
     FATAL_ERROR_IF(width == 0 || height == 0, "Zero dimensions");
     deallocate();
@@ -365,34 +387,6 @@ void TargetGraph::Framebuffer::deallocate() {
     GL_DELETE_OBJECT(fbo, Framebuffers)
     GL_DELETE_OBJECT(colorTex, Textures)
     GL_DELETE_OBJECT(depthTex, Textures)
-}
-
-void TargetGraph::allocateConnectionVertexBuffer() {
-    // First calculate the greatest amount of connections we can have
-    size_t maxConnectionsCount = 0;
-    for (const CmagTarget &target : targets) {
-        for (const CmagTargetConfig &config : target.configs) {
-            auto currentMaxCount = std::max(config.derived.linkDependencies.size(), config.derived.buildDependencies.size());
-            maxConnectionsCount += currentMaxCount;
-        }
-    }
-
-    // Each connection is represented by two vertices
-    const size_t verticesPerConnection = 2; // we're rendering lines
-    const GLint attribsPerVertex = 2;       // x,y
-    const size_t dataSize = maxConnectionsCount * verticesPerConnection * attribsPerVertex;
-    createVertexBuffer(&connections.gl.vao, &connections.gl.vbo, nullptr, dataSize, &attribsPerVertex, 1);
-}
-
-void TargetGraph::deallocateConnectionVertexBuffer() {
-    if (connections.gl.vbo) {
-        glDeleteBuffers(1, &connections.gl.vbo);
-        connections.gl.vbo = {};
-    }
-    if (connections.gl.vao) {
-        glDeleteVertexArrays(1, &connections.gl.vao);
-        connections.gl.vao = {};
-    }
 }
 
 void TargetGraph::allocateProgram() {
