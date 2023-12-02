@@ -21,7 +21,7 @@ public:
     void savePosition(size_t x, size_t y);
 
     CmagTarget *getSelectedTarget() { return selectedTarget; }
-    auto getTexture() const { return gl.texture; }
+    auto getTexture() const { return framebuffer.colorTex; }
     auto getTextureWidth() const { return bounds.width; }
     auto getTextureHeight() const { return bounds.height; }
 
@@ -42,8 +42,6 @@ private:
     void initializeProjectionMatrix();
 
     bool calculateScreenSpaceSize(float spaceX, float spaceY);
-    void allocateStorage();
-    void deallocateStorage();
     void allocateShapeVertexBuffer();
     void deallocateShapeVertexBuffer();
     void allocateConnectionVertexBuffer();
@@ -103,6 +101,17 @@ private:
         } gl;
     } connections;
 
+    // We are rendering to an offscreen texture that is later passed to ImGui. It has to be allocated with the right size.
+    // This size is obtained from ImGui and it is dependent on window size.
+    struct Framebuffer {
+        GLuint colorTex = {};
+        GLuint depthTex = {};
+        GLuint fbo = {};
+
+        void allocate(size_t width, size_t height);
+        void deallocate();
+    } framebuffer;
+
     struct {
         GLuint shapeVbo = {};
         GLuint shapeVao = {};
@@ -113,9 +122,5 @@ private:
             GLint transform = {};
             GLint color = {};
         } programUniform = {};
-
-        GLuint texture = {};
-        GLuint depthTexture = {};
-        GLuint framebuffer = {};
     } gl = {};
 };

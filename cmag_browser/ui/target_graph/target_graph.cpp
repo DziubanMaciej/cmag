@@ -22,7 +22,7 @@ TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
 }
 
 TargetGraph ::~TargetGraph() {
-    deallocateStorage();
+    framebuffer.deallocate();
     deallocateShapeVertexBuffer();
     deallocateConnectionVertexBuffer();
     deallocateProgram();
@@ -98,10 +98,10 @@ void TargetGraph::update(ImGuiIO &io) {
 
 void TargetGraph::render(float spaceX, float spaceY) {
     if (calculateScreenSpaceSize(spaceX, spaceY)) {
-        allocateStorage();
+        framebuffer.allocate(bounds.width, bounds.height);
     }
 
-    SAFE_GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl.framebuffer));
+    SAFE_GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer.fbo));
     SAFE_GL(glEnable(GL_DEPTH_TEST));
 
     SAFE_GL(glViewport(0, 0, static_cast<GLsizei>(bounds.width), static_cast<GLsizei>(bounds.height)));
@@ -300,36 +300,33 @@ bool TargetGraph::calculateScreenSpaceSize(float spaceX, float spaceY) {
     return false;
 }
 
-void TargetGraph::allocateStorage() {
-    FATAL_ERROR_IF(bounds.width == 0 || bounds.height == 0, "Zero dimensions");
-    deallocateStorage();
+void TargetGraph::Framebuffer::allocate(size_t width, size_t height) {
+    FATAL_ERROR_IF(width == 0 || height == 0, "Zero dimensions");
+    deallocate();
 
-    SAFE_GL(glGenTextures(1, &gl.texture));
-    SAFE_GL(glBindTexture(GL_TEXTURE_2D, gl.texture));
+    SAFE_GL(glGenTextures(1, &colorTex));
+    SAFE_GL(glBindTexture(GL_TEXTURE_2D, colorTex));
     SAFE_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     SAFE_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-    SAFE_GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(bounds.width), static_cast<GLsizei>(bounds.height), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
+    SAFE_GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, static_cast<GLsizei>(width), static_cast<GLsizei>(height), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
 
-    SAFE_GL(glGenTextures(1, &gl.depthTexture));
-    SAFE_GL(glBindTexture(GL_TEXTURE_2D, gl.depthTexture));
+    SAFE_GL(glGenTextures(1, &depthTex));
+    SAFE_GL(glBindTexture(GL_TEXTURE_2D, depthTex));
     SAFE_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     SAFE_GL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-    SAFE_GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, static_cast<GLsizei>(bounds.width), static_cast<GLsizei>(bounds.height), 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr));
+    SAFE_GL(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, static_cast<GLsizei>(width), static_cast<GLsizei>(height), 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr));
 
-    SAFE_GL(glGenFramebuffers(1, &gl.framebuffer));
-    SAFE_GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl.framebuffer));
-    SAFE_GL(glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gl.texture, 0));
-    SAFE_GL(glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, gl.depthTexture, 0));
+    SAFE_GL(glGenFramebuffers(1, &fbo));
+    SAFE_GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo));
+    SAFE_GL(glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, colorTex, 0));
+    SAFE_GL(glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTex, 0));
     SAFE_GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
 }
 
-void TargetGraph::deallocateStorage() {
-    if (gl.framebuffer) {
-        glDeleteFramebuffers(1, &gl.framebuffer);
-    }
-    if (gl.texture) {
-        glDeleteTextures(1, &gl.texture);
-    }
+void TargetGraph::Framebuffer::deallocate() {
+    GL_DELETE_OBJECT(fbo, Framebuffers)
+    GL_DELETE_OBJECT(colorTex, Textures)
+    GL_DELETE_OBJECT(depthTex, Textures)
 }
 
 void TargetGraph::allocateShapeVertexBuffer() {
