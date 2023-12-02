@@ -69,6 +69,7 @@ struct CmagTarget {
     void *userData = {};
 
     void deriveData(const std::vector<CmagTarget> &targets);
+    const CmagTargetConfig *tryGetConfig(std::string_view configName) const;
     CmagTargetConfig &getOrCreateConfig(std::string_view configName);
 };
 

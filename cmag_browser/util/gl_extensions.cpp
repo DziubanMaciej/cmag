@@ -11,6 +11,7 @@ bool initialize(GetProcAddressFn getProcAddressFn) {
     FUNCTION(glDeleteBuffers)
     FUNCTION(glBindBuffer)
     FUNCTION(glBufferData)
+    FUNCTION(glBufferSubData)
     FUNCTION(glVertexAttribPointer)
     FUNCTION(glEnableVertexAttribArray)
     FUNCTION(glDisableVertexAttribArray)
@@ -55,6 +56,7 @@ PFNGLGENBUFFERSPROC glGenBuffers;
 PFNGLDELETEBUFFERSPROC glDeleteBuffers;
 PFNGLBINDBUFFERPROC glBindBuffer;
 PFNGLBUFFERDATAPROC glBufferData;
+PFNGLBUFFERSUBDATAPROC glBufferSubData;
 PFNGLVERTEXATTRIBPOINTERPROC glVertexAttribPointer;
 PFNGLENABLEVERTEXATTRIBARRAYPROC glEnableVertexAttribArray;
 PFNGLDISABLEVERTEXATTRIBARRAYPROC glDisableVertexAttribArray;

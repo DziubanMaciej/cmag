@@ -35,6 +35,8 @@ private:
 
     float calculateDepthValueForTarget(const CmagTarget &target, bool forText) const;
 
+    void updateConnections();
+
     void scaleTargetPositions();
     void initializeTargetData();
     void initializeProjectionMatrix();
@@ -42,8 +44,10 @@ private:
     bool calculateScreenSpaceSize(float spaceX, float spaceY);
     void allocateStorage();
     void deallocateStorage();
-    void allocateBuffers();
-    void deallocateBuffers();
+    void allocateShapeVertexBuffer();
+    void deallocateShapeVertexBuffer();
+    void allocateConnectionVertexBuffer();
+    void deallocateConnectionVertexBuffer();
     void allocateProgram();
     void deallocateProgram();
 
@@ -88,6 +92,16 @@ private:
         glm::vec4 offsetFromCenter = {};
         CmagTarget *target = {};
     } targetDrag = {};
+
+    // There are connections between the targets, which graphically represent dependencies. We keep a vertex buffer and
+    // rebuild it when necessary (e.g. when nodes are moved).
+    struct {
+        size_t count = {};
+        struct {
+            GLuint vbo = {};
+            GLuint vao = {};
+        } gl;
+    } connections;
 
     struct {
         GLuint shapeVbo = {};

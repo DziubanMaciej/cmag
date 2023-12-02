@@ -250,6 +250,17 @@ void CmagTargetConfig::deriveData(const std::vector<CmagTarget> &targets) {
     }
 }
 
+const CmagTargetConfig *CmagTarget::tryGetConfig(std::string_view configName) const {
+    auto configIt = std::find_if(configs.begin(), configs.end(), [configName](const auto &config) {
+        return configName == config.name;
+    });
+    if (configIt == configs.end()) {
+        return nullptr;
+    } else {
+        return &*configIt;
+    }
+}
+
 CmagTargetConfig &CmagTarget::getOrCreateConfig(std::string_view configName) {
     auto propertiesIt = std::find_if(configs.begin(), configs.end(), [configName](const auto &config) {
         return configName == config.name;

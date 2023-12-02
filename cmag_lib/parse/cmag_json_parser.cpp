@@ -91,6 +91,7 @@ ParseResult CmagJsonParser::parseProject(std::string_view json, CmagProject &out
         return ParseResult::MissingField;
     }
 
+    outProject.deriveData();
     return ParseResult::Success;
 }
 
