@@ -70,7 +70,7 @@ void TargetGraph::update(ImGuiIO &io) {
         if (updated) {
             clampTargetPositionToVisibleWorldSpace(*targetDrag.draggedTarget);
             TargetData::initializeModelMatrix(*targetDrag.draggedTarget, nodeScale, textScale);
-            connections.update(targets, shapes);
+            connections.update(targets, shapes, arrowLengthScale, arrowWidthScale);
         }
     }
 
@@ -130,7 +130,8 @@ void TargetGraph::render(float spaceX, float spaceY) {
     SAFE_GL(glBindVertexArray(connections.gl.vao));
     SAFE_GL(glEnableVertexAttribArray(0));
     SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(projectionMatrix)));
-    SAFE_GL(glDrawArrays(GL_LINES, 0, connections.count * 2));
+    SAFE_GL(glDrawArrays(GL_LINES, connections.lineDataOffset, connections.count * 2));
+    SAFE_GL(glDrawArrays(GL_TRIANGLES, connections.triangleDataOffset, connections.count * 3));
     SAFE_GL(glUseProgram(0));
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
@@ -156,7 +157,7 @@ void TargetGraph::reinitializeModelMatrices() {
     for (const CmagTarget &target : targets) {
         TargetData::initializeModelMatrix(target, nodeScale, textScale);
     }
-    connections.update(targets, shapes);
+    connections.update(targets, shapes, arrowLengthScale, arrowWidthScale);
 }
 
 void TargetGraph::scaleTargetPositionsToWorldSpace() {
@@ -225,7 +226,7 @@ bool TargetGraph::calculateScreenSpaceSize(float spaceX, float spaceY) {
     if (newWidth != bounds.width || newHeight != bounds.height) {
         bounds.width = newWidth;
         bounds.height = newHeight;
-        connections.update(targets, shapes);
+        connections.update(targets, shapes, arrowLengthScale, arrowWidthScale);
         return true;
     }
     return false;
@@ -370,7 +371,7 @@ void TargetGraph::Connections::allocate(const std::vector<CmagTarget> &targets) 
     }
 
     // Each connection is represented by two vertices
-    const size_t verticesPerConnection = 2; // we're rendering lines
+    const size_t verticesPerConnection = 5; // line + triangle
     const GLint attribsPerVertex = 2;       // x,y
     const size_t dataSize = maxConnectionsCount * verticesPerConnection * attribsPerVertex;
     createVertexBuffer(&gl.vao, &gl.vbo, nullptr, dataSize, &attribsPerVertex, 1);
@@ -381,10 +382,11 @@ void TargetGraph::Connections::deallocate() {
     GL_DELETE_OBJECT(gl.vao, VertexArrays);
 }
 
-void TargetGraph::Connections::update(const std::vector<CmagTarget> &targets, const Shapes &shapes) {
+void TargetGraph::Connections::update(const std::vector<CmagTarget> &targets, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale) {
     count = 0;
 
-    std::vector<float> data = {};
+    std::vector<float> lineData = {};
+    std::vector<float> triangleData = {};
     for (const CmagTarget &srcTarget : targets) {
         const CmagTargetConfig *config = srcTarget.tryGetConfig("Debug"); // TODO make this selectable from gui
         if (config == nullptr) {
@@ -405,17 +407,33 @@ void TargetGraph::Connections::update(const std::vector<CmagTarget> &targets, co
             trimSegment(connection, parameterStart, parameterEnd);
 
             // Add segment to our data
-            data.push_back(connection.start.x);
-            data.push_back(connection.start.y);
-            data.push_back(connection.end.x);
-            data.push_back(connection.end.y);
+            lineData.push_back(connection.start.x);
+            lineData.push_back(connection.start.y);
+            lineData.push_back(connection.end.x);
+            lineData.push_back(connection.end.y);
+
+            // Add arrow
+            Vec arrowA{}, arrowB{}, arrowC{};
+            calculateArrowCoordinates(connection, arrowLengthScale, arrowWidthScale, arrowA, arrowB, arrowC);
+            triangleData.push_back(arrowA.x);
+            triangleData.push_back(arrowA.y);
+            triangleData.push_back(arrowB.x);
+            triangleData.push_back(arrowB.y);
+            triangleData.push_back(arrowC.x);
+            triangleData.push_back(arrowC.y);
+
             count++;
         }
     }
 
-    const size_t dataSize = data.size() * sizeof(float);
+    const size_t lineDataSize = lineData.size() * sizeof(float);
+    const size_t triangleDataSize = triangleData.size() * sizeof(float);
+    lineDataOffset = 0;
+    triangleDataOffset = lineDataSize / 8;
+
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, gl.vbo));
-    SAFE_GL(glBufferSubData(GL_ARRAY_BUFFER, 0, dataSize, data.data()));
+    SAFE_GL(glBufferSubData(GL_ARRAY_BUFFER, 0, lineDataSize, lineData.data()));
+    SAFE_GL(glBufferSubData(GL_ARRAY_BUFFER, lineDataSize, triangleDataSize, triangleData.data()));
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
@@ -456,6 +474,55 @@ float TargetGraph::Connections::calculateSegmentTrimParameter(const CmagTarget &
     }
 
     return result;
+}
+void TargetGraph::Connections::calculateArrowCoordinates(const Segment &connectionSegment, float arrowLength, float arrowWidth, Vec &outA, Vec &outB, Vec &outC) {
+    // Calculate direction of the segment
+    Vec diff = {
+        connectionSegment.end.x - connectionSegment.start.x,
+        connectionSegment.end.y - connectionSegment.start.y,
+    };
+    const float segmentLength = length(diff);
+    scale(diff, 1 / segmentLength);
+
+    // Our segment may be too small to insert a triangle. Scale it down to some degree, but make it disappear for very small segments.
+    constexpr float scaleDownThreshold = 0.2f;
+    constexpr float scaleDownRatioMultiplier = 0.8f;
+    const float scaleDownRatio = segmentLength * scaleDownRatioMultiplier / arrowLength;
+    if (scaleDownRatio < scaleDownThreshold) {
+        // Too small, create degenerate triangles and leave
+        outA = {};
+        outB = {};
+        outC = {};
+        return;
+    } else if (scaleDownRatio < 1) {
+        // Too small for full size arrow, but within the threshold. Scale down the arrow.
+        arrowWidth *= scaleDownRatio;
+        arrowLength *= scaleDownRatio;
+    }
+
+    // Calculate offsets
+    const Vec lengthwiseOffset{
+        diff.x * arrowLength,
+        diff.y * arrowLength,
+    };
+    const Vec acrossOffset{
+        diff.y * arrowWidth,
+        -diff.x * arrowWidth,
+    };
+
+    // Output vertices
+    outA = {
+        connectionSegment.end.x,
+        connectionSegment.end.y,
+    };
+    outB = {
+        connectionSegment.end.x - lengthwiseOffset.x + acrossOffset.x,
+        connectionSegment.end.y - lengthwiseOffset.y + acrossOffset.y,
+    };
+    outC = {
+        connectionSegment.end.x - lengthwiseOffset.x - acrossOffset.x,
+        connectionSegment.end.y - lengthwiseOffset.y - acrossOffset.y,
+    };
 }
 
 void TargetGraph::Framebuffer::allocate(size_t width, size_t height) {

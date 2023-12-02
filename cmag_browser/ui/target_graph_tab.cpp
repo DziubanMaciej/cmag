@@ -33,6 +33,15 @@ void TargetGraphTab::renderSidePane(float width) {
     if (ImGui::SliderFloat("text size", targetGraph.getTextScalePtr(), 3, 12, "%.2f", ImGuiSliderFlags_AlwaysClamp)) {
         targetGraph.reinitializeModelMatrices();
     }
+    ImGui::PushItemWidth(width - ImGui::CalcTextSize("arrow length").x);
+    if (ImGui::SliderFloat("arrow length", targetGraph.getArrowLengthScalePtr(), 1, 15, "%.2f", ImGuiSliderFlags_AlwaysClamp)) {
+        // TODO add refreshConnections()
+        targetGraph.reinitializeModelMatrices();
+    }
+    ImGui::PushItemWidth(width - ImGui::CalcTextSize("arrow width").x);
+    if (ImGui::SliderFloat("arrow width", targetGraph.getArrowWidthScalePtr(), 1, 15, "%.2f", ImGuiSliderFlags_AlwaysClamp)) {
+        targetGraph.reinitializeModelMatrices();
+    }
 
     renderPropertyPopup();
     renderPropertyTable(width);

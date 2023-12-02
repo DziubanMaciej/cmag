@@ -39,11 +39,12 @@ bool isPointInsidePolygon(float pointX, float pointY, const float *polygon, size
     return (windingNumber != 0);
 }
 
-void normalize(Vec &vec) {
-    // TODO do we need this?
-    const float length = sqrtf(vec.x * vec.x + vec.y * vec.y);
-    vec.x /= length;
-    vec.y /= length;
+float length(Vec vec) {
+    return sqrtf(vec.x * vec.x + vec.y * vec.y);
+}
+void scale(Vec &vec, float scale) {
+    vec.x *= scale;
+    vec.y *= scale;
 }
 
 bool intersectSegments(

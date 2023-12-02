@@ -11,6 +11,7 @@
 struct ImGuiIO;
 struct ShapeInfo;
 struct Segment;
+struct Vec;
 
 class TargetGraph {
 public:
@@ -28,6 +29,8 @@ public:
 
     auto getNodeScalePtr() { return &nodeScale; }
     auto getTextScalePtr() { return &textScale; }
+    auto getArrowLengthScalePtr() { return &arrowLengthScale; }
+    auto getArrowWidthScalePtr() { return &arrowWidthScale; }
 
     void reinitializeModelMatrices();
 
@@ -47,6 +50,8 @@ private:
     glm::mat4 projectionMatrix = {};
     float nodeScale = 25;
     float textScale = 3;
+    float arrowLengthScale = 9.3;
+    float arrowWidthScale = 3.15;
 
     // Every target has a void* userData field to track custom, gui-specific data. We allocate a vector of our data structs
     // and bind them to each target.
@@ -101,6 +106,8 @@ private:
     // There are connections between the targets, which graphically represent dependencies. We keep a vertex buffer and
     // rebuild it when necessary (e.g. when nodes are moved).
     struct Connections {
+        size_t lineDataOffset = {};
+        size_t triangleDataOffset = {};
         size_t count = {};
         struct {
             GLuint vbo = {};
@@ -109,8 +116,9 @@ private:
 
         void allocate(const std::vector<CmagTarget> &targets);
         void deallocate();
-        void update(const std::vector<CmagTarget> &targets, const Shapes &shapes);
+        void update(const std::vector<CmagTarget> &targets, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale);
         static float calculateSegmentTrimParameter(const CmagTarget &target, const Segment &connectionSegment, const Shapes &shapes, bool isSrcTarget);
+        static void calculateArrowCoordinates(const Segment &connectionSegment, float arrowLength, float arrowWidth, Vec &outA, Vec &outB, Vec &outC);
     } connections = {};
 
     // We are rendering to an offscreen texture that is later passed to ImGui. It has to be allocated with the right size.

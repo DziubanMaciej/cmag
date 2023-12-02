@@ -14,6 +14,9 @@ struct Segment {
     Vec end;
 };
 
+float length(Vec vec);
+void scale(Vec &vec, float scale);
+
 bool intersectSegments(
     Segment a,
     Segment b,
