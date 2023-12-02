@@ -11,18 +11,21 @@
 #include <memory>
 
 TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
+    scaleTargetPositionsToWorldSpace();
+
     shapes.allocate();
     connections.allocate(targets);
     program.allocate();
+    targetData.allocate(targets, nodeScale, textScale);
 
-    scaleTargetPositionsToWorldSpace();
     projectionMatrix = glm::ortho(-worldSpaceHalfWidth, worldSpaceHalfWidth, -worldSpaceHalfHeight, worldSpaceHalfHeight);
-    initializeTargetData();
+    connections.update(targets);
 }
 
 TargetGraph ::~TargetGraph() {
     framebuffer.deallocate();
 
+    targetData.deallocate(targets);
     program.deallocate();
     connections.deallocate();
     shapes.deallocate();
@@ -48,7 +51,7 @@ void TargetGraph::update(ImGuiIO &io) {
 
             // Transform vertices from local space to screen space, so we're able to compare it with mouse position.
             // TODO wouldn't it be possible/better to transform mouse position to local space of each target?
-            glm::mat4 viewModelMatrix = projectionMatrix * getTargetData(target).modelMatrix;
+            glm::mat4 viewModelMatrix = projectionMatrix * TargetData::get(target).modelMatrix;
             for (size_t i = 0; i < targetVerticesSize; i += 2) {
                 glm::vec4 vertex{targetVertices[i], targetVertices[i + 1], 0, 1};
                 vertex = viewModelMatrix * vertex;
@@ -67,7 +70,7 @@ void TargetGraph::update(ImGuiIO &io) {
         const bool updated = targetDrag.update(mouseX, mouseY, projectionMatrix);
         if (updated) {
             clampTargetPositionToVisibleWorldSpace(*targetDrag.draggedTarget);
-            getTargetData(*targetDrag.draggedTarget).initializeModelMatrix(targetDrag.draggedTarget->graphical, nodeScale, textScale);
+            TargetData::initializeModelMatrix(*targetDrag.draggedTarget, nodeScale, textScale);
             connections.update(targets);
         }
     }
@@ -104,7 +107,7 @@ void TargetGraph::render(float spaceX, float spaceY) {
         const size_t vbOffset = shapes.offsets[static_cast<int>(target.type)] / 2;
         const size_t vbSize = shapes.shapeInfos[static_cast<int>(target.type)]->verticesCount / 2;
 
-        const auto modelMatrix = getTargetData(target).modelMatrix;
+        const auto modelMatrix = TargetData::get(target).modelMatrix;
         const auto transform = projectionMatrix * modelMatrix;
         SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(transform)));
         SAFE_GL(glUniform1f(program.uniformLocation.depthValue, calculateDepthValueForTarget(target, false)));
@@ -134,7 +137,7 @@ void TargetGraph::render(float spaceX, float spaceY) {
 
     // Render text
     for (const CmagTarget &target : targets) {
-        auto modelMatrix = getTargetData(target).textModelMatrix;
+        auto modelMatrix = TargetData::get(target).textModelMatrix;
         const auto transform = projectionMatrix * modelMatrix;
         const auto depthValue = calculateDepthValueForTarget(target, true);
         const auto font = ImGui::GetFont();
@@ -152,7 +155,7 @@ void TargetGraph::savePosition(size_t x, size_t y) {
 
 void TargetGraph::reinitializeModelMatrices() {
     for (const CmagTarget &target : targets) {
-        getTargetData(target).initializeModelMatrix(target.graphical, nodeScale, textScale);
+        TargetData::initializeModelMatrix(target, nodeScale, textScale);
     }
     connections.update(targets);
 }
@@ -248,13 +251,31 @@ float TargetGraph::calculateDepthValueForTarget(const CmagTarget &target, bool f
     return result;
 }
 
-void TargetGraph::initializeTargetData() {
-    targetData.resize(targets.size());
+void TargetGraph::TargetData::allocate(std::vector<CmagTarget> &targets, float nodeScale, float textScale) {
+    storage.resize(targets.size());
     for (size_t i = 0; i < targets.size(); i++) {
-        targets[i].userData = &targetData[i];
-        targetData[i].initializeModelMatrix(targets[i].graphical, nodeScale, textScale);
+        targets[i].userData = &storage[i];
+        initializeModelMatrix(targets[i], nodeScale, textScale);
     }
-    connections.update(targets);
+}
+void TargetGraph::TargetData::deallocate(std::vector<CmagTarget> &targets) {
+    for (CmagTarget &target : targets) {
+        target.userData = nullptr;
+    }
+    storage.clear();
+}
+void TargetGraph::TargetData::initializeModelMatrix(const CmagTarget &target, float nodeScale, float textScale) {
+    UserData &data = get(target);
+
+    auto translationMatrix = glm::identity<glm::mat4>();
+    translationMatrix = glm::translate(translationMatrix, glm::vec3(target.graphical.x, target.graphical.y, 0));
+
+    data.modelMatrix = glm::scale(translationMatrix, glm::vec3(nodeScale, nodeScale, 1));
+    data.textModelMatrix = glm::scale(translationMatrix, glm::vec3(textScale, textScale, 1));
+}
+
+TargetGraph::TargetData::UserData &TargetGraph::TargetData::get(const CmagTarget &target) {
+    return *static_cast<TargetData::UserData *>(target.userData);
 }
 
 void TargetGraph::TargetDrag::begin(float mouseX, float mouseY, const glm::mat4 &projectionMatrix, CmagTarget *focusedTarget) {
@@ -430,16 +451,4 @@ void TargetGraph::Program::deallocate() {
         glDeleteProgram(gl.program);
         gl.program = {};
     }
-}
-
-void TargetGraph::TargetData::initializeModelMatrix(CmagTargetGraphicalData graphical, float nodeScale, float textScale) {
-    auto translationMatrix = glm::identity<glm::mat4>();
-    translationMatrix = glm::translate(translationMatrix, glm::vec3(graphical.x, graphical.y, 0));
-
-    modelMatrix = glm::scale(translationMatrix, glm::vec3(nodeScale, nodeScale, 1));
-    textModelMatrix = glm::scale(translationMatrix, glm::vec3(textScale, textScale, 1));
-}
-
-TargetGraph::TargetData &TargetGraph::getTargetData(const CmagTarget &target) {
-    return *static_cast<TargetData *>(target.userData);
 }

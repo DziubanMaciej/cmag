@@ -35,7 +35,6 @@ private:
     void clampTargetPositionToVisibleWorldSpace(CmagTarget &target) const;
     bool calculateScreenSpaceSize(float spaceX, float spaceY);
     float calculateDepthValueForTarget(const CmagTarget &target, bool forText) const;
-    void initializeTargetData();
 
     // General data and subobjects
     std::vector<CmagTarget> &targets;
@@ -49,13 +48,17 @@ private:
     // Every target has a void* userData field to track custom, gui-specific data. We allocate a vector of our data structs
     // and bind them to each target.
     struct TargetData {
-        glm::mat4 modelMatrix;
-        glm::mat4 textModelMatrix;
+        struct UserData {
+            glm::mat4 modelMatrix = {};
+            glm::mat4 textModelMatrix = {};
+        };
+        std::vector<UserData> storage = {};
 
-        void initializeModelMatrix(CmagTargetGraphicalData graphical, float nodeScale, float textScale);
-    };
-    std::vector<TargetData> targetData = {};
-    static TargetData &getTargetData(const CmagTarget &target);
+        void allocate(std::vector<CmagTarget> &targets, float nodeScale, float textScale);
+        void deallocate(std::vector<CmagTarget> &targets);
+        static void initializeModelMatrix(const CmagTarget &target, float nodeScale, float textScale);
+        static UserData &get(const CmagTarget &target);
+    } targetData = {};
 
     // Bounds of our graph in screen space. It determines framebuffer size and the rendering viewport. It is obtained
     // from higher level interface, which tells this class, how big it should render.
