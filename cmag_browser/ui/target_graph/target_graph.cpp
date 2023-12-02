@@ -417,9 +417,9 @@ void TargetGraph::Framebuffer::allocate(size_t width, size_t height) {
 }
 
 void TargetGraph::Framebuffer::deallocate() {
-    GL_DELETE_OBJECT(fbo, Framebuffers)
-    GL_DELETE_OBJECT(colorTex, Textures)
-    GL_DELETE_OBJECT(depthTex, Textures)
+    GL_DELETE_OBJECT(fbo, Framebuffers);
+    GL_DELETE_OBJECT(colorTex, Textures);
+    GL_DELETE_OBJECT(depthTex, Textures);
 }
 void TargetGraph::Program::allocate() {
     const char *vertexShaderSource = R"(

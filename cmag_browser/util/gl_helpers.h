@@ -24,11 +24,13 @@
         CHECK_GL_ERRORS(#expression) \
     } while (false)
 
-#define GL_DELETE_OBJECT(object, objectTypeName) \
-    if (object) {                                \
-        glDelete##objectTypeName(1, &(object));  \
-        object = {};                             \
-    }
+#define GL_DELETE_OBJECT(object, objectTypeName)    \
+    do {                                            \
+        if (object) {                               \
+            glDelete##objectTypeName(1, &(object)); \
+            object = {};                            \
+        }                                           \
+    } while (false)
 
 void createVertexBuffer(GLuint *outVao, GLuint *outVbo, const void *data, size_t dataSize, const GLint *attribsSizes, size_t attribSizesCount);
 GLuint createProgram(const char *vertexShaderSource, const char *fragmentShaderSource);
