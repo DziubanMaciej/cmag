@@ -1,4 +1,5 @@
 #include "target_graph_tab.h"
+#include "cmag_lib/utils/string_utils.h"
 
 #include <imgui/imgui.h>
 
@@ -114,21 +115,6 @@ void TargetGraphTab::scheduleOpenPropertyPopupOnClick(const CmagTargetProperty &
         popup.shouldBeOpen = true;
         popup.isOpen = false;
         popup.property = &property;
-        popup.propertyValueList = {};
-
-        // If property value contains semicolons, most probably it's a list, because CMake delimits list entries with semicolons.
-        // Split the value, so we can display it as a list of bullets in popup.
-        size_t currentPosition = 0;
-        size_t semicolonPosition = 0;
-        while ((semicolonPosition = property.value.find(";", currentPosition)) != std::string::npos) {
-            std::string_view entry = std::string_view{property.value}.substr(currentPosition, semicolonPosition - currentPosition);
-            popup.propertyValueList.push_back(entry);
-
-            currentPosition = semicolonPosition + 1;
-        }
-        if (!popup.propertyValueList.empty()) {
-            std::string_view entry = std::string_view{property.value}.substr(currentPosition);
-            popup.propertyValueList.push_back(entry);
-        }
+        popup.propertyValueList = splitCmakeListString(property.value, true);
     }
 }
