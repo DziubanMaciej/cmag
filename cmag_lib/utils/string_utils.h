@@ -4,7 +4,7 @@
 #include <string_view>
 #include <vector>
 
-std::vector<std::string_view> splitCmakeListString(std::string_view value, bool ignoreSingleEntry) {
+inline std::vector<std::string_view> splitCmakeListString(std::string_view value, bool ignoreSingleEntry) {
     // If property value contains semicolons, most probably it's a list, because CMake delimits list entries with semicolons.
     // Split the value, so we can display it as a list of bullets in popup.
 

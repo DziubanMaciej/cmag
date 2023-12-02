@@ -37,29 +37,38 @@ struct CmagTargetProperty {
     std::string value;
 };
 
-struct CmagTargetConfig {
-    std::string name;
-    std::vector<CmagTargetProperty> properties;
+struct CmagTarget;
 
+struct CmagTargetConfig {
+    std::string name = {};
+    std::vector<CmagTargetProperty> properties = {};
+
+    struct {
+        std::vector<const CmagTarget*> linkDependencies = {}; // based on LINK_LIBRARIES
+        std::vector<const CmagTarget*> buildDependencies = {}; // based on LINK_LIBRARIES + MANUALLY_ADDED_DEPENDENCIES
+    } derived = {};
+
+    void deriveData(const std::vector<CmagTarget> &targets);
     void fixupWithNonEvaled(std::string_view propertyName, std::string_view nonEvaledValue);
 
 private:
-    void fixupLinkLibrariesDirectoryId(std::string &value);
-    void fixupLinkLibrariesGenex(CmagTargetProperty &property, std::string_view nonEvaledValue);
+    static void fixupLinkLibrariesDirectoryId(std::string &value);
+    static void fixupLinkLibrariesGenex(CmagTargetProperty &property, std::string_view nonEvaledValue);
 };
 
 struct CmagTargetGraphicalData {
-    float x;
-    float y;
+    float x = {};
+    float y = {};
 };
 
 struct CmagTarget {
     std::string name;
     CmagTargetType type;
     std::vector<CmagTargetConfig> configs;
-    CmagTargetGraphicalData graphical;
-    void *userData = nullptr;
+    CmagTargetGraphicalData graphical = {};
+    void *userData = {};
 
+    void deriveData(const std::vector<CmagTarget> &targets);
     CmagTargetConfig &getOrCreateConfig(std::string_view configName);
 };
 
@@ -72,6 +81,8 @@ public:
     void addTargetGraphical(std::string_view targetName, float x, float y);
     bool addTarget(CmagTarget &&newTarget);
 
+    void deriveData();
+
     const auto &getConfigs() const { return configs; }
     const auto &getTargets() const { return targets; }
     auto &getTargets() { return targets; }
@@ -79,7 +90,7 @@ public:
     auto &getGlobals() { return globals; }
 
 private:
-    bool mergeTargets(CmagTarget &dst, CmagTarget &&src);
+    static bool mergeTargets(CmagTarget &dst, CmagTarget &&src);
     void addConfig(std::string_view config);
 
     CmagConfigs configs = {};

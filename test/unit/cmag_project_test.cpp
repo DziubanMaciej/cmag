@@ -154,6 +154,49 @@ TEST(CmagProjectTest, givenTargetsWithVariousConfigsAreAddedThenCollectAllConfig
     EXPECT_STREQ("MinSizeRel", project.getConfigs()[3].c_str());
 }
 
+TEST(CmagProjectTest, givenTargetsWithDependenciesWhenDerivingDataThenDependenciesAreSavedToTheVectors) {
+    CmagProject project = {};
+
+    EXPECT_TRUE(project.addTarget(CmagTarget{
+        "target",
+        CmagTargetType::Executable,
+        {
+            {
+                "Debug",
+                {
+                    {"LINK_LIBRARIES", "dep1;dep2"},
+                    {"MANUALLY_ADDED_DEPENDENCIES", "depExternal;dep3"},
+                },
+            },
+        },
+    }));
+    EXPECT_TRUE(project.addTarget(CmagTarget{
+        "dep1",
+        CmagTargetType::Executable,
+        {{"Debug", {}}},
+    }));
+    EXPECT_TRUE(project.addTarget(CmagTarget{
+        "dep2",
+        CmagTargetType::Executable,
+        {{"Debug", {}}},
+    }));
+    EXPECT_TRUE(project.addTarget(CmagTarget{
+        "dep3",
+        CmagTargetType::Executable,
+        {{"Debug", {}}},
+    }));
+
+    project.deriveData();
+
+    const std::vector<CmagTarget> &targets = project.getTargets();
+    ASSERT_EQ(4u, targets.size());
+    const CmagTargetConfig &targetConfig = targets[0].configs[0];
+    const std::vector<const CmagTarget*> expectedLinkDependencies = {&targets[1], &targets[2]};
+    const std::vector<const CmagTarget*> expectedBuildDependencies = {&targets[1], &targets[2], &targets[3]};
+    EXPECT_EQ(expectedLinkDependencies, targetConfig.derived.linkDependencies);
+    EXPECT_EQ(expectedBuildDependencies, targetConfig.derived.buildDependencies);
+}
+
 TEST(CmagTargetTest, givenConfigExistsWhenGetOrCreateConfigIsCalledThenReturnExistingConfig) {
     CmagTarget target = {
         "target",

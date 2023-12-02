@@ -1,5 +1,7 @@
 #include "cmag_project.h"
 
+#include "cmag_lib/utils/string_utils.h"
+
 #include <algorithm>
 #include <cstring>
 
@@ -58,7 +60,12 @@ bool CmagProject::mergeTargets(CmagTarget &dst, CmagTarget &&src) {
 
 void CmagProject::addConfig(std::string_view config) {
     if (std::find(configs.begin(), configs.end(), config) == configs.end()) {
-        configs.push_back(std::string(config));
+        configs.emplace_back(config);
+    }
+}
+void CmagProject::deriveData() {
+    for (CmagTarget &target : targets) {
+        target.deriveData(targets);
     }
 }
 
@@ -213,15 +220,49 @@ void CmagTargetConfig::fixupLinkLibrariesGenex(CmagTargetProperty &property, std
         elementIndex++;
     }
 }
+void CmagTargetConfig::deriveData(const std::vector<CmagTarget> &targets) {
+    auto addTargetsToVector = [&targets](std::vector<std::string_view> &strings, std::vector<const CmagTarget *> &outList) {
+        for (std::string_view string : strings) {
+            auto it = std::find_if(targets.begin(), targets.end(), [string](const CmagTarget &target) {
+                return target.name == string;
+            });
+            if (it != targets.end()) {
+                outList.push_back(&*it);
+            }
+        }
+    };
+
+    auto findProperty = [this](std::string_view propertyName) {
+        return std::find_if(properties.begin(), properties.end(), [propertyName](const CmagTargetProperty &p) {
+            return p.name == propertyName;
+        });
+    };
+
+    if (auto it = findProperty("LINK_LIBRARIES"); it != properties.end()) {
+        std::vector<std::string_view> dependencies = splitCmakeListString(it->value, false);
+        addTargetsToVector(dependencies, derived.linkDependencies);
+        derived.buildDependencies = derived.linkDependencies;
+    }
+
+    if (auto it = findProperty("MANUALLY_ADDED_DEPENDENCIES"); it != properties.end()) {
+        std::vector<std::string_view> dependencies = splitCmakeListString(it->value, false);
+        addTargetsToVector(dependencies, derived.buildDependencies);
+    }
+}
 
 CmagTargetConfig &CmagTarget::getOrCreateConfig(std::string_view configName) {
     auto propertiesIt = std::find_if(configs.begin(), configs.end(), [configName](const auto &config) {
         return configName == config.name;
     });
     if (propertiesIt == configs.end()) {
-        configs.push_back({std::string(configName), {}});
+        configs.push_back({std::string(configName), {}, {}});
         return configs.back();
     } else {
         return *propertiesIt;
+    }
+}
+void CmagTarget::deriveData(const std::vector<CmagTarget> &targets) {
+    for (CmagTargetConfig &config : configs) {
+        config.deriveData(targets);
     }
 }
