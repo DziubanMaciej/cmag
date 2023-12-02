@@ -15,8 +15,8 @@ TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
     connections.allocate(targets);
     program.allocate();
 
-    scaleTargetPositions();
-    initializeProjectionMatrix();
+    scaleTargetPositionsToWorldSpace();
+    projectionMatrix = glm::ortho(-worldSpaceHalfWidth, worldSpaceHalfWidth, -worldSpaceHalfHeight, worldSpaceHalfHeight);
     initializeTargetData();
 }
 
@@ -48,7 +48,7 @@ void TargetGraph::update(ImGuiIO &io) {
 
             // Transform vertices from local space to screen space, so we're able to compare it with mouse position.
             // TODO wouldn't it be possible/better to transform mouse position to local space of each target?
-            glm::mat4 viewModelMatrix = camera.projectionMatrix * getTargetData(target).modelMatrix;
+            glm::mat4 viewModelMatrix = projectionMatrix * getTargetData(target).modelMatrix;
             for (size_t i = 0; i < targetVerticesSize; i += 2) {
                 glm::vec4 vertex{targetVertices[i], targetVertices[i + 1], 0, 1};
                 vertex = viewModelMatrix * vertex;
@@ -64,7 +64,7 @@ void TargetGraph::update(ImGuiIO &io) {
     }
 
     if (mouseMoved) {
-        const bool updated = targetDrag.update(mouseX, mouseY, camera.projectionMatrix);
+        const bool updated = targetDrag.update(mouseX, mouseY, projectionMatrix);
         if (updated) {
             clampTargetPositionToVisibleWorldSpace(*targetDrag.draggedTarget);
             getTargetData(*targetDrag.draggedTarget).initializeModelMatrix(targetDrag.draggedTarget->graphical, nodeScale, textScale);
@@ -74,7 +74,7 @@ void TargetGraph::update(ImGuiIO &io) {
 
     if (mouseInside && io.MouseClicked[ImGuiMouseButton_Left]) {
         if (focusedTarget) {
-            targetDrag.begin(mouseX, mouseY, camera.projectionMatrix, focusedTarget);
+            targetDrag.begin(mouseX, mouseY, projectionMatrix, focusedTarget);
         }
         selectedTarget = focusedTarget;
     }
@@ -105,7 +105,7 @@ void TargetGraph::render(float spaceX, float spaceY) {
         const size_t vbSize = shapes.shapeInfos[static_cast<int>(target.type)]->verticesCount / 2;
 
         const auto modelMatrix = getTargetData(target).modelMatrix;
-        const auto transform = camera.projectionMatrix * modelMatrix;
+        const auto transform = projectionMatrix * modelMatrix;
         SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(transform)));
         SAFE_GL(glUniform1f(program.uniformLocation.depthValue, calculateDepthValueForTarget(target, false)));
 
@@ -127,7 +127,7 @@ void TargetGraph::render(float spaceX, float spaceY) {
     SAFE_GL(glUseProgram(program.gl.program));
     SAFE_GL(glBindVertexArray(connections.gl.vao));
     SAFE_GL(glEnableVertexAttribArray(0));
-    SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(camera.projectionMatrix)));
+    SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(projectionMatrix)));
     SAFE_GL(glDrawArrays(GL_LINES, 0, connections.count * 2));
     SAFE_GL(glUseProgram(0));
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -135,7 +135,7 @@ void TargetGraph::render(float spaceX, float spaceY) {
     // Render text
     for (const CmagTarget &target : targets) {
         auto modelMatrix = getTargetData(target).textModelMatrix;
-        const auto transform = camera.projectionMatrix * modelMatrix;
+        const auto transform = projectionMatrix * modelMatrix;
         const auto depthValue = calculateDepthValueForTarget(target, true);
         const auto font = ImGui::GetFont();
         textRenderer.render(transform, depthValue, target.name, font);
@@ -157,39 +157,7 @@ void TargetGraph::reinitializeModelMatrices() {
     connections.update(targets);
 }
 
-void TargetGraph::clampTargetPositionToVisibleWorldSpace(CmagTarget &target) const {
-    const ShapeInfo *shape = shapes.shapeInfos[static_cast<int>(target.type)];
-
-    const float minX = -shape->bounds.minX * nodeScale - worldSpaceHalfWidth;
-    const float maxX = -shape->bounds.maxX * nodeScale + worldSpaceHalfWidth;
-    const float minY = -shape->bounds.minY * nodeScale - worldSpaceHalfHeight;
-    const float maxY = -shape->bounds.maxY * nodeScale + worldSpaceHalfHeight;
-
-    target.graphical.x = clamp(target.graphical.x, minX, maxX);
-    target.graphical.y = clamp(target.graphical.y, minY, maxY);
-}
-
-float TargetGraph::calculateDepthValueForTarget(const CmagTarget &target, bool forText) const {
-    constexpr float valueDefault = 0;
-    constexpr float valueSelected = 0.1;
-    constexpr float valueFocused = 0.2;
-    constexpr float textOffset = 0.01;
-
-    float result = valueDefault;
-    if (&target == selectedTarget) {
-        result = valueSelected;
-    } else if (&target == focusedTarget) {
-        result = valueFocused;
-    }
-
-    if (forText) {
-        result += textOffset;
-    }
-
-    return result;
-}
-
-void TargetGraph::scaleTargetPositions() {
+void TargetGraph::scaleTargetPositionsToWorldSpace() {
     // Target positions were calculated by core cmag and the may be in an arbitrary space. We scale them to our
     // custom world space.
 
@@ -228,17 +196,16 @@ void TargetGraph::scaleTargetPositions() {
     }
 }
 
-void TargetGraph::initializeTargetData() {
-    targetData.resize(targets.size());
-    for (size_t i = 0; i < targets.size(); i++) {
-        targets[i].userData = &targetData[i];
-        targetData[i].initializeModelMatrix(targets[i].graphical, nodeScale, textScale);
-    }
-    connections.update(targets);
-}
+void TargetGraph::clampTargetPositionToVisibleWorldSpace(CmagTarget &target) const {
+    const ShapeInfo *shape = shapes.shapeInfos[static_cast<int>(target.type)];
 
-void TargetGraph::initializeProjectionMatrix() {
-    camera.projectionMatrix = glm::ortho(-worldSpaceHalfWidth, worldSpaceHalfWidth, -worldSpaceHalfHeight, worldSpaceHalfHeight);
+    const float minX = -shape->bounds.minX * nodeScale - worldSpaceHalfWidth;
+    const float maxX = -shape->bounds.maxX * nodeScale + worldSpaceHalfWidth;
+    const float minY = -shape->bounds.minY * nodeScale - worldSpaceHalfHeight;
+    const float maxY = -shape->bounds.maxY * nodeScale + worldSpaceHalfHeight;
+
+    target.graphical.x = clamp(target.graphical.x, minX, maxX);
+    target.graphical.y = clamp(target.graphical.y, minY, maxY);
 }
 
 bool TargetGraph::calculateScreenSpaceSize(float spaceX, float spaceY) {
@@ -259,6 +226,35 @@ bool TargetGraph::calculateScreenSpaceSize(float spaceX, float spaceY) {
         return true;
     }
     return false;
+}
+
+float TargetGraph::calculateDepthValueForTarget(const CmagTarget &target, bool forText) const {
+    constexpr float valueDefault = 0;
+    constexpr float valueSelected = 0.1;
+    constexpr float valueFocused = 0.2;
+    constexpr float textOffset = 0.01;
+
+    float result = valueDefault;
+    if (&target == selectedTarget) {
+        result = valueSelected;
+    } else if (&target == focusedTarget) {
+        result = valueFocused;
+    }
+
+    if (forText) {
+        result += textOffset;
+    }
+
+    return result;
+}
+
+void TargetGraph::initializeTargetData() {
+    targetData.resize(targets.size());
+    for (size_t i = 0; i < targets.size(); i++) {
+        targets[i].userData = &targetData[i];
+        targetData[i].initializeModelMatrix(targets[i].graphical, nodeScale, textScale);
+    }
+    connections.update(targets);
 }
 
 void TargetGraph::TargetDrag::begin(float mouseX, float mouseY, const glm::mat4 &projectionMatrix, CmagTarget *focusedTarget) {

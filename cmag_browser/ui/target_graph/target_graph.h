@@ -31,21 +31,18 @@ public:
     void reinitializeModelMatrices();
 
 private:
+    void scaleTargetPositionsToWorldSpace();
     void clampTargetPositionToVisibleWorldSpace(CmagTarget &target) const;
-
-    float calculateDepthValueForTarget(const CmagTarget &target, bool forText) const;
-
-    void scaleTargetPositions();
-    void initializeTargetData();
-    void initializeProjectionMatrix();
-
     bool calculateScreenSpaceSize(float spaceX, float spaceY);
+    float calculateDepthValueForTarget(const CmagTarget &target, bool forText) const;
+    void initializeTargetData();
 
+    // General data and subobjects
     std::vector<CmagTarget> &targets;
     CmagTarget *selectedTarget = nullptr;
     CmagTarget *focusedTarget = nullptr;
     TextRenderer textRenderer = {};
-
+    glm::mat4 projectionMatrix = {};
     float nodeScale = 25;
     float textScale = 3;
 
@@ -68,10 +65,6 @@ private:
         size_t width = {};
         size_t height = {};
     } bounds = {};
-
-    struct {
-        glm::mat4 projectionMatrix = {};
-    } camera = {};
 
     // User can drag targets on the screen with a mouse. For this to work we need to keep track of some state. This is
     // enclosed in this struct.
