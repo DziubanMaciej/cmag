@@ -13,7 +13,7 @@ struct ShapeInfo;
 
 class TargetGraph {
 public:
-    TargetGraph(std::vector<CmagTarget> &targets);
+    explicit TargetGraph(std::vector<CmagTarget> &targets);
     ~TargetGraph();
 
     void update(ImGuiIO &io);
@@ -73,10 +73,17 @@ private:
         glm::mat4 projectionMatrix = {};
     } camera = {};
 
-    struct {
+    // User can drag targets on the screen with a mouse. For this to work we need to keep track of some state. This is
+    // enclosed in this struct.
+    struct Shapes;
+    struct TargetDrag {
         bool active = {};
         glm::vec4 offsetFromCenter = {};
-        CmagTarget *target = {};
+        CmagTarget *draggedTarget = {};
+
+        void begin(float mouseX, float mouseY, const glm::mat4 &projectionMatrix, CmagTarget *focusedTarget);
+        bool update(float mouseX, float mouseY, const glm::mat4 &projectionMatrix) const;
+        void end();
     } targetDrag = {};
 
     // Each target type may have different shape associated with it. We keep them all in a shared vertex buffer and store

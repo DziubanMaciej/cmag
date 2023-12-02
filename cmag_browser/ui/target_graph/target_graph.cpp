@@ -2,7 +2,6 @@
 
 #include "cmag_browser/ui/target_graph/coordinate_space.h"
 #include "cmag_browser/ui/target_graph/shapes.h"
-#include "cmag_browser/util/gl_extensions.h"
 #include "cmag_browser/util/gl_helpers.h"
 #include "cmag_browser/util/math_utils.h"
 
@@ -35,6 +34,7 @@ void TargetGraph::update(ImGuiIO &io) {
     const float mouseX = 2 * (io.MousePos.x - static_cast<float>(bounds.x)) / static_cast<float>(bounds.width) - 1;
     const float mouseY = 2 * (io.MousePos.y - static_cast<float>(bounds.y)) / static_cast<float>(bounds.height) - 1;
     const bool mouseInside = -1 <= mouseX && mouseX <= 1 && -1 <= mouseY && mouseY <= 1;
+    const bool mouseMoved = io.MousePos.x != io.MousePosPrev.x || io.MousePos.y != io.MousePosPrev.y;
 
     constexpr size_t maxVerticesSize = 20;
     float verticesTransformed[maxVerticesSize];
@@ -63,37 +63,24 @@ void TargetGraph::update(ImGuiIO &io) {
         }
     }
 
-    if (io.MousePos.x != io.MousePosPrev.x || io.MousePos.y != io.MousePosPrev.y) {
-        if (targetDrag.active) {
-            glm::vec4 mouseWorld{mouseX, mouseY, 0, 1};
-            mouseWorld = glm::inverse(camera.projectionMatrix) * mouseWorld;
-
-            targetDrag.target->graphical.x = mouseWorld.x - targetDrag.offsetFromCenter.x;
-            targetDrag.target->graphical.y = mouseWorld.y - targetDrag.offsetFromCenter.y;
-
-            clampTargetPositionToVisibleWorldSpace(*targetDrag.target);
-            getTargetData(*targetDrag.target).initializeModelMatrix(targetDrag.target->graphical, nodeScale, textScale);
+    if (mouseMoved) {
+        const bool updated = targetDrag.update(mouseX, mouseY, camera.projectionMatrix);
+        if (updated) {
+            clampTargetPositionToVisibleWorldSpace(*targetDrag.draggedTarget);
+            getTargetData(*targetDrag.draggedTarget).initializeModelMatrix(targetDrag.draggedTarget->graphical, nodeScale, textScale);
             connections.update(targets);
         }
     }
 
     if (mouseInside && io.MouseClicked[ImGuiMouseButton_Left]) {
         if (focusedTarget) {
-            targetDrag.active = true;
-            targetDrag.target = focusedTarget;
-
-            targetDrag.offsetFromCenter.x = mouseX;
-            targetDrag.offsetFromCenter.y = mouseY;
-            targetDrag.offsetFromCenter = glm::inverse(camera.projectionMatrix) * targetDrag.offsetFromCenter;
-            targetDrag.offsetFromCenter.x -= focusedTarget->graphical.x;
-            targetDrag.offsetFromCenter.y -= focusedTarget->graphical.y;
+            targetDrag.begin(mouseX, mouseY, camera.projectionMatrix, focusedTarget);
         }
-
         selectedTarget = focusedTarget;
     }
 
     if (io.MouseReleased[ImGuiMouseButton_Left] && targetDrag.active) {
-        targetDrag = {};
+        targetDrag.end();
     }
 }
 
@@ -272,6 +259,35 @@ bool TargetGraph::calculateScreenSpaceSize(float spaceX, float spaceY) {
         return true;
     }
     return false;
+}
+
+void TargetGraph::TargetDrag::begin(float mouseX, float mouseY, const glm::mat4 &projectionMatrix, CmagTarget *focusedTarget) {
+    active = true;
+    draggedTarget = focusedTarget;
+
+    offsetFromCenter.x = mouseX;
+    offsetFromCenter.y = mouseY;
+    offsetFromCenter = glm::inverse(projectionMatrix) * offsetFromCenter;
+    offsetFromCenter.x -= focusedTarget->graphical.x;
+    offsetFromCenter.y -= focusedTarget->graphical.y;
+}
+
+bool TargetGraph::TargetDrag::update(float mouseX, float mouseY, const glm::mat4 &projectionMatrix) const {
+    if (!active) {
+        return false;
+    }
+
+    glm::vec4 mouseWorld{mouseX, mouseY, 0, 1};
+    mouseWorld = glm::inverse(projectionMatrix) * mouseWorld;
+
+    draggedTarget->graphical.x = mouseWorld.x - offsetFromCenter.x;
+    draggedTarget->graphical.y = mouseWorld.y - offsetFromCenter.y;
+
+    return true;
+}
+
+void TargetGraph::TargetDrag::end() {
+    *this = {};
 }
 
 void TargetGraph::Shapes::allocate() {
