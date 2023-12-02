@@ -10,6 +10,7 @@
 
 struct ImGuiIO;
 struct ShapeInfo;
+struct Segment;
 
 class TargetGraph {
 public:
@@ -31,10 +32,12 @@ public:
     void reinitializeModelMatrices();
 
 private:
+    struct Shapes;
     void scaleTargetPositionsToWorldSpace();
     void clampTargetPositionToVisibleWorldSpace(CmagTarget &target) const;
     bool calculateScreenSpaceSize(float spaceX, float spaceY);
     float calculateDepthValueForTarget(const CmagTarget &target, bool forText) const;
+    static void calculateWorldSpaceVerticesForTarget(const CmagTarget &target, const Shapes &shapes, float *outVertices, size_t *outVerticesCount);
 
     // General data and subobjects
     std::vector<CmagTarget> &targets;
@@ -62,7 +65,7 @@ private:
 
     // Bounds of our graph in screen space. It determines framebuffer size and the rendering viewport. It is obtained
     // from higher level interface, which tells this class, how big it should render.
-    struct {
+    struct Bounds {
         size_t x = {};
         size_t y = {};
         size_t width = {};
@@ -71,7 +74,6 @@ private:
 
     // User can drag targets on the screen with a mouse. For this to work we need to keep track of some state. This is
     // enclosed in this struct.
-    struct Shapes;
     struct TargetDrag {
         bool active = {};
         glm::vec4 offsetFromCenter = {};
@@ -107,7 +109,8 @@ private:
 
         void allocate(const std::vector<CmagTarget> &targets);
         void deallocate();
-        void update(const std::vector<CmagTarget> &targets);
+        void update(const std::vector<CmagTarget> &targets, const Shapes &shapes);
+        static float calculateSegmentTrimParameter(const CmagTarget &target, const Segment &connectionSegment, const Shapes &shapes, bool isSrcTarget);
     } connections = {};
 
     // We are rendering to an offscreen texture that is later passed to ImGui. It has to be allocated with the right size.

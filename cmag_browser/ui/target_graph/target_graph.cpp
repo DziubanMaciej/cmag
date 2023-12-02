@@ -19,7 +19,6 @@ TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
     targetData.allocate(targets, nodeScale, textScale);
 
     projectionMatrix = glm::ortho(-worldSpaceHalfWidth, worldSpaceHalfWidth, -worldSpaceHalfHeight, worldSpaceHalfHeight);
-    connections.update(targets);
 }
 
 TargetGraph ::~TargetGraph() {
@@ -71,7 +70,7 @@ void TargetGraph::update(ImGuiIO &io) {
         if (updated) {
             clampTargetPositionToVisibleWorldSpace(*targetDrag.draggedTarget);
             TargetData::initializeModelMatrix(*targetDrag.draggedTarget, nodeScale, textScale);
-            connections.update(targets);
+            connections.update(targets, shapes);
         }
     }
 
@@ -157,7 +156,7 @@ void TargetGraph::reinitializeModelMatrices() {
     for (const CmagTarget &target : targets) {
         TargetData::initializeModelMatrix(target, nodeScale, textScale);
     }
-    connections.update(targets);
+    connections.update(targets, shapes);
 }
 
 void TargetGraph::scaleTargetPositionsToWorldSpace() {
@@ -226,6 +225,7 @@ bool TargetGraph::calculateScreenSpaceSize(float spaceX, float spaceY) {
     if (newWidth != bounds.width || newHeight != bounds.height) {
         bounds.width = newWidth;
         bounds.height = newHeight;
+        connections.update(targets, shapes);
         return true;
     }
     return false;
@@ -249,6 +249,21 @@ float TargetGraph::calculateDepthValueForTarget(const CmagTarget &target, bool f
     }
 
     return result;
+}
+void TargetGraph::calculateWorldSpaceVerticesForTarget(const CmagTarget &target, const Shapes &shapes, float *outVertices, size_t *outVerticesCount) {
+    const ShapeInfo *shapeInfo = shapes.shapeInfos[static_cast<int>(target.type)];
+    const float *targetVertices = shapeInfo->vertices;
+    const size_t targetVerticesSize = shapeInfo->verticesCount;
+
+    glm::mat4 modelMatrix = TargetData::get(target).modelMatrix;
+    for (size_t i = 0; i < targetVerticesSize; i += 2) {
+        glm::vec4 vertex{targetVertices[i], targetVertices[i + 1], 0, 1};
+        vertex = modelMatrix * vertex;
+        outVertices[i + 0] = vertex.x;
+        outVertices[i + 1] = vertex.y;
+    }
+
+    *outVerticesCount = targetVerticesSize;
 }
 
 void TargetGraph::TargetData::allocate(std::vector<CmagTarget> &targets, float nodeScale, float textScale) {
@@ -366,7 +381,7 @@ void TargetGraph::Connections::deallocate() {
     GL_DELETE_OBJECT(gl.vao, VertexArrays);
 }
 
-void TargetGraph::Connections::update(const std::vector<CmagTarget> &targets) {
+void TargetGraph::Connections::update(const std::vector<CmagTarget> &targets, const Shapes &shapes) {
     count = 0;
 
     std::vector<float> data = {};
@@ -376,13 +391,24 @@ void TargetGraph::Connections::update(const std::vector<CmagTarget> &targets) {
             continue;
         }
 
+        const Vec srcCenter{srcTarget.graphical.x, srcTarget.graphical.y};
         for (const CmagTarget *dstTarget : config->derived.linkDependencies) {
-            data.push_back(srcTarget.graphical.x);
-            data.push_back(srcTarget.graphical.y);
+            const Vec dstCenter{dstTarget->graphical.x, dstTarget->graphical.y};
+            Segment connection{srcCenter, dstCenter};
 
-            data.push_back(dstTarget->graphical.x);
-            data.push_back(dstTarget->graphical.y);
+            // Trim the connection, so it doesn't get inside the shape
+            const float parameterStart = calculateSegmentTrimParameter(srcTarget, connection, shapes, true);
+            const float parameterEnd = calculateSegmentTrimParameter(*dstTarget, connection, shapes, false);
+            if (parameterStart >= parameterEnd) {
+                continue;
+            }
+            trimSegment(connection, parameterStart, parameterEnd);
 
+            // Add segment to our data
+            data.push_back(connection.start.x);
+            data.push_back(connection.start.y);
+            data.push_back(connection.end.x);
+            data.push_back(connection.end.y);
             count++;
         }
     }
@@ -391,6 +417,45 @@ void TargetGraph::Connections::update(const std::vector<CmagTarget> &targets) {
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, gl.vbo));
     SAFE_GL(glBufferSubData(GL_ARRAY_BUFFER, 0, dataSize, data.data()));
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+}
+
+float TargetGraph::Connections::calculateSegmentTrimParameter(const CmagTarget &target, const Segment &connectionSegment, const Shapes &shapes, bool isSrcTarget) {
+    // This function finds closest point of intersection between connectionSegment (a segment between centers of two targets) and
+    // all edges of a given target. The result value is a parameter from 0 to 1 specifying where to trim the connection segment.
+
+    // Get shape vertices in world space
+    constexpr size_t maxVerticesSize = 20;
+    size_t verticesCount = 0;
+    float verticesTransformed[maxVerticesSize];
+    calculateWorldSpaceVerticesForTarget(target, shapes, verticesTransformed, &verticesCount);
+
+    // Initialize the trim parameter. If given target is at a start of connection segment, we're searching for smallest possible
+    // parameter value. If it's at the end, we're searching for largest parameter value.
+    float result = isSrcTarget ? 1.f : 0.f;
+
+    // Iterate over all edges of the polygon
+    for (size_t i = 0; i < verticesCount; i += 2) {
+        // Get the edge segment
+        const size_t j = (i + 2) % verticesCount;
+        const Segment polygonEdge{
+            {verticesTransformed[i], verticesTransformed[i + 1]},
+            {verticesTransformed[j], verticesTransformed[j + 1]},
+        };
+
+        // Check for intersection. If no intersection, then current edge is irrelevant - skip it.
+        float currentParameter = 0;
+        if (!intersectSegments(connectionSegment, polygonEdge, &currentParameter)) {
+            continue;
+        }
+
+        if (isSrcTarget) {
+            result = std::min(result, currentParameter);
+        } else {
+            result = std::max(result, currentParameter);
+        }
+    }
+
+    return result;
 }
 
 void TargetGraph::Framebuffer::allocate(size_t width, size_t height) {
