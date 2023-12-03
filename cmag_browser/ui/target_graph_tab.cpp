@@ -32,6 +32,7 @@ void TargetGraphTab::renderSidePane(float width) {
     renderSidePaneSlider("arrow width", width, 1, 15, targetGraph.getArrowWidthScalePtr());
 
     configSelector.render(width);
+    renderSidePaneDependencyTypeSelection(width);
     renderPropertyPopup();
     renderPropertyTable(width);
 }
@@ -41,6 +42,29 @@ void TargetGraphTab::renderSidePaneSlider(const char *label, float width, float 
     if (ImGui::SliderFloat(label, value, min, max, "%.2f", ImGuiSliderFlags_AlwaysClamp)) {
         targetGraph.refreshModelMatrices();
         targetGraph.refreshConnections();
+    }
+}
+
+void TargetGraphTab::renderSidePaneDependencyTypeSelection(float width) {
+    const char *labels[] = {
+        "Draw build dependencies",
+        "Draw link dependencies",
+    };
+    constexpr int selectionsCount = static_cast<int>(CmakeDependencyType::COUNT);
+    static_assert(sizeof(labels) / sizeof(labels[0]) == selectionsCount);
+
+    ImGui::SetNextItemWidth(width);
+    if (ImGui::BeginCombo("##dependencyTypeSelection", labels[dependencyTypeComboSelection])) {
+        for (int selectionIndex = 0; selectionIndex < selectionsCount; selectionIndex++) {
+            const bool isSelected = (dependencyTypeComboSelection == selectionIndex);
+            if (ImGui::Selectable(labels[selectionIndex], isSelected)) {
+                dependencyTypeComboSelection = selectionIndex;
+            }
+            if (isSelected) {
+                ImGui::SetItemDefaultFocus();
+            }
+        }
+        ImGui::EndCombo();
     }
 }
 
@@ -117,6 +141,7 @@ void TargetGraphTab::renderGraph(ImGuiIO &io) {
 
         // Render to an offscreen texture
         targetGraph.setCurrentCmakeConfig(configSelector.getCurrentConfig());
+        targetGraph.setDisplayedDependencyType(static_cast<CmakeDependencyType>(dependencyTypeComboSelection));
         targetGraph.update(io);
         targetGraph.render();
 

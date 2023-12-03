@@ -15,6 +15,7 @@ public:
 private:
     void renderSidePane(float width);
     void renderSidePaneSlider(const char *label, float width, float min, float max, float *value);
+    void renderSidePaneDependencyTypeSelection(float width);
     void renderPropertyPopup();
     void renderPropertyTable(float width);
     void renderGraph(ImGuiIO &io);
@@ -23,6 +24,7 @@ private:
 
     TargetGraph targetGraph;
     ConfigSelector &configSelector;
+    int dependencyTypeComboSelection = static_cast<int>(CmakeDependencyType::DEFAULT);
 
     bool showDemoWindow = false;
     struct {

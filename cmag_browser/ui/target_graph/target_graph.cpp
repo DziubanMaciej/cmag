@@ -265,7 +265,7 @@ void TargetGraph::calculateWorldSpaceVerticesForTarget(const CmagTarget &target,
 }
 
 void TargetGraph::refreshConnections() {
-    connections.update(targets, cmakeConfig, shapes, arrowLengthScale, arrowWidthScale);
+    connections.update(targets, cmakeConfig, displayedDependencyType, shapes, arrowLengthScale, arrowWidthScale);
 }
 
 void TargetGraph::setCurrentCmakeConfig(std::string_view newConfig) {
@@ -274,6 +274,14 @@ void TargetGraph::setCurrentCmakeConfig(std::string_view newConfig) {
     }
 
     cmakeConfig = newConfig;
+    refreshConnections();
+}
+void TargetGraph::setDisplayedDependencyType(CmakeDependencyType newType) {
+    if (displayedDependencyType == newType) {
+        return;
+    }
+
+    displayedDependencyType = newType;
     refreshConnections();
 }
 
@@ -394,7 +402,7 @@ void TargetGraph::Connections::deallocate() {
     GL_DELETE_OBJECT(gl.vao, VertexArrays);
 }
 
-void TargetGraph::Connections::update(const std::vector<CmagTarget> &targets, std::string_view cmakeConfig, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale) {
+void TargetGraph::Connections::update(const std::vector<CmagTarget> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale) {
     count = 0;
 
     std::vector<float> lineData = {};
@@ -406,7 +414,8 @@ void TargetGraph::Connections::update(const std::vector<CmagTarget> &targets, st
         }
 
         const Vec srcCenter{srcTarget.graphical.x, srcTarget.graphical.y};
-        for (const CmagTarget *dstTarget : config->derived.linkDependencies) {
+        const auto &dependencies = dependencyType == CmakeDependencyType::Build ? config->derived.buildDependencies : config->derived.linkDependencies;
+        for (const CmagTarget *dstTarget : dependencies) {
             const Vec dstCenter{dstTarget->graphical.x, dstTarget->graphical.y};
             Segment connection{srcCenter, dstCenter};
 
