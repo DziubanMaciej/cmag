@@ -84,18 +84,18 @@ void TargetGraphTab::renderPropertyTable(float width) {
                 {
                     RaiiImguiStyle style{};
                     style.color(ImGuiCol_Text, property.isConsistent ? colors.propertyName : colors.inconsistentPropertyName);
-                    ImGui::Text(property.name.c_str());
+                    ImGui::Text("%s", property.name.c_str());
                 }
 
                 scheduleOpenPropertyPopupOnClick(property);
                 if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-                    ImGui::SetTooltip(property.name.c_str());
+                    ImGui::SetTooltip("%s", property.name.c_str());
                 }
                 ImGui::TableNextColumn();
-                ImGui::Text(property.value.c_str());
+                ImGui::Text("%s", property.value.c_str());
                 scheduleOpenPropertyPopupOnClick(property);
                 if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-                    ImGui::SetTooltip(property.value.c_str());
+                    ImGui::SetTooltip("%s", property.value.c_str());
                 }
             }
         }
