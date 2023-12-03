@@ -19,7 +19,8 @@ public:
     ~TargetGraph();
 
     void update(ImGuiIO &io);
-    void render(float spaceX, float spaceY);
+    void setAvailableSpace(float spaceX, float spaceY);
+    void render();
     void savePosition(size_t x, size_t y);
 
     CmagTarget *getSelectedTarget() { return selectedTarget; }
@@ -39,7 +40,6 @@ private:
     struct Shapes;
     void scaleTargetPositionsToWorldSpace();
     void clampTargetPositionToVisibleWorldSpace(CmagTarget &target) const;
-    bool calculateScreenSpaceSize(float spaceX, float spaceY);
     float calculateDepthValueForTarget(const CmagTarget &target, bool forText) const;
     static void calculateWorldSpaceVerticesForTarget(const CmagTarget &target, const Shapes &shapes, float *outVertices, size_t *outVerticesCount);
 

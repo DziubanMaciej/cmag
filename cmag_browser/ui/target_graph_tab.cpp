@@ -106,7 +106,8 @@ void TargetGraphTab::renderGraph(ImGuiIO &io) {
 
     if (space.x > 0 && space.y > 0) {
         targetGraph.update(io);
-        targetGraph.render(space.x, space.y);
+        targetGraph.setAvailableSpace(space.x, space.y);
+        targetGraph.render();
 
         // We passed available space to the target graph, but actually used space may be different,
         // because the graph tries to maintain aspect ratio. Hence, we have to query the size before

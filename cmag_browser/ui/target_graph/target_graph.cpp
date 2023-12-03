@@ -19,6 +19,8 @@ TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
     targetData.allocate(targets, nodeScale, textScale);
 
     projectionMatrix = glm::ortho(-worldSpaceHalfWidth, worldSpaceHalfWidth, -worldSpaceHalfHeight, worldSpaceHalfHeight);
+
+    refreshConnections();
 }
 
 TargetGraph ::~TargetGraph() {
@@ -86,11 +88,30 @@ void TargetGraph::update(ImGuiIO &io) {
     }
 }
 
-void TargetGraph::render(float spaceX, float spaceY) {
-    if (calculateScreenSpaceSize(spaceX, spaceY)) {
-        framebuffer.allocate(bounds.width, bounds.height);
+void TargetGraph::setAvailableSpace(float spaceX, float spaceY) {
+    // Scale dimensions, so we keep aspect ratio
+    if (spaceX > spaceY * screenSpaceAspectRatio) {
+        spaceX = spaceY * screenSpaceAspectRatio;
+    }
+    if (spaceY > spaceX / screenSpaceAspectRatio) {
+        spaceY = spaceX / screenSpaceAspectRatio;
     }
 
+    // Early return if dimensions did not change
+    const auto newWidth = static_cast<size_t>(spaceX);
+    const auto newHeight = static_cast<size_t>(spaceY);
+    if (newWidth == bounds.width && newHeight == bounds.height) {
+        return;
+    }
+
+    // Set new dimensions and update internal data
+    bounds.width = newWidth;
+    bounds.height = newHeight;
+    // refreshConnections();
+    framebuffer.allocate(bounds.width, bounds.height);
+}
+
+void TargetGraph::render() {
     SAFE_GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer.fbo));
     SAFE_GL(glEnable(GL_DEPTH_TEST));
 
@@ -208,27 +229,6 @@ void TargetGraph::clampTargetPositionToVisibleWorldSpace(CmagTarget &target) con
 
     target.graphical.x = clamp(target.graphical.x, minX, maxX);
     target.graphical.y = clamp(target.graphical.y, minY, maxY);
-}
-
-bool TargetGraph::calculateScreenSpaceSize(float spaceX, float spaceY) {
-
-    if (spaceX > spaceY * screenSpaceAspectRatio) {
-        spaceX = spaceY * screenSpaceAspectRatio;
-    }
-    if (spaceY > spaceX / screenSpaceAspectRatio) {
-        spaceY = spaceX / screenSpaceAspectRatio;
-    }
-
-    const auto newWidth = static_cast<size_t>(spaceX);
-    const auto newHeight = static_cast<size_t>(spaceY);
-
-    if (newWidth != bounds.width || newHeight != bounds.height) {
-        bounds.width = newWidth;
-        bounds.height = newHeight;
-        refreshConnections();
-        return true;
-    }
-    return false;
 }
 
 float TargetGraph::calculateDepthValueForTarget(const CmagTarget &target, bool forText) const {
