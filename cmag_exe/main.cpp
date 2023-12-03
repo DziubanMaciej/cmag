@@ -34,5 +34,8 @@ int main(int argc, const char **argv) {
     RETURN_ERROR(cmag.readCmagProjectFromGeneration(argParser.getBuildPath()));
     RETURN_ERROR(cmag.generateGraphPositionsForProject(argParser.getBuildPath(), argParser.getGraphvizPath()));
     RETURN_ERROR(cmag.writeProjectToFile(argParser.getBuildPath()));
+    if (argParser.getLaunchGui()) {
+        RETURN_ERROR(cmag.launchProjectInGui(argParser.getBuildPath()));
+    }
     return 0;
 }

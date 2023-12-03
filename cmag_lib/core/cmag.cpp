@@ -189,3 +189,29 @@ CmagResult Cmag::writeProjectToFile(const fs::path &buildPath) {
     LOG_INFO("Successfully written project file to ", filePath.string());
     return CmagResult::Success;
 }
+CmagResult Cmag::launchProjectInGui(const fs::path &buildPath) {
+    const fs::path browserBinaryPath = getExeLocation().parent_path() / CMAG_BROWSER_BINARY_NAME;
+
+    std::string fileName = std::string(projectName) + ".cmag-project";
+    fs::path projectPath = buildPath / fileName;
+
+    std::vector<std::string> browserArgs = {};
+    browserArgs.push_back(browserBinaryPath.string());
+    browserArgs.push_back(projectPath.string());
+    const SubprocessResult result = runSubprocess(browserArgs);
+    switch (result) {
+    case SubprocessResult::Success:
+        return CmagResult::Success;
+    case SubprocessResult::CreationFailed:
+        LOG_ERROR("running gui failed.");
+        return CmagResult::SubprocessError;
+    case SubprocessResult::ProcessKilled:
+        LOG_ERROR("gui has been killed.");
+        return CmagResult::SubprocessError;
+    case SubprocessResult::ProcessFailed:
+        LOG_ERROR("gui failed.");
+        return CmagResult::SubprocessError;
+    default:
+        UNREACHABLE_CODE;
+    }
+}

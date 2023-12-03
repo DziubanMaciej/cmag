@@ -23,6 +23,7 @@ public:
     CmagResult readCmagProjectFromMerge() { return CmagResult::Success; } // TODO implement
     CmagResult generateGraphPositionsForProject(const fs::path &buildPath, const fs::path &graphvizPath);
     CmagResult writeProjectToFile(const fs::path &buildPath);
+    CmagResult launchProjectInGui(const fs::path &buildPath);
 
 protected:
     std::string projectName;

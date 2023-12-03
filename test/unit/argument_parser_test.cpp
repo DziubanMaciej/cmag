@@ -300,3 +300,20 @@ TEST(ArgumentParserTest, givenJsonDebugArgThenParseCorrectly) {
     EXPECT_TRUE(parser.isValid());
     EXPECT_TRUE(parser.getJsonDebug());
 }
+
+TEST(ArgumentParserTest, givenLaunchGuiArgumentThenItIsParsedCorrectly) {
+    {
+        const char *argv[] = {"cmag", "cmake", ".."};
+        const int argc = sizeof(argv) / sizeof(argv[0]);
+        ArgumentParser parser{argc, argv};
+        EXPECT_TRUE(parser.isValid());
+        EXPECT_FALSE(parser.getLaunchGui());
+    }
+    {
+        const char *argv[] = {"cmag", "-g", "cmake", ".."};
+        const int argc = sizeof(argv) / sizeof(argv[0]);
+        ArgumentParser parser{argc, argv};
+        EXPECT_TRUE(parser.isValid());
+        EXPECT_TRUE(parser.getLaunchGui());
+    }
+}

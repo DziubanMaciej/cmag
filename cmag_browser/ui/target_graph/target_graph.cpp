@@ -255,6 +255,7 @@ float TargetGraph::calculateDepthValueForTarget(const CmagTarget &target, bool f
 }
 void TargetGraph::calculateWorldSpaceVerticesForTarget(const CmagTarget &target, const Shapes &shapes, float *outVertices, size_t *outVerticesCount) {
     const ShapeInfo *shapeInfo = shapes.shapeInfos[static_cast<int>(target.type)];
+    FATAL_ERROR_IF(shapeInfo == nullptr, "Unknown shape");
     const float *targetVertices = shapeInfo->vertices;
     const size_t targetVerticesSize = shapeInfo->verticesCount;
 

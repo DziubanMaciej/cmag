@@ -1,14 +1,8 @@
-#include "cmag_lib/utils/error.h"
+#include "cmag_lib/utils/linux/error.h"
 #include "cmag_lib/utils/subprocess.h"
 
-#include <cstring>
 #include <sys/wait.h>
 #include <unistd.h>
-
-#define FATAL_ERROR_ON_FAILED_SYSCALL(expression)                                 \
-    if ((expression) < 0) {                                                       \
-        FATAL_ERROR("Syscall error on \"", #expression, "\", ", strerror(errno)); \
-    }
 
 static SubprocessResult waitForResult(int pid) {
     int status{};
