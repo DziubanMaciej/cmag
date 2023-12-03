@@ -70,7 +70,7 @@ void TargetGraph::update(ImGuiIO &io) {
         if (updated) {
             clampTargetPositionToVisibleWorldSpace(*targetDrag.draggedTarget);
             TargetData::initializeModelMatrix(*targetDrag.draggedTarget, nodeScale, textScale);
-            connections.update(targets, shapes, arrowLengthScale, arrowWidthScale);
+            refreshConnections();
         }
     }
 
@@ -153,11 +153,10 @@ void TargetGraph::savePosition(size_t x, size_t y) {
     bounds.y = y;
 }
 
-void TargetGraph::reinitializeModelMatrices() {
+void TargetGraph::refreshModelMatrices() {
     for (const CmagTarget &target : targets) {
         TargetData::initializeModelMatrix(target, nodeScale, textScale);
     }
-    connections.update(targets, shapes, arrowLengthScale, arrowWidthScale);
 }
 
 void TargetGraph::scaleTargetPositionsToWorldSpace() {
@@ -226,7 +225,7 @@ bool TargetGraph::calculateScreenSpaceSize(float spaceX, float spaceY) {
     if (newWidth != bounds.width || newHeight != bounds.height) {
         bounds.width = newWidth;
         bounds.height = newHeight;
-        connections.update(targets, shapes, arrowLengthScale, arrowWidthScale);
+        refreshConnections();
         return true;
     }
     return false;
@@ -265,6 +264,9 @@ void TargetGraph::calculateWorldSpaceVerticesForTarget(const CmagTarget &target,
     }
 
     *outVerticesCount = targetVerticesSize;
+}
+void TargetGraph::refreshConnections() {
+    connections.update(targets, shapes, arrowLengthScale, arrowWidthScale);
 }
 
 void TargetGraph::TargetData::allocate(std::vector<CmagTarget> &targets, float nodeScale, float textScale) {

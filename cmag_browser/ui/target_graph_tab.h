@@ -14,6 +14,7 @@ public:
 
 private:
     void renderSidePane(float width);
+    void renderSidePaneSlider(const char *label, float width, float min, float max, float *value);
     void renderPropertyPopup();
     void renderPropertyTable(float width);
     void renderGraph(ImGuiIO &io);

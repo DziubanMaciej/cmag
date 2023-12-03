@@ -26,29 +26,22 @@ void TargetGraphTab::renderSidePane(float width) {
         ImGui::ShowDemoWindow(&showDemoWindow);
     }
 
-    // TODO: extract this to a separate function
-    // TODO: do we leave this? Or make sure scales are always correctly calculated?
-    ImGui::PushItemWidth(width - ImGui::CalcTextSize("node size").x);
-    if (ImGui::SliderFloat("node size", targetGraph.getNodeScalePtr(), 5, 40, "%.2f", ImGuiSliderFlags_AlwaysClamp)) {
-        targetGraph.reinitializeModelMatrices();
-    }
-    ImGui::PushItemWidth(width - ImGui::CalcTextSize("text size").x);
-    if (ImGui::SliderFloat("text size", targetGraph.getTextScalePtr(), 3, 12, "%.2f", ImGuiSliderFlags_AlwaysClamp)) {
-        targetGraph.reinitializeModelMatrices();
-    }
-    ImGui::PushItemWidth(width - ImGui::CalcTextSize("arrow length").x);
-    if (ImGui::SliderFloat("arrow length", targetGraph.getArrowLengthScalePtr(), 1, 15, "%.2f", ImGuiSliderFlags_AlwaysClamp)) {
-        // TODO add refreshConnections()
-        targetGraph.reinitializeModelMatrices();
-    }
-    ImGui::PushItemWidth(width - ImGui::CalcTextSize("arrow width").x);
-    if (ImGui::SliderFloat("arrow width", targetGraph.getArrowWidthScalePtr(), 1, 15, "%.2f", ImGuiSliderFlags_AlwaysClamp)) {
-        targetGraph.reinitializeModelMatrices();
-    }
+    renderSidePaneSlider("node size", width, 5, 40, targetGraph.getNodeScalePtr());
+    renderSidePaneSlider("text size", width, 3, 12, targetGraph.getTextScalePtr());
+    renderSidePaneSlider("arrow length", width, 1, 15, targetGraph.getArrowLengthScalePtr());
+    renderSidePaneSlider("arrow width", width, 1, 15, targetGraph.getArrowWidthScalePtr());
 
     configSelector.render(width);
     renderPropertyPopup();
     renderPropertyTable(width);
+}
+
+void TargetGraphTab::renderSidePaneSlider(const char *label, float width, float min, float max, float *value) {
+    ImGui::PushItemWidth(width - ImGui::CalcTextSize(label).x); // TODO handle underflow :)
+    if (ImGui::SliderFloat(label, value, min, max, "%.2f", ImGuiSliderFlags_AlwaysClamp)) {
+        targetGraph.refreshModelMatrices();
+        targetGraph.refreshConnections();
+    }
 }
 
 void TargetGraphTab::renderPropertyPopup() {

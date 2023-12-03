@@ -32,7 +32,8 @@ public:
     auto getArrowLengthScalePtr() { return &arrowLengthScale; }
     auto getArrowWidthScalePtr() { return &arrowWidthScale; }
 
-    void reinitializeModelMatrices();
+    void refreshModelMatrices();
+    void refreshConnections();
 
 private:
     struct Shapes;
