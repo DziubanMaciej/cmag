@@ -209,12 +209,13 @@ function (json_append_lists_files OUT_VARIABLE PARENT_DIR DIR INDENT)
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
 endfunction()
 
-function(json_append_globals OUT_VARIABLE INDENT INDENT_INCREMENT)
+function(json_append_globals OUT_VARIABLE SELECTED_CONFIG INDENT INDENT_INCREMENT)
     set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
     set(INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
 
     json_append_line(${OUT_VARIABLE} "{" ${INDENT})
     json_append_key_value_unquoted(${OUT_VARIABLE} darkMode true ${INNER_INDENT})
+    json_append_key_value(${OUT_VARIABLE} selectedConfig "${SELECTED_CONFIG}" ${INNER_INDENT})
     json_append_key_value(${OUT_VARIABLE} cmagVersion "${CMAG_VERSION}" ${INNER_INDENT})
     json_append_key_value(${OUT_VARIABLE} cmakeVersion "${CMAKE_VERSION}" ${INNER_INDENT})
     json_append_key_value(${OUT_VARIABLE} cmakeProjectName "${CMAKE_PROJECT_NAME}" ${INNER_INDENT})
@@ -269,6 +270,7 @@ get_property(CMAG_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(CMAG_IS_MULTI_CONFIG)
     set(CMAG_CONFIGS "${CMAKE_CONFIGURATION_TYPES}")
     set(CMAG_CONFIG "$<CONFIG>")
+    list(GET CMAKE_CONFIGURATION_TYPES 0 CMAG_CONFIG_DEFAULT)
 else()
     # Work out current config. It can be unspecified, in which cas we'll name it as "Default".
     # Note that $<CONFIG> generator expression doesn't work if build type isn't explicitly
@@ -279,7 +281,7 @@ else()
     endif()
 
     set(CMAG_CONFIGS "${CMAG_CONFIG}")
-    set(CMAG_CONFIG "${CMAG_CONFIG}")
+    set(CMAG_CONFIG_DEFAULT "${CMAG_CONFIG}")
 endif()
 
 # Write configs list
@@ -288,7 +290,7 @@ set(TARGETS_LIST_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-targets-lis
 file(WRITE "${TARGETS_LIST_FILE}" "${CONFIGS_JSON}")
 
 # Write global settings
-json_append_globals(GLOBALS_JSON "  " "  ")
+json_append_globals(GLOBALS_JSON "${CMAG_CONFIG_DEFAULT}" "  " "  ")
 set(GLOBALS_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-globals")
 file(WRITE "${GLOBALS_FILE}" "${GLOBALS_JSON}")
 

@@ -105,6 +105,7 @@ ParseResult CmagJsonParser::parseGlobalValues(const nlohmann::json &node, CmagGl
         }                                                                                                          \
     } while (false)
     PARSE_GLOBAL_FIELD(darkMode);
+    PARSE_GLOBAL_FIELD(selectedConfig);
     PARSE_GLOBAL_FIELD(cmagVersion);
     PARSE_GLOBAL_FIELD(cmakeVersion);
     PARSE_GLOBAL_FIELD(cmakeProjectName);

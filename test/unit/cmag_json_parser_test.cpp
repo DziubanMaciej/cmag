@@ -10,6 +10,7 @@ struct CmagParseTest : ::testing::Test {
         const char *globals = R"DELIMETER(
             {
                 "darkMode": false,
+                "selectedConfig": "",
                 "cmagVersion": "",
                 "cmakeVersion": "",
                 "cmakeProjectName": "",
@@ -62,6 +63,7 @@ TEST_F(CmagProjectParseTest, givenProjectWithGlobalsSetThenParseCorrectly) {
         {
             "globals": {
                 "darkMode": true,
+                "selectedConfig": "Z",
                 "cmagVersion": "A",
                 "cmakeVersion": "B",
                 "cmakeProjectName": "C",
@@ -80,6 +82,7 @@ TEST_F(CmagProjectParseTest, givenProjectWithGlobalsSetThenParseCorrectly) {
     ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseProject(json, project));
     CmagGlobals &globals = project.getGlobals();
     EXPECT_TRUE(globals.darkMode);
+    EXPECT_STREQ(globals.selectedConfig.c_str(), "Z");
     EXPECT_STREQ(globals.cmagVersion.c_str(), "A");
     EXPECT_STREQ(globals.cmakeVersion.c_str(), "B");
     EXPECT_STREQ(globals.cmakeProjectName.c_str(), "C");
@@ -427,6 +430,7 @@ TEST(CmagGlobalsFileParseTest, givenAllFieldsSpecifiedThenParseCorrectly) {
     const char *json = R"DELIMETER(
     {
         "darkMode": true,
+        "selectedConfig": "Z",
         "cmagVersion": "A",
         "cmakeVersion": "B",
         "cmakeProjectName": "C",
@@ -442,6 +446,7 @@ TEST(CmagGlobalsFileParseTest, givenAllFieldsSpecifiedThenParseCorrectly) {
     CmagGlobals globals{};
     ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseGlobalsFile(json, globals));
     EXPECT_TRUE(globals.darkMode);
+    EXPECT_STREQ(globals.selectedConfig.c_str(), "Z");
     EXPECT_STREQ(globals.cmagVersion.c_str(), "A");
     EXPECT_STREQ(globals.cmakeVersion.c_str(), "B");
     EXPECT_STREQ(globals.cmakeProjectName.c_str(), "C");

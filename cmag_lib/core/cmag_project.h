@@ -23,6 +23,7 @@ enum class CmagTargetType {
 
 struct CmagGlobals {
     bool darkMode = false;
+    std::string selectedConfig = {};
     std::string cmagVersion = {};
     std::string cmakeVersion = {};
     std::string cmakeProjectName = {};

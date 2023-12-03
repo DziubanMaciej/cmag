@@ -15,6 +15,7 @@ nlohmann::json CmagJsonWriter::createGlobalsNode(const CmagGlobals &globals) {
     nlohmann::json node = nlohmann::json::object();
 #define WRITE_GLOBAL_FIELD(name) node[#name] = globals.name
     WRITE_GLOBAL_FIELD(darkMode);
+    WRITE_GLOBAL_FIELD(selectedConfig);
     WRITE_GLOBAL_FIELD(cmagVersion);
     WRITE_GLOBAL_FIELD(cmakeVersion);
     WRITE_GLOBAL_FIELD(cmakeProjectName);
