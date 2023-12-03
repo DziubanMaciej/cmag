@@ -32,6 +32,34 @@ TargetGraph ::~TargetGraph() {
     shapes.deallocate();
 }
 
+void TargetGraph::setScreenSpaceAvailableSpace(float spaceX, float spaceY) {
+    // Scale dimensions, so we keep aspect ratio
+    if (spaceX > spaceY * screenSpaceAspectRatio) {
+        spaceX = spaceY * screenSpaceAspectRatio;
+    }
+    if (spaceY > spaceX / screenSpaceAspectRatio) {
+        spaceY = spaceX / screenSpaceAspectRatio;
+    }
+
+    // Early return if dimensions did not change
+    const auto newWidth = static_cast<size_t>(spaceX);
+    const auto newHeight = static_cast<size_t>(spaceY);
+    if (newWidth == bounds.width && newHeight == bounds.height) {
+        return;
+    }
+
+    // Set new dimensions and update internal data
+    bounds.width = newWidth;
+    bounds.height = newHeight;
+    // refreshConnections();
+    framebuffer.allocate(bounds.width, bounds.height);
+}
+
+void TargetGraph::setScreenSpacePosition(size_t x, size_t y) {
+    bounds.x = x;
+    bounds.y = y;
+}
+
 void TargetGraph::update(ImGuiIO &io) {
     // ImGuiIO gives us mouse position global to the whole window. We have to transform it so it's relative
     // to our graph that we're rendering.
@@ -86,29 +114,6 @@ void TargetGraph::update(ImGuiIO &io) {
     if (io.MouseReleased[ImGuiMouseButton_Left] && targetDrag.active) {
         targetDrag.end();
     }
-}
-
-void TargetGraph::setAvailableSpace(float spaceX, float spaceY) {
-    // Scale dimensions, so we keep aspect ratio
-    if (spaceX > spaceY * screenSpaceAspectRatio) {
-        spaceX = spaceY * screenSpaceAspectRatio;
-    }
-    if (spaceY > spaceX / screenSpaceAspectRatio) {
-        spaceY = spaceX / screenSpaceAspectRatio;
-    }
-
-    // Early return if dimensions did not change
-    const auto newWidth = static_cast<size_t>(spaceX);
-    const auto newHeight = static_cast<size_t>(spaceY);
-    if (newWidth == bounds.width && newHeight == bounds.height) {
-        return;
-    }
-
-    // Set new dimensions and update internal data
-    bounds.width = newWidth;
-    bounds.height = newHeight;
-    // refreshConnections();
-    framebuffer.allocate(bounds.width, bounds.height);
 }
 
 void TargetGraph::render() {
@@ -167,11 +172,6 @@ void TargetGraph::render() {
 
     SAFE_GL(glDisable(GL_DEPTH_TEST));
     SAFE_GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
-}
-
-void TargetGraph::savePosition(size_t x, size_t y) {
-    bounds.x = x;
-    bounds.y = y;
 }
 
 void TargetGraph::refreshModelMatrices() {

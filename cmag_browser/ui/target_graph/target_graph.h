@@ -18,10 +18,10 @@ public:
     explicit TargetGraph(std::vector<CmagTarget> &targets);
     ~TargetGraph();
 
+    void setScreenSpaceAvailableSpace(float spaceX, float spaceY);
+    void setScreenSpacePosition(size_t x, size_t y);
     void update(ImGuiIO &io);
-    void setAvailableSpace(float spaceX, float spaceY);
     void render();
-    void savePosition(size_t x, size_t y);
 
     CmagTarget *getSelectedTarget() { return selectedTarget; }
     auto getTexture() const { return framebuffer.colorTex; }

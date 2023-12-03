@@ -105,22 +105,25 @@ void TargetGraphTab::renderGraph(ImGuiIO &io) {
     ImVec2 space = ImGui::GetContentRegionAvail();
 
     if (space.x > 0 && space.y > 0) {
-        targetGraph.update(io);
-        targetGraph.setAvailableSpace(space.x, space.y);
-        targetGraph.render();
+        targetGraph.setScreenSpaceAvailableSpace(space.x, space.y);
 
         // We passed available space to the target graph, but actually used space may be different,
-        // because the graph tries to maintain aspect ratio. Hence, we have to query the size before
-        // displaying the image.
-        const auto texture = (void *)(intptr_t)targetGraph.getTexture();
+        // because the graph tries to maintain aspect ratio. Hence, we have to query the size.
         const auto textureWidth = static_cast<float>(targetGraph.getTextureWidth());
         const auto textureHeight = static_cast<float>(targetGraph.getTextureHeight());
-        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + (space.x - textureWidth) / 2);
+        const auto textureX = ImGui::GetCursorPosX() + (space.x - textureWidth) / 2;
+        const auto textureY = ImGui::GetCursorPosY() + (space.y - textureHeight) / 2;
+        targetGraph.setScreenSpacePosition(static_cast<size_t>(textureX), static_cast<size_t>(textureY));
+
+        // Render to an offscreen texture
+        targetGraph.update(io);
+        targetGraph.render();
+
+        // Display rendered texture
+        const auto texture = (void *)(intptr_t)targetGraph.getTexture();
+        ImGui::SetCursorPosX(textureX);
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + (space.y - textureHeight) / 2);
         ImGui::Image(texture, ImVec2(textureWidth, textureHeight));
-
-        const ImVec2 pos = ImGui::GetItemRectMin();
-        targetGraph.savePosition(static_cast<size_t>(pos.x), static_cast<size_t>(pos.y));
     }
 }
 
