@@ -50,8 +50,13 @@ void TargetGraphTab::renderSidePaneDependencyTypeSelection(float width) {
         "Draw build dependencies",
         "Draw link dependencies",
     };
+    const char *tooltips[] = {
+        "Derived based on LINK_LIBRARIES (target_link_libraries) and MANUALLY_ADDED_DEPENDENCIES (add_dependencies).",
+        "Derived based on LINK_LIBRARIES (target_link_libraries).",
+    };
     constexpr int selectionsCount = static_cast<int>(CmakeDependencyType::COUNT);
     static_assert(sizeof(labels) / sizeof(labels[0]) == selectionsCount);
+    static_assert(sizeof(tooltips) / sizeof(tooltips[0]) == selectionsCount);
 
     ImGui::SetNextItemWidth(width);
     if (ImGui::BeginCombo("##dependencyTypeSelection", labels[dependencyTypeComboSelection])) {
@@ -59,6 +64,9 @@ void TargetGraphTab::renderSidePaneDependencyTypeSelection(float width) {
             const bool isSelected = (dependencyTypeComboSelection == selectionIndex);
             if (ImGui::Selectable(labels[selectionIndex], isSelected)) {
                 dependencyTypeComboSelection = selectionIndex;
+            }
+            if (ImGui::IsItemHovered()) {
+                ImGui::SetTooltip("%s", tooltips[selectionIndex]);
             }
             if (isSelected) {
                 ImGui::SetItemDefaultFocus();
