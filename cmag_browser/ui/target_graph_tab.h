@@ -4,9 +4,11 @@
 
 #include <imgui/imgui.h>
 
+class ConfigSelector;
+
 struct TargetGraphTab {
 public:
-    explicit TargetGraphTab(std::vector<CmagTarget> &targets);
+    explicit TargetGraphTab(CmagProject &project, ConfigSelector &configSelector);
 
     void render(ImGuiIO &io);
 
@@ -19,6 +21,8 @@ private:
     void scheduleOpenPropertyPopupOnClick(const CmagTargetProperty &property);
 
     TargetGraph targetGraph;
+    ConfigSelector &configSelector;
+
     bool showDemoWindow = false;
     struct {
         bool shouldBeOpen = false;

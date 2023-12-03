@@ -1,9 +1,12 @@
 #include "target_graph_tab.h"
 
+#include "cmag_browser/ui/config_selector.h"
 #include "cmag_browser/util/imgui_utils.h"
 #include "cmag_lib/utils/string_utils.h"
 
-TargetGraphTab::TargetGraphTab(std::vector<CmagTarget> &targets) : targetGraph(targets) {}
+TargetGraphTab::TargetGraphTab(CmagProject &project, ConfigSelector &configSelector)
+    : targetGraph(project.getTargets()),
+      configSelector(configSelector) {}
 
 void TargetGraphTab::render(ImGuiIO &io) {
     const float windowWidth = ImGui::GetContentRegionAvail().x;
@@ -43,6 +46,7 @@ void TargetGraphTab::renderSidePane(float width) {
         targetGraph.reinitializeModelMatrices();
     }
 
+    configSelector.render();
     renderPropertyPopup();
     renderPropertyTable(width);
 }
@@ -77,7 +81,8 @@ void TargetGraphTab::renderPropertyTable(float width) {
     if (ImGui::BeginTable("Table populating", 2, tableFlags, propertyTableSize)) {
         CmagTarget *selectedTarget = targetGraph.getSelectedTarget();
         if (selectedTarget != nullptr) {
-            for (const CmagTargetProperty &property : selectedTarget->configs[0].properties) {
+            const CmagTargetConfig *config = selectedTarget->tryGetConfig(configSelector.getCurrentConfig());
+            for (const CmagTargetProperty &property : config->properties) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 

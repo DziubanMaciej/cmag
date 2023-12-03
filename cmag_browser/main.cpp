@@ -1,9 +1,8 @@
 
+#include "cmag_browser/ui/config_selector.h"
 #include "cmag_browser/ui/listfile_tab.h"
 #include "cmag_browser/ui/summary_tab.h"
 #include "cmag_browser/ui/target_graph_tab.h"
-#include "cmag_browser/util/gl_extensions.h"
-#include "cmag_lib/core/cmag_project.h"
 #include "cmag_lib/parse/cmag_json_parser.h"
 #include "cmag_lib/utils/error.h"
 #include "cmag_lib/utils/file_utils.h"
@@ -74,7 +73,8 @@ int main(int argc, char **argv) {
     initializeImgui(window, glslVersion);
     ImGuiIO &io = ImGui::GetIO();
 
-    TargetGraphTab targetGraphTab{cmagProject.getTargets()};
+    ConfigSelector configSelector{cmagProject};
+    TargetGraphTab targetGraphTab{cmagProject, configSelector};
     ListFileTab listFileTab = {};
     SummaryTab summaryTab = {};
 
