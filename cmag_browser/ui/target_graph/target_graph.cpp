@@ -31,6 +31,8 @@ TargetGraph ::~TargetGraph() {
 }
 
 void TargetGraph::setScreenSpaceAvailableSpace(float spaceX, float spaceY) {
+    FATAL_ERROR_IF(spaceX == 0 || spaceY == 0, "Zero dimensions");
+
     // Scale dimensions, so we keep aspect ratio
     if (spaceX > spaceY * screenSpaceAspectRatio) {
         spaceX = spaceY * screenSpaceAspectRatio;
@@ -46,11 +48,14 @@ void TargetGraph::setScreenSpaceAvailableSpace(float spaceX, float spaceY) {
         return;
     }
 
-    // Set new dimensions and update internal data
+    // Set new dimensions
     bounds.width = newWidth;
     bounds.height = newHeight;
-    // refreshConnections();
-    framebuffer.allocate(bounds.width, bounds.height);
+
+    // Reallocate framebuffer
+    if (newWidth > 0 && newHeight > 0) {
+        framebuffer.allocate(bounds.width, bounds.height);
+    }
 }
 
 void TargetGraph::setScreenSpacePosition(size_t x, size_t y) {
