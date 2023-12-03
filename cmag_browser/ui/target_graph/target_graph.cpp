@@ -71,8 +71,7 @@ void TargetGraph::update(ImGuiIO &io) {
     const bool mouseInside = -1 <= mouseX && mouseX <= 1 && -1 <= mouseY && mouseY <= 1;
     const bool mouseMoved = io.MousePos.x != io.MousePosPrev.x || io.MousePos.y != io.MousePosPrev.y;
 
-    constexpr size_t maxVerticesSize = 20;
-    float verticesTransformed[maxVerticesSize];
+    float verticesTransformed[ShapeInfo::maxVerticesCount];
 
     focusedTarget = nullptr;
     if (mouseInside && !targetDrag.active) {
@@ -132,24 +131,29 @@ void TargetGraph::render() {
     SAFE_GL(glBindVertexArray(shapes.gl.vao));
     SAFE_GL(glEnableVertexAttribArray(0));
     for (const CmagTarget &target : targets) {
-        const size_t vbOffset = shapes.offsets[static_cast<int>(target.type)] / 2;
-        const size_t vbSize = shapes.shapeInfos[static_cast<int>(target.type)]->verticesCount / 2;
+        const size_t vbBaseOffset = shapes.offsets[static_cast<int>(target.type)] / 2;
+        const ShapeInfo &shape = *shapes.shapeInfos[static_cast<int>(target.type)];
 
         const auto modelMatrix = TargetData::get(target).modelMatrix;
         const auto transform = projectionMatrix * modelMatrix;
         SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(transform)));
-        SAFE_GL(glUniform1f(program.uniformLocation.depthValue, calculateDepthValueForTarget(target, false)));
 
         if (&target == selectedTarget) {
+            SAFE_GL(glUniform1f(program.uniformLocation.depthValue, calculateDepthValueForTarget(target, false)));
             SAFE_GL(glUniform3f(program.uniformLocation.color, 0, 0, 1));
-            SAFE_GL(glDrawArrays(GL_TRIANGLE_FAN, vbOffset, vbSize));
+            SAFE_GL(glDrawArrays(GL_TRIANGLE_FAN, vbBaseOffset, shape.subShapes[0].count / 2));
         } else if (&target == focusedTarget) {
+            SAFE_GL(glUniform1f(program.uniformLocation.depthValue, calculateDepthValueForTarget(target, false)));
             SAFE_GL(glUniform3f(program.uniformLocation.color, 0, 1, 0));
-            SAFE_GL(glDrawArrays(GL_TRIANGLE_FAN, vbOffset, vbSize));
+            SAFE_GL(glDrawArrays(GL_TRIANGLE_FAN, vbBaseOffset, shape.subShapes[0].count / 2));
         }
 
+        SAFE_GL(glUniform1f(program.uniformLocation.depthValue, calculateDepthValueForTarget(target, true)));
         SAFE_GL(glUniform3f(program.uniformLocation.color, 0, 0, 0));
-        SAFE_GL(glDrawArrays(GL_LINE_LOOP, vbOffset, vbSize));
+        for (size_t subShapeIndex = 0; subShapeIndex < shape.subShapesCount; subShapeIndex++) {
+            const ShapeInfo::SubShape &subShape = shape.subShapes[subShapeIndex];
+            SAFE_GL(glDrawArrays(GL_LINE_LOOP, vbBaseOffset + subShape.offset / 2, subShape.count / 2));
+        }
     }
     SAFE_GL(glUseProgram(0));
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -349,8 +353,9 @@ void TargetGraph::TargetDrag::end() {
 
 void TargetGraph::Shapes::allocate() {
     // Assign shapes to target types
-    shapeInfos[static_cast<int>(CmagTargetType::StaticLibrary)] = &ShapeInfo::postcard;
-    shapeInfos[static_cast<int>(CmagTargetType::Executable)] = &ShapeInfo::square;
+    shapeInfos[static_cast<int>(CmagTargetType::StaticLibrary)] = &ShapeInfo::staticLib;
+    shapeInfos[static_cast<int>(CmagTargetType::SharedLibrary)] = &ShapeInfo::sharedLib;
+    shapeInfos[static_cast<int>(CmagTargetType::Executable)] = &ShapeInfo::executable;
 
     // Sum up all vertices counts of all shapes
     size_t verticesCount = 0;
@@ -469,9 +474,8 @@ float TargetGraph::Connections::calculateSegmentTrimParameter(const CmagTarget &
     // all edges of a given target. The result value is a parameter from 0 to 1 specifying where to trim the connection segment.
 
     // Get shape vertices in world space
-    constexpr size_t maxVerticesSize = 20;
     size_t verticesCount = 0;
-    float verticesTransformed[maxVerticesSize];
+    float verticesTransformed[ShapeInfo::maxVerticesCount];
     calculateWorldSpaceVerticesForTarget(target, shapes, verticesTransformed, &verticesCount);
 
     // Initialize the trim parameter. If given target is at a start of connection segment, we're searching for smallest possible
