@@ -1,5 +1,6 @@
 #include "target_graph_tab.h"
 
+#include "cmag_browser/util/imgui_utils.h"
 #include "cmag_lib/utils/string_utils.h"
 
 #include <imgui/imgui.h>
@@ -82,13 +83,15 @@ void TargetGraphTab::renderPropertyTable(float width) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
 
-                if (property.isConsistent) {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImColor::HSV(0.14f, 0.6f, 0.6f).Value);
-                } else {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImColor::HSV(0.5f, 0.6f, 0.6f).Value);
+                {
+                    RaiiImguiStyle style{};
+                    if (property.isConsistent) {
+                        style.color(ImGuiCol_Text, ImColor::HSV(0.14f, 0.6f, 0.6f));
+                    } else {
+                        style.color(ImGuiCol_Text, ImColor::HSV(0.5f, 0.6f, 0.6f));
+                    }
+                    ImGui::Text(property.name.c_str());
                 }
-                ImGui::Text(property.name.c_str());
-                ImGui::PopStyleColor(1);
 
                 scheduleOpenPropertyPopupOnClick(property);
                 if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
