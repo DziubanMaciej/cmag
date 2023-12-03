@@ -19,8 +19,6 @@ TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
     targetData.allocate(targets, nodeScale, textScale);
 
     projectionMatrix = glm::ortho(-worldSpaceHalfWidth, worldSpaceHalfWidth, -worldSpaceHalfHeight, worldSpaceHalfHeight);
-
-    refreshConnections();
 }
 
 TargetGraph ::~TargetGraph() {
@@ -265,8 +263,18 @@ void TargetGraph::calculateWorldSpaceVerticesForTarget(const CmagTarget &target,
 
     *outVerticesCount = targetVerticesSize;
 }
+
 void TargetGraph::refreshConnections() {
-    connections.update(targets, shapes, arrowLengthScale, arrowWidthScale);
+    connections.update(targets, cmakeConfig, shapes, arrowLengthScale, arrowWidthScale);
+}
+
+void TargetGraph::setCurrentCmakeConfig(std::string_view newConfig) {
+    if (cmakeConfig == newConfig) {
+        return;
+    }
+
+    cmakeConfig = newConfig;
+    refreshConnections();
 }
 
 void TargetGraph::TargetData::allocate(std::vector<CmagTarget> &targets, float nodeScale, float textScale) {
@@ -366,16 +374,18 @@ void TargetGraph::Connections::allocate(const std::vector<CmagTarget> &targets) 
     // First calculate the greatest amount of connections we can have
     size_t maxConnectionsCount = 0;
     for (const CmagTarget &target : targets) {
+        size_t currentMaxCount = 0;
         for (const CmagTargetConfig &config : target.configs) {
-            auto currentMaxCount = std::max(config.derived.linkDependencies.size(), config.derived.buildDependencies.size());
-            maxConnectionsCount += currentMaxCount;
+            currentMaxCount = std::max(currentMaxCount, config.derived.linkDependencies.size());
+            currentMaxCount = std::max(currentMaxCount, config.derived.buildDependencies.size());
         }
+        maxConnectionsCount += currentMaxCount;
     }
 
     // Each connection is represented by two vertices
     const size_t verticesPerConnection = 5; // line + triangle
     const GLint attribsPerVertex = 2;       // x,y
-    const size_t dataSize = maxConnectionsCount * verticesPerConnection * attribsPerVertex;
+    const size_t dataSize = maxConnectionsCount * verticesPerConnection * attribsPerVertex * sizeof(float);
     createVertexBuffer(&gl.vao, &gl.vbo, nullptr, dataSize, &attribsPerVertex, 1);
 }
 
@@ -384,13 +394,13 @@ void TargetGraph::Connections::deallocate() {
     GL_DELETE_OBJECT(gl.vao, VertexArrays);
 }
 
-void TargetGraph::Connections::update(const std::vector<CmagTarget> &targets, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale) {
+void TargetGraph::Connections::update(const std::vector<CmagTarget> &targets, std::string_view cmakeConfig, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale) {
     count = 0;
 
     std::vector<float> lineData = {};
     std::vector<float> triangleData = {};
     for (const CmagTarget &srcTarget : targets) {
-        const CmagTargetConfig *config = srcTarget.tryGetConfig("Debug"); // TODO make this selectable from gui
+        const CmagTargetConfig *config = srcTarget.tryGetConfig(cmakeConfig);
         if (config == nullptr) {
             continue;
         }

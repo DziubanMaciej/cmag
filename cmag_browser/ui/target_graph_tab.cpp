@@ -116,6 +116,7 @@ void TargetGraphTab::renderGraph(ImGuiIO &io) {
         targetGraph.setScreenSpacePosition(static_cast<size_t>(textureX), static_cast<size_t>(textureY));
 
         // Render to an offscreen texture
+        targetGraph.setCurrentCmakeConfig(configSelector.getCurrentConfig());
         targetGraph.update(io);
         targetGraph.render();
 

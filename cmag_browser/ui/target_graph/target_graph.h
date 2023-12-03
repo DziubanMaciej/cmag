@@ -20,6 +20,7 @@ public:
 
     void setScreenSpaceAvailableSpace(float spaceX, float spaceY);
     void setScreenSpacePosition(size_t x, size_t y);
+    void setCurrentCmakeConfig(std::string_view newConfig);
     void update(ImGuiIO &io);
     void render();
 
@@ -49,6 +50,7 @@ private:
     CmagTarget *focusedTarget = nullptr;
     TextRenderer textRenderer = {};
     glm::mat4 projectionMatrix = {};
+    std::string_view cmakeConfig = {};
     float nodeScale = 25;
     float textScale = 3;
     float arrowLengthScale = 9.3;
@@ -117,7 +119,7 @@ private:
 
         void allocate(const std::vector<CmagTarget> &targets);
         void deallocate();
-        void update(const std::vector<CmagTarget> &targets, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale);
+        void update(const std::vector<CmagTarget> &targets, std::string_view cmakeConfig, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale);
         static float calculateSegmentTrimParameter(const CmagTarget &target, const Segment &connectionSegment, const Shapes &shapes, bool isSrcTarget);
         static void calculateArrowCoordinates(const Segment &connectionSegment, float arrowLength, float arrowWidth, Vec &outA, Vec &outB, Vec &outC);
     } connections = {};
