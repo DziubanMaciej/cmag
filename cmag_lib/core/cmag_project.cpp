@@ -232,22 +232,26 @@ void CmagTargetConfig::deriveData(const std::vector<CmagTarget> &targets) {
         }
     };
 
-    auto findProperty = [this](std::string_view propertyName) {
-        return std::find_if(properties.begin(), properties.end(), [propertyName](const CmagTargetProperty &p) {
-            return p.name == propertyName;
-        });
-    };
-
-    if (auto it = findProperty("LINK_LIBRARIES"); it != properties.end()) {
-        std::vector<std::string_view> dependencies = splitCmakeListString(it->value, false);
+    if (auto property = findProperty("LINK_LIBRARIES"); property != nullptr) {
+        std::vector<std::string_view> dependencies = splitCmakeListString(property->value, false);
         addTargetsToVector(dependencies, derived.linkDependencies);
         derived.buildDependencies = derived.linkDependencies;
     }
 
-    if (auto it = findProperty("MANUALLY_ADDED_DEPENDENCIES"); it != properties.end()) {
-        std::vector<std::string_view> dependencies = splitCmakeListString(it->value, false);
+    if (auto property = findProperty("MANUALLY_ADDED_DEPENDENCIES"); property != nullptr) {
+        std::vector<std::string_view> dependencies = splitCmakeListString(property->value, false);
         addTargetsToVector(dependencies, derived.buildDependencies);
     }
+}
+
+CmagTargetProperty *CmagTargetConfig::findProperty(std::string_view propertyName) {
+    auto it = std::find_if(properties.begin(), properties.end(), [propertyName](const CmagTargetProperty &p) {
+        return p.name == propertyName;
+    });
+    if (it != properties.end()) {
+        return &*it;
+    }
+    return nullptr;
 }
 
 const CmagTargetConfig *CmagTarget::tryGetConfig(std::string_view configName) const {
@@ -275,5 +279,51 @@ CmagTargetConfig &CmagTarget::getOrCreateConfig(std::string_view configName) {
 void CmagTarget::deriveData(const std::vector<CmagTarget> &targets) {
     for (CmagTargetConfig &config : configs) {
         config.deriveData(targets);
+    }
+    deriveDataPropertyConsistency();
+}
+void CmagTarget::deriveDataPropertyConsistency() {
+    if (configs.size() < 2) {
+        return;
+    }
+
+    std::vector<CmagTargetProperty *> cachedProperties(configs.size());
+
+    // This loop is written with the assumption that all configs contain the same properties. W
+    // will loop through properties of a zeroth config and assume they will also be found on other
+    // configs.
+    // It may work incorrectly if they are different. This scenario could happen only when merging
+    // multiple single-generator projects.
+    // TODO: disallow different properties for configs in cmag --merge
+    CmagTargetConfig &defaultConfig = configs[0];
+    for (auto &defaultConfigProperty : defaultConfig.properties) {
+        std::fill(cachedProperties.begin(), cachedProperties.end(), nullptr);
+        cachedProperties[0] = &defaultConfigProperty;
+
+        // Search for the same property in rest of configs and verify whether they are the same
+        bool isConsistent = true;
+        for (size_t configIndex = 1u; configIndex < configs.size(); configIndex++) {
+            CmagTargetProperty *currentConfigProperty = configs[configIndex].findProperty(defaultConfigProperty.name);
+            cachedProperties[configIndex] = currentConfigProperty;
+
+            // this situation shouldn't normally happen for correctly generated cmag projects, but let's
+            // handle it to be robust.
+            if (currentConfigProperty == nullptr) {
+                isConsistent = false;
+                continue;
+            }
+
+            if (defaultConfigProperty.value != currentConfigProperty->value) {
+                isConsistent = false;
+            }
+        }
+
+        // Set the boolean value for cachedProperties of all configs.
+        for (CmagTargetProperty *property : cachedProperties) {
+            if (property == nullptr) {
+                continue;
+            }
+            property->isConsistent = isConsistent;
+        }
     }
 }

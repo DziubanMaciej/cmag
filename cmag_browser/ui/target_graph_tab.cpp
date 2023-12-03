@@ -81,7 +81,15 @@ void TargetGraphTab::renderPropertyTable(float width) {
             for (const CmagTargetProperty &property : selectedTarget->configs[0].properties) {
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
+
+                if (property.isConsistent) {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImColor::HSV(0.14f, 0.6f, 0.6f).Value);
+                } else {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImColor::HSV(0.5f, 0.6f, 0.6f).Value);
+                }
                 ImGui::Text(property.name.c_str());
+                ImGui::PopStyleColor(1);
+
                 scheduleOpenPropertyPopupOnClick(property);
                 if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
                     ImGui::SetTooltip(property.name.c_str());

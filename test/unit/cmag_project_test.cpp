@@ -197,6 +197,97 @@ TEST(CmagProjectTest, givenTargetsWithDependenciesWhenDerivingDataThenDependenci
     EXPECT_EQ(expectedBuildDependencies, targetConfig.derived.buildDependencies);
 }
 
+TEST(CmagProjectTest, givenTargetWithOneConfigWhenDerivingDataThenAllPropertiesAreConsistent) {
+    CmagProject project = {};
+
+    EXPECT_TRUE(project.addTarget(CmagTarget{
+        "target",
+        CmagTargetType::Executable,
+        {
+            {
+                "Debug",
+                {
+                    {"A", "a"},
+                    {"B", "b"},
+                },
+            },
+        },
+    }));
+    ASSERT_EQ(1u, project.getTargets().size());
+    project.deriveData();
+
+    const CmagTarget &target = project.getTargets()[0];
+    const auto &propertiesDebug = target.configs[0].properties;
+    EXPECT_TRUE(propertiesDebug[0].isConsistent);
+    EXPECT_TRUE(propertiesDebug[1].isConsistent);
+}
+
+TEST(CmagProjectTest, givenTargetWithMultipleConfigsWhenDerivingDataThenDifferingPropertiesAreNotConsistent) {
+    CmagProject project = {};
+
+    EXPECT_TRUE(project.addTarget(CmagTarget{
+        "target",
+        CmagTargetType::Executable,
+        {
+            {
+                "Debug",
+                {
+                    {"A", "a"},
+                    {"B", "b"},
+                    {"C", "c"},
+                    {"D", "d"},
+                    {"E", "e"},
+                },
+            },
+            {
+                "Release",
+                {
+                    {"A", "aa"},
+                    {"B", "b"},
+                    {"C", "cc"},
+                    {"D", "d"},
+                    {"E", "ee"},
+                },
+            },
+            {
+                "RelWithDeb",
+                {
+                    {"A", "a"},
+                    {"B", "b"},
+                    {"C", "c"},
+                    {"D", "d"},
+                    {"E", "e"},
+                },
+            },
+        },
+    }));
+    ASSERT_EQ(1u, project.getTargets().size());
+    project.deriveData();
+
+    const CmagTarget &target = project.getTargets()[0];
+
+    const auto &propertiesDebug = target.configs[0].properties;
+    EXPECT_FALSE(propertiesDebug[0].isConsistent);
+    EXPECT_TRUE(propertiesDebug[1].isConsistent);
+    EXPECT_FALSE(propertiesDebug[2].isConsistent);
+    EXPECT_TRUE(propertiesDebug[3].isConsistent);
+    EXPECT_FALSE(propertiesDebug[4].isConsistent);
+
+    const auto &propertiesRelease = target.configs[1].properties;
+    EXPECT_FALSE(propertiesRelease[0].isConsistent);
+    EXPECT_TRUE(propertiesRelease[1].isConsistent);
+    EXPECT_FALSE(propertiesRelease[2].isConsistent);
+    EXPECT_TRUE(propertiesRelease[3].isConsistent);
+    EXPECT_FALSE(propertiesRelease[4].isConsistent);
+
+    const auto &propertiesRelWithDeb = target.configs[2].properties;
+    EXPECT_FALSE(propertiesRelWithDeb[0].isConsistent);
+    EXPECT_TRUE(propertiesRelWithDeb[1].isConsistent);
+    EXPECT_FALSE(propertiesRelWithDeb[2].isConsistent);
+    EXPECT_TRUE(propertiesRelWithDeb[3].isConsistent);
+    EXPECT_FALSE(propertiesRelWithDeb[4].isConsistent);
+}
+
 TEST(CmagTargetTest, givenConfigExistsWhenGetOrCreateConfigIsCalledThenReturnExistingConfig) {
     CmagTarget target = {
         "target",

@@ -4,6 +4,9 @@
 #include <utility>
 #include <vector>
 
+struct CmagTarget;
+class CmagProject;
+
 enum class CmagTargetType {
     Invalid,
     StaticLibrary,
@@ -33,11 +36,10 @@ struct CmagGlobals {
 };
 
 struct CmagTargetProperty {
-    std::string name;
-    std::string value;
+    std::string name = {};
+    std::string value = {};
+    bool isConsistent = true; // true if this property has the same value for all other configs
 };
-
-struct CmagTarget;
 
 struct CmagTargetConfig {
     std::string name = {};
@@ -50,6 +52,7 @@ struct CmagTargetConfig {
 
     void deriveData(const std::vector<CmagTarget> &targets);
     void fixupWithNonEvaled(std::string_view propertyName, std::string_view nonEvaledValue);
+    CmagTargetProperty *findProperty(std::string_view propertyName);
 
 private:
     static void fixupLinkLibrariesDirectoryId(std::string &value);
@@ -68,9 +71,13 @@ struct CmagTarget {
     CmagTargetGraphicalData graphical = {};
     void *userData = {};
 
-    void deriveData(const std::vector<CmagTarget> &targets);
     const CmagTargetConfig *tryGetConfig(std::string_view configName) const;
     CmagTargetConfig &getOrCreateConfig(std::string_view configName);
+
+private:
+    friend CmagProject;
+    void deriveData(const std::vector<CmagTarget> &targets);
+    void deriveDataPropertyConsistency();
 };
 
 using CmagConfigs = std::vector<std::string>;
