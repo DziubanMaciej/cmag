@@ -46,7 +46,7 @@ void TargetGraphTab::renderSidePane(float width) {
         targetGraph.reinitializeModelMatrices();
     }
 
-    configSelector.render();
+    configSelector.render(width);
     renderPropertyPopup();
     renderPropertyTable(width);
 }

@@ -9,7 +9,7 @@ class ConfigSelector {
 public:
     explicit ConfigSelector(CmagProject &project);
 
-    void render();
+    void render(float width);
     std::string_view getCurrentConfig();
 
 private:

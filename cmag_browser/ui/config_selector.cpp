@@ -15,7 +15,8 @@ ConfigSelector::ConfigSelector(CmagProject &project) : project(project),
         }
     }
 }
-void ConfigSelector::render() {
+void ConfigSelector::render(float width) {
+    ImGui::SetNextItemWidth(width);
     ImGui::Combo("##ConfigSelection", &currentSelection, configs.get(), selectionsCount);
 }
 
