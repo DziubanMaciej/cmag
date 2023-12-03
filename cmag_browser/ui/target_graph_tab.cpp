@@ -38,10 +38,27 @@ void TargetGraphTab::renderSidePane(float width) {
 }
 
 void TargetGraphTab::renderSidePaneSlider(const char *label, float width, float min, float max, float *value) {
-    ImGui::PushItemWidth(width - ImGui::CalcTextSize(label).x); // TODO handle underflow :)
-    if (ImGui::SliderFloat(label, value, min, max, "%.2f", ImGuiSliderFlags_AlwaysClamp)) {
+    const float textWidth = ImGui::CalcTextSize(label).x;
+    std::string labelHidden = std::string("##");
+
+    float sliderWidth = width - textWidth;
+    const char *sliderLabel = label;
+    bool tooltipNeeded = false;
+    const float minimumSliderWidth = 50.f;
+    if (textWidth + minimumSliderWidth > width) {
+        sliderWidth = width;
+        labelHidden.append(label);
+        sliderLabel = labelHidden.c_str();
+        tooltipNeeded = true;
+    }
+
+    ImGui::PushItemWidth(sliderWidth);
+    if (ImGui::SliderFloat(sliderLabel, value, min, max, "%.2f", ImGuiSliderFlags_AlwaysClamp)) {
         targetGraph.refreshModelMatrices();
         targetGraph.refreshConnections();
+    }
+    if (tooltipNeeded && ImGui::IsItemHovered()) {
+        ImGui::SetTooltip("%s", label);
     }
 }
 
