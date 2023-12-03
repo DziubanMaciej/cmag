@@ -72,6 +72,8 @@ int main(int argc, char **argv) {
 
     initializeImgui(window, glslVersion);
     ImGuiIO &io = ImGui::GetIO();
+    io.IniFilename = nullptr;
+    io.LogFilename = nullptr;
 
     ConfigSelector configSelector{cmagProject};
     TargetGraphTab targetGraphTab{cmagProject, configSelector};
