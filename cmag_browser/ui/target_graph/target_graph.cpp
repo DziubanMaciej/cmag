@@ -354,8 +354,12 @@ void TargetGraph::TargetDrag::end() {
 void TargetGraph::Shapes::allocate() {
     // Assign shapes to target types
     shapeInfos[static_cast<int>(CmagTargetType::StaticLibrary)] = &ShapeInfo::staticLib;
+    shapeInfos[static_cast<int>(CmagTargetType::ModuleLibrary)] = &ShapeInfo::moduleLib;
     shapeInfos[static_cast<int>(CmagTargetType::SharedLibrary)] = &ShapeInfo::sharedLib;
+    shapeInfos[static_cast<int>(CmagTargetType::ObjectLibrary)] = &ShapeInfo::objectLib;
+    shapeInfos[static_cast<int>(CmagTargetType::InterfaceLibrary)] = &ShapeInfo::interfaceLib;
     shapeInfos[static_cast<int>(CmagTargetType::Executable)] = &ShapeInfo::executable;
+    shapeInfos[static_cast<int>(CmagTargetType::Utility)] = &ShapeInfo::customTarget;
 
     // Sum up all vertices counts of all shapes
     size_t verticesCount = 0;

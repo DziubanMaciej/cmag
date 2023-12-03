@@ -70,4 +70,9 @@ struct ShapeInfo {
     const static ShapeInfo staticLib;
     const static ShapeInfo executable;
     const static ShapeInfo sharedLib;
+    const static ShapeInfo moduleLib;
+    const static ShapeInfo customTarget;
+    const static ShapeInfo interfaceLib;
+    const static ShapeInfo objectLib;
+    const static ShapeInfo unknownLib;
 };
