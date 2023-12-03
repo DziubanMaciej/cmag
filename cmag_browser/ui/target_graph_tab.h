@@ -2,11 +2,11 @@
 
 #include "cmag_browser/ui/target_graph/target_graph.h"
 
-struct ImGuiIO;
+#include <imgui/imgui.h>
 
 struct TargetGraphTab {
 public:
-    TargetGraphTab(std::vector<CmagTarget> &targets);
+    explicit TargetGraphTab(std::vector<CmagTarget> &targets);
 
     void render(ImGuiIO &io);
 
@@ -26,4 +26,9 @@ private:
         const CmagTargetProperty *property = nullptr;
         std::vector<std::string_view> propertyValueList;
     } popup;
+
+    struct {
+        const ImColor propertyName = ImColor::HSV(0.14f, 0.6f, 0.6f);
+        const ImColor inconsistentPropertyName = ImColor::HSV(0.9f, 0.6f, 0.6f);
+    } colors;
 };

@@ -3,8 +3,6 @@
 #include "cmag_browser/util/imgui_utils.h"
 #include "cmag_lib/utils/string_utils.h"
 
-#include <imgui/imgui.h>
-
 TargetGraphTab::TargetGraphTab(std::vector<CmagTarget> &targets) : targetGraph(targets) {}
 
 void TargetGraphTab::render(ImGuiIO &io) {
@@ -85,11 +83,7 @@ void TargetGraphTab::renderPropertyTable(float width) {
 
                 {
                     RaiiImguiStyle style{};
-                    if (property.isConsistent) {
-                        style.color(ImGuiCol_Text, ImColor::HSV(0.14f, 0.6f, 0.6f));
-                    } else {
-                        style.color(ImGuiCol_Text, ImColor::HSV(0.5f, 0.6f, 0.6f));
-                    }
+                    style.color(ImGuiCol_Text, property.isConsistent ? colors.propertyName : colors.inconsistentPropertyName);
                     ImGui::Text(property.name.c_str());
                 }
 

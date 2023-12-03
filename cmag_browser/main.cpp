@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
     initializeImgui(window, glslVersion);
     ImGuiIO &io = ImGui::GetIO();
 
-    TargetGraphTab targetGraphTab = {cmagProject.getTargets()};
+    TargetGraphTab targetGraphTab{cmagProject.getTargets()};
     ListFileTab listFileTab = {};
     SummaryTab summaryTab = {};
 
