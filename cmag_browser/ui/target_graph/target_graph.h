@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <unordered_map>
 
+class CmagBrowserTheme;
 struct ImGuiIO;
 struct ShapeInfo;
 struct Segment;
@@ -23,7 +24,7 @@ enum class CmakeDependencyType {
 
 class TargetGraph {
 public:
-    explicit TargetGraph(std::vector<CmagTarget> &targets);
+    TargetGraph(const CmagBrowserTheme &theme, std::vector<CmagTarget> &targets);
     ~TargetGraph();
 
     void setScreenSpaceAvailableSpace(float spaceX, float spaceY);
@@ -54,6 +55,7 @@ private:
     static void calculateWorldSpaceVerticesForTarget(const CmagTarget &target, const Shapes &shapes, float *outVertices, size_t *outVerticesCount);
 
     // General data and subobjects
+    const CmagBrowserTheme &theme;
     std::vector<CmagTarget> &targets;
     CmagTarget *selectedTarget = nullptr;
     CmagTarget *focusedTarget = nullptr;

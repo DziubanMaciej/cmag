@@ -29,5 +29,11 @@ public:
     ImColor colorPropertyValue = {};
     ImColor colorPopup = {};
     ImColor colorHyperlink = {};
+    ImColor colorTargetGraphBackground = {};
+    ImColor colorTargetGraphNode = {};
+    ImColor colorTargetGraphNodeFocused = {};
+    ImColor colorTargetGraphNodeSelected = {};
+    ImColor colorTargetGraphNodeOutline = {};
+    ImColor colorTargetGraphConnection = {};
     float maxWidthPopup = {};
 };

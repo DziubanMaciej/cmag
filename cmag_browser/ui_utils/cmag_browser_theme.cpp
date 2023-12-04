@@ -31,16 +31,22 @@ CmagBrowserTheme CmagBrowserTheme::createDarkTheme() {
 
     // Create basic theme
     CmagBrowserTheme theme = {
-        ImGuiStyle{},                    // style
-        grayBackgroundLighter,           // colorPropertyTableBackground0;
-        grayBackgroundLighterLighter,    // colorPropertyTableBackground1;
-        vistaBlue,                       // colorPropertyName;
-        ImColor(0.4f, 0.4f, 0.4f, 0.4f), // colorPropertyNameEmpty;
-        roseTaupe,                       // colorPropertyNameInconsistent;
-        ImColorGrey(0.7f),               // colorPropertyValue;
-        ImColorGrey(0.8f),               // colorPopup;
-        ImColor(48, 73, 96, 255),        // colorHyperlink;
-        300.f,                           // maxWidthPopup;
+        ImGuiStyle{},                          // style
+        grayBackgroundLighter,                 // colorPropertyTableBackground0;
+        grayBackgroundLighterLighter,          // colorPropertyTableBackground1;
+        vistaBlue,                             // colorPropertyName;
+        ImColor(0.4f, 0.4f, 0.4f, 0.4f),       // colorPropertyNameEmpty;
+        roseTaupe,                             // colorPropertyNameInconsistent;
+        ImColorGrey(0.7f),                     // colorPropertyValue;
+        ImColorGrey(0.8f),                     // colorPopup;
+        ImColor(48, 73, 96, 255),              // colorHyperlink;
+        ImColor(grayBackgroundLighterLighter), // colorTargetGraphBackground
+        vistaBlue,                             // colorTargetGraphNode
+        vistaBlueLighter,                      // colorTargetGraphNodeFocused
+        prussianBlue,                          // colorTargetGraphNodeSelected
+        ImColorGrey(0),                        // colorTargetGraphNodeOutline
+        vistaBlue,                             // colorTargetGraphConnection
+        300.f,                                 // maxWidthPopup;
     };
     ImGui::StyleColorsDark(&theme.style);
     ImGuiStyle &style = theme.style;

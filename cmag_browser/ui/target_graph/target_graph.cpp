@@ -2,6 +2,7 @@
 
 #include "cmag_browser/ui/target_graph/coordinate_space.h"
 #include "cmag_browser/ui/target_graph/shapes.h"
+#include "cmag_browser/ui_utils/cmag_browser_theme.h"
 #include "cmag_browser/util/gl_helpers.h"
 #include "cmag_browser/util/math_utils.h"
 
@@ -10,7 +11,9 @@
 #include <imgui/imgui.h>
 #include <memory>
 
-TargetGraph::TargetGraph(std::vector<CmagTarget> &targets) : targets(targets) {
+TargetGraph::TargetGraph(const CmagBrowserTheme &theme, std::vector<CmagTarget> &targets)
+    : theme(theme),
+      targets(targets) {
     scaleTargetPositionsToWorldSpace();
 
     shapes.allocate();
@@ -122,8 +125,15 @@ void TargetGraph::render() {
     SAFE_GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer.fbo));
     SAFE_GL(glEnable(GL_DEPTH_TEST));
 
+    const auto colorBackground = theme.colorTargetGraphBackground.Value;
+    const float *colorNode = &theme.colorTargetGraphNode.Value.x;
+    const float *colorNodeFocused = &theme.colorTargetGraphNodeFocused.Value.x;
+    const float *colorNodeSelected = &theme.colorTargetGraphNodeSelected.Value.x;
+    const float *colorNodeOutline = &theme.colorTargetGraphNodeOutline.Value.x;
+    const float *colorConnection = &theme.colorTargetGraphConnection.Value.x;
+
     SAFE_GL(glViewport(0, 0, static_cast<GLsizei>(bounds.width), static_cast<GLsizei>(bounds.height)));
-    SAFE_GL(glClearColor(1, 0, 0, 1));
+    SAFE_GL(glClearColor(colorBackground.x, colorBackground.y, colorBackground.z, colorBackground.w));
     SAFE_GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
     // Render targets
@@ -138,18 +148,20 @@ void TargetGraph::render() {
         const auto transform = projectionMatrix * modelMatrix;
         SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(transform)));
 
+        // Render solid portion of the node
         if (&target == selectedTarget) {
-            SAFE_GL(glUniform1f(program.uniformLocation.depthValue, calculateDepthValueForTarget(target, false)));
-            SAFE_GL(glUniform3f(program.uniformLocation.color, 0, 0, 1));
-            SAFE_GL(glDrawArrays(GL_TRIANGLE_FAN, vbBaseOffset, shape.subShapes[0].count / 2));
+            SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, colorNodeSelected));
         } else if (&target == focusedTarget) {
-            SAFE_GL(glUniform1f(program.uniformLocation.depthValue, calculateDepthValueForTarget(target, false)));
-            SAFE_GL(glUniform3f(program.uniformLocation.color, 0, 1, 0));
-            SAFE_GL(glDrawArrays(GL_TRIANGLE_FAN, vbBaseOffset, shape.subShapes[0].count / 2));
+            SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, colorNodeFocused));
+        } else {
+            SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, colorNode));
         }
+        SAFE_GL(glUniform1f(program.uniformLocation.depthValue, calculateDepthValueForTarget(target, false)));
+        SAFE_GL(glDrawArrays(GL_TRIANGLE_FAN, vbBaseOffset, shape.subShapes[0].count / 2));
 
+        // Render outline
         SAFE_GL(glUniform1f(program.uniformLocation.depthValue, calculateDepthValueForTarget(target, true)));
-        SAFE_GL(glUniform3f(program.uniformLocation.color, 0, 0, 0));
+        SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, colorNodeOutline));
         for (size_t subShapeIndex = 0; subShapeIndex < shape.subShapesCount; subShapeIndex++) {
             const ShapeInfo::SubShape &subShape = shape.subShapes[subShapeIndex];
             SAFE_GL(glDrawArrays(GL_LINE_LOOP, vbBaseOffset + subShape.offset / 2, subShape.count / 2));
@@ -163,6 +175,7 @@ void TargetGraph::render() {
     SAFE_GL(glBindVertexArray(connections.gl.vao));
     SAFE_GL(glEnableVertexAttribArray(0));
     SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(projectionMatrix)));
+    SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, colorConnection));
     SAFE_GL(glDrawArrays(GL_LINES, connections.lineDataOffset, connections.count * 2));
     SAFE_GL(glDrawArrays(GL_TRIANGLES, connections.triangleDataOffset, connections.count * 3));
     SAFE_GL(glUseProgram(0));

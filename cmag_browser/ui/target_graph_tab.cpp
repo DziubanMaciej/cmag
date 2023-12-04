@@ -7,7 +7,7 @@
 
 TargetGraphTab::TargetGraphTab(CmagBrowserTheme &theme, CmagProject &project, ConfigSelector &configSelector)
     : theme(theme),
-      targetGraph(project.getTargets()),
+      targetGraph(theme, project.getTargets()),
       configSelector(configSelector) {}
 
 void TargetGraphTab::render(ImGuiIO &io) {
