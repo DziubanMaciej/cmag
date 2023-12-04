@@ -97,11 +97,11 @@ RaiiImguiStyle CmagBrowserTheme::setupPropertyTable() const {
 
 RaiiImguiStyle CmagBrowserTheme::setupPropertyName(bool isEmpty, bool isConsistent) const {
     ImColor color = colorPropertyName;
-    if (!isConsistent) {
-        color = colorPropertyNameInconsistent;
-    }
     if (isEmpty) {
         color = colorPropertyNameEmpty;
+    }
+    if (!isConsistent) {
+        color = colorPropertyNameInconsistent;
     }
 
     RaiiImguiStyle style{};

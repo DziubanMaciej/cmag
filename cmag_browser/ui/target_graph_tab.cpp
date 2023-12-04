@@ -2,7 +2,7 @@
 
 #include "cmag_browser/ui/config_selector.h"
 #include "cmag_browser/ui_utils/cmag_browser_theme.h"
-#include "cmag_browser/ui_utils/raii_imgui_style.h"
+#include "cmag_browser/ui_utils/tooltip.h"
 #include "cmag_lib/utils/string_utils.h"
 
 TargetGraphTab::TargetGraphTab(CmagBrowserTheme &theme, CmagProject &project, ConfigSelector &configSelector)
@@ -145,25 +145,35 @@ void TargetGraphTab::renderPropertyTable(float width) {
             ImGui::TableNextRow();
 
             ImGui::TableNextColumn();
-            auto nameStyle = theme.setupPropertyName(property.value.empty(), property.isConsistent);
-            ImGui::Text("%s", property.name.c_str());
-            scheduleOpenPropertyPopupOnClick(property);
-            if (ImGui::IsItemHovered()) {
-                auto popupStyle = theme.setupPopup();
-                ImGui::SetTooltip("%s", property.name.c_str());
+            {
+                auto nameStyle = theme.setupPropertyName(property.value.empty(), property.isConsistent);
+                ImGui::Text("%s", property.name.c_str());
             }
+            scheduleOpenPropertyPopupOnClick(property);
+            renderPropertyTablePopup(property, false);
 
             ImGui::TableNextColumn();
-            auto valueStyle = theme.setupPropertyValue();
-            ImGui::Text("%s", property.value.c_str());
-            scheduleOpenPropertyPopupOnClick(property);
-            if (ImGui::IsItemHovered()) {
-                auto popupStyle = theme.setupPopup();
-                ImGui::SetTooltip("%s", property.value.c_str());
+            {
+                auto valueStyle = theme.setupPropertyValue();
+                ImGui::Text("%s", property.value.c_str());
             }
+            scheduleOpenPropertyPopupOnClick(property);
+            renderPropertyTablePopup(property, true);
         }
     }
     ImGui::EndTable();
+}
+void TargetGraphTab::renderPropertyTablePopup(const CmagTargetProperty &property, bool showValue) const {
+    const char *content = showValue ? property.value.c_str() : property.name.c_str();
+    if (Tooltip::begin(theme, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), content)) {
+        {
+            auto popupStyle = theme.setupPopup();
+            auto textStyle = theme.setupPropertyName(false, property.isConsistent);
+            const char *contentExtra = property.isConsistent ? "This property has the same value for all configs." : "This property has a different value for different configs.";
+            ImGui::Text("%s", contentExtra);
+        }
+        Tooltip::end();
+    }
 }
 
 void TargetGraphTab::renderGraph(ImGuiIO &io) {

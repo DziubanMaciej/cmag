@@ -19,6 +19,7 @@ private:
     void renderSidePaneDependencyTypeSelection(float width);
     void renderPropertyPopup();
     void renderPropertyTable(float width);
+    void renderPropertyTablePopup(const CmagTargetProperty &property, bool showValue) const;
     void renderGraph(ImGuiIO &io);
 
     void scheduleOpenPropertyPopupOnClick(const CmagTargetProperty &property);
