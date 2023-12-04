@@ -54,25 +54,31 @@ void SummaryTab::render() {
 }
 
 void SummaryTab::renderTableRowString(const char *name, const std::string &value, const char *tooltip, const char *tooltipHyperlink) {
+
     ImGui::TableNextRow();
     ImGui::TableNextColumn();
+    const ImVec2 posMin = ImGui::GetCursorPos();
     ImGui::Text("%s", name);
-    const ImVec2 posMin = ImGui::GetItemRectMin();
     ImGui::TableNextColumn();
     ImGui::Text("%s", value.c_str());
-
     const ImVec2 posMax = ImGui::GetItemRectMax();
-    const ImVec2 mousePos = ImGui::GetMousePos();
-    if (posMin.x <= mousePos.x && mousePos.x <= posMax.x && posMin.y <= mousePos.y && mousePos.y <= posMax.y) {
+
+    if (isRectHovered(posMin, posMax)) {
         renderTooltip(tooltip, tooltipHyperlink);
     }
 }
 void SummaryTab::renderTableRowSelectedConfig() {
     ImGui::TableNextRow();
     ImGui::TableNextColumn();
+    const ImVec2 posMin = ImGui::GetCursorPos();
     ImGui::Text("Selected config");
     ImGui::TableNextColumn();
-    configSelector.render(0);
+    configSelector.render(0, true);
+    const ImVec2 posMax = ImGui::GetItemRectMax();
+
+    if (isRectHovered(posMin, posMax)) {
+        configSelector.renderTooltip();
+    }
 }
 
 void SummaryTab::renderTableRowSpacer() {
@@ -95,4 +101,8 @@ void SummaryTab::renderTooltip(const char *tooltip, const char *tooltipHyperlink
         }
         ImGui::EndTooltip();
     }
+}
+bool SummaryTab::isRectHovered(ImVec2 min, ImVec2 max) {
+    const ImVec2 mousePos = ImGui::GetMousePos();
+    return min.x <= mousePos.x && mousePos.x <= max.x && min.y <= mousePos.y && mousePos.y <= max.y;
 }

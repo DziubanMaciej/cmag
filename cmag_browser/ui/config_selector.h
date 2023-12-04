@@ -9,7 +9,8 @@ class ConfigSelector {
 public:
     explicit ConfigSelector(CmagProject &project);
 
-    void render(float width);
+    void render(float width, bool skipTooltip = false);
+    void renderTooltip();
     std::string_view getCurrentConfig();
 
 private:

@@ -12,11 +12,10 @@ public:
     void render();
 
 private:
-    using TooltipFunction = void(*)();
     static void renderTableRowString(const char *name, const std::string &value, const char *tooltip, const char *tooltipHyperlink = nullptr);
     static void renderTooltip(const char *tooltip, const char *tooltipHyperlink);
     void renderTableRowSelectedConfig();
-
+    static bool isRectHovered(ImVec2 min, ImVec2 max);
 
     static void renderTableRowSpacer();
 

@@ -15,7 +15,7 @@ ConfigSelector::ConfigSelector(CmagProject &project) : project(project),
         }
     }
 }
-void ConfigSelector::render(float width) {
+void ConfigSelector::render(float width, bool skipTooltip) {
     if (width != 0) {
         ImGui::SetNextItemWidth(width);
     }
@@ -25,15 +25,20 @@ void ConfigSelector::render(float width) {
     ImGui::Combo("##ConfigSelection", &currentSelection, configs.get(), selectionsCount);
     if (selectionsCount == 1) {
         ImGui::EndDisabled();
-
-        // TODO wrap tooltips in some shared helper
-        if (ImGui::BeginItemTooltip()) {
-            const int wrapWidth = 300;
-            ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + wrapWidth);
-            ImGui::Text("Only %s config is available. This is common for single config generators. See output of cmag -h about --merge option to be able to compare multiple configs", configs[0]);
-            ImGui::PopTextWrapPos();
-            ImGui::EndTooltip();
+        if (!skipTooltip && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+            renderTooltip();
         }
+    }
+}
+
+void ConfigSelector::renderTooltip() {
+    // TODO wrap tooltips in some shared helper
+    if (ImGui::BeginTooltip()) {
+        const int wrapWidth = 300;
+        ImGui::PushTextWrapPos(ImGui::GetCursorPos().x + wrapWidth);
+        ImGui::Text("Only %s config is available. This is common for single config generators. See output of cmag -h about --merge option to be able to compare multiple configs", configs[0]);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
     }
 }
 
