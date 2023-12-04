@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
     ConfigSelector configSelector{cmagProject};
     TargetGraphTab targetGraphTab{cmagProject, configSelector};
     ListFileTab listFileTab = {};
-    SummaryTab summaryTab = {};
+    SummaryTab summaryTab{cmagProject, configSelector};
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();

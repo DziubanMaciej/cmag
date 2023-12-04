@@ -8,7 +8,7 @@ class ConfigSelector;
 
 struct TargetGraphTab {
 public:
-    explicit TargetGraphTab(CmagProject &project, ConfigSelector &configSelector);
+    TargetGraphTab(CmagProject &project, ConfigSelector &configSelector);
 
     void render(ImGuiIO &io);
 
