@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
     io.LogFilename = nullptr;
 
     CmagBrowserTheme theme = CmagBrowserTheme::darkTheme;
-    ConfigSelector configSelector{cmagProject};
+    ConfigSelector configSelector{theme, cmagProject};
     TargetGraphTab targetGraphTab{theme, cmagProject, configSelector};
     ListFileTab listFileTab = {};
     SummaryTab summaryTab{theme, cmagProject, configSelector};

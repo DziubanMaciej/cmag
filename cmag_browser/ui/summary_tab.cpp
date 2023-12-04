@@ -39,7 +39,6 @@ void SummaryTab::render() {
 }
 
 void SummaryTab::renderTableRowString(const char *name, const std::string &value, const char *tooltip, const char *tooltipHyperlink) {
-
     ImGui::TableNextRow();
     ImGui::TableNextColumn();
     const ImVec2 posMin = ImGui::GetCursorPos();
