@@ -76,11 +76,13 @@ int main(int argc, char **argv) {
     io.IniFilename = nullptr;
     io.LogFilename = nullptr;
 
-    CmagBrowserTheme theme = CmagBrowserTheme::darkTheme;
+    CmagBrowserTheme theme = CmagBrowserTheme::createDarkTheme();
     ConfigSelector configSelector{theme, cmagProject};
     TargetGraphTab targetGraphTab{theme, cmagProject, configSelector};
     ListFileTab listFileTab = {};
     SummaryTab summaryTab{theme, cmagProject, configSelector};
+
+    theme.setup();
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -94,7 +96,7 @@ int main(int argc, char **argv) {
         ImGui::SetNextWindowPos(ImVec2(0, 0));
         ImGui::SetNextWindowSize(ImGui::GetIO().DisplaySize);
         ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
-        ImGui::Begin("Hello, world!", nullptr, windowFlags);
+        ImGui::Begin("ContentWindow", nullptr, windowFlags);
         if (ImGui::BeginTabBar("root")) {
             if (ImGui::BeginTabItem("Target graph")) {
                 targetGraphTab.render(io);

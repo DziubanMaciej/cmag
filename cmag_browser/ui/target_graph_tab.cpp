@@ -28,6 +28,14 @@ void TargetGraphTab::renderSidePane(float width) {
         ImGui::ShowDemoWindow(&showDemoWindow);
     }
 
+    ImGui::Checkbox("Style selector", &showStyleSelector);
+    if (showStyleSelector) {
+        if (ImGui::Begin("StyleSelectorWindow")) {
+            ImGui::ShowStyleEditor(&ImGui::GetStyle());
+            ImGui::End();
+        }
+    }
+
     renderSidePaneSlider("node size", width, 5, 40, targetGraph.getNodeScalePtr());
     renderSidePaneSlider("text size", width, 3, 12, targetGraph.getTextScalePtr());
     renderSidePaneSlider("arrow length", width, 1, 15, targetGraph.getArrowLengthScalePtr());
@@ -127,8 +135,9 @@ void TargetGraphTab::renderPropertyTable(float width) {
 
     ImVec2 propertyTableSize = ImGui::GetContentRegionAvail();
     propertyTableSize.x = width;
-    const ImGuiTableFlags tableFlags = ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders;
+    const ImGuiTableFlags tableFlags = ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
 
+    auto tableStyle = theme.setupPropertyTable();
     if (ImGui::BeginTable("Table populating", 2, tableFlags, propertyTableSize)) {
 
         const CmagTargetConfig *config = selectedTarget->tryGetConfig(configSelector.getCurrentConfig());

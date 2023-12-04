@@ -6,16 +6,23 @@
 
 class CmagBrowserTheme {
 public:
-    RaiiImguiStyle setupText() const;
+    // Called for entire frame
+    void setup() const;
+
+    // Called for rendering individual parts of UI
+    RaiiImguiStyle setupPropertyTable() const;
     RaiiImguiStyle setupPropertyName(bool isEmpty, bool isConsistent) const;
     RaiiImguiStyle setupPropertyValue() const;
     RaiiImguiStyle setupPopup() const;
     RaiiImguiStyle setupPopup(float textWrapWidth) const;
     RaiiImguiStyle setupHyperlink() const;
 
-    const static CmagBrowserTheme darkTheme;
+    static CmagBrowserTheme createDarkTheme();
 
-    ImColor colorText = {};
+    ImGuiStyle style = {};
+
+    ImColor colorPropertyTableBackground0 = {};
+    ImColor colorPropertyTableBackground1 = {};
     ImColor colorPropertyName = {};
     ImColor colorPropertyNameEmpty = {};
     ImColor colorPropertyNameInconsistent = {};

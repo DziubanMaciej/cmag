@@ -4,20 +4,88 @@ static constexpr ImColor ImColorGrey(float value) {
     return {value, value, value, 1.f};
 }
 
-const CmagBrowserTheme CmagBrowserTheme::darkTheme{
-    ImColorGrey(1.f),                // colorText
-    ImColor::HSV(0.14f, 0.6f, 0.6f), // colorPropertyName;
-    ImColor(0.4f, 0.4f, 0.4f, 0.4f), // colorPropertyNameEmpty;
-    ImColor::HSV(0.9f, 0.6f, 0.6f),  // colorPropertyNameInconsistent;
-    ImColorGrey(0.7f),               // colorPropertyValue;
-    ImColorGrey(0.8f),               // colorPopup;
-    ImColor(48, 73, 96, 255),        // colorHyperlink;
-    300.f,                           // maxWidthPopup;
+const static ImColor debugColor[] = {
+    ImColor(255, 0, 0, 255),
+    ImColor(0, 255, 0, 255),
+    ImColor(0, 0, 255, 255),
+    ImColor(255, 255, 0, 255),
+    ImColor(255, 0, 255, 255),
+    ImColor(0, 255, 255, 255),
 };
 
-RaiiImguiStyle CmagBrowserTheme::setupText() const {
+CmagBrowserTheme CmagBrowserTheme::createDarkTheme() {
+    // Define our color palette
+    ImColor eggplant{0x55, 0x3a, 0x41};
+    ImColor roseTaupe{0x86, 0x5B, 0x66};
+    ImColor raisinBlack{0x26, 0x1F, 0x1E};
+    ImColor vistaBlue{0x8E, 0xA4, 0xD2};
+    ImColor vistaBlueLighter{0x7C, 0x95, 0xCB};
+    ImColor prussianBlue{0x02, 0x2F, 0x40};
+
+    ImColor grayBackground = ImColorGrey(0.1f);
+    ImColor grayBackgroundLighter = ImColorGrey(0.11f);
+    ImColor grayBackgroundLighterLighter = ImColorGrey(0.118f);
+
+    ImColor &colorWidgetMark = vistaBlue;
+    ImColor &colorWidgetMarkClicked = vistaBlueLighter;
+
+    // Create basic theme
+    CmagBrowserTheme theme = {
+        ImGuiStyle{},                    // style
+        grayBackgroundLighter,           // colorPropertyTableBackground0;
+        grayBackgroundLighterLighter,    // colorPropertyTableBackground1;
+        vistaBlue,                       // colorPropertyName;
+        ImColor(0.4f, 0.4f, 0.4f, 0.4f), // colorPropertyNameEmpty;
+        roseTaupe,                       // colorPropertyNameInconsistent;
+        ImColorGrey(0.7f),               // colorPropertyValue;
+        ImColorGrey(0.8f),               // colorPopup;
+        ImColor(48, 73, 96, 255),        // colorHyperlink;
+        300.f,                           // maxWidthPopup;
+    };
+    ImGui::StyleColorsDark(&theme.style);
+    ImGuiStyle &style = theme.style;
+
+    // Define rest of the style
+    style.Colors[ImGuiCol_Text] = ImColorGrey(1.f);
+    style.Colors[ImGuiCol_WindowBg] = grayBackground;
+    style.WindowBorderSize = 0.0f;
+
+    // Frames are input widget such as checkboxes, sliders, combo-boxes
+    style.Colors[ImGuiCol_FrameBg] = ImColorGrey(0.2f);
+    style.Colors[ImGuiCol_FrameBgActive] = ImColorGrey(0.26f);
+    style.Colors[ImGuiCol_FrameBgHovered] = ImColorGrey(0.3f);
+    style.FrameRounding = 2.f;
+
+    // Popups
+    style.Colors[ImGuiCol_PopupBg] = grayBackground;
+
+    // Checkmarks, slider handles, etc
+    style.Colors[ImGuiCol_CheckMark] = colorWidgetMark;
+    style.Colors[ImGuiCol_SliderGrab] = colorWidgetMark;
+    style.Colors[ImGuiCol_SliderGrabActive] = colorWidgetMarkClicked;
+    style.Colors[ImGuiCol_Header] = colorWidgetMark;
+    style.Colors[ImGuiCol_HeaderHovered] = colorWidgetMark;
+    style.Colors[ImGuiCol_HeaderActive] = colorWidgetMarkClicked;
+    style.Colors[ImGuiCol_Button] = colorWidgetMark;
+    style.Colors[ImGuiCol_ButtonHovered] = colorWidgetMark;
+    style.Colors[ImGuiCol_ButtonActive] = colorWidgetMarkClicked;
+
+    // Tab bars
+    style.Colors[ImGuiCol_Tab] = vistaBlue;
+    style.Colors[ImGuiCol_TabHovered] = prussianBlue; // when tab is both hovered and active, this one is used...
+    style.Colors[ImGuiCol_TabActive] = prussianBlue;
+
+    return theme;
+}
+
+void CmagBrowserTheme::setup() const {
+    memcpy(&ImGui::GetStyle(), &style, sizeof(ImGuiStyle));
+}
+
+RaiiImguiStyle CmagBrowserTheme::setupPropertyTable() const {
     RaiiImguiStyle style{};
-    style.color(ImGuiCol_Text, colorText);
+    style.color(ImGuiCol_TableRowBg, colorPropertyTableBackground0);
+    style.color(ImGuiCol_TableRowBgAlt, colorPropertyTableBackground1);
     return style;
 }
 

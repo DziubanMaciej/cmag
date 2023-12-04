@@ -29,6 +29,7 @@ private:
     int dependencyTypeComboSelection = static_cast<int>(CmakeDependencyType::DEFAULT);
 
     bool showDemoWindow = false;
+    bool showStyleSelector = false;
     struct {
         bool shouldBeOpen = false;
         bool isOpen = false;
