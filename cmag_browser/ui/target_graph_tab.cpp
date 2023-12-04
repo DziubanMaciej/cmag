@@ -90,6 +90,8 @@ void TargetGraphTab::renderSidePaneDependencyTypeSelection(float width) {
             }
         }
         ImGui::EndCombo();
+    } else {
+        ImGui::SetItemTooltip("%s", tooltips[dependencyTypeComboSelection]);
     }
 }
 
