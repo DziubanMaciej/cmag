@@ -42,11 +42,16 @@ RaiiImguiStyle CmagBrowserTheme::setupPropertyValue() const {
 }
 
 RaiiImguiStyle CmagBrowserTheme::setupPopup() const {
+    return setupPopup(maxWidthPopup);
+}
+
+RaiiImguiStyle CmagBrowserTheme::setupPopup(float textWrapWidth) const {
     RaiiImguiStyle style{};
     style.color(ImGuiCol_Text, colorPopup);
-    style.textWrapWidth(maxWidthPopup);
+    style.textWrapWidth(textWrapWidth);
     return style;
 }
+
 RaiiImguiStyle CmagBrowserTheme::setupHyperlink() const {
     RaiiImguiStyle style{};
     style.color(ImGuiCol_Text, colorHyperlink);

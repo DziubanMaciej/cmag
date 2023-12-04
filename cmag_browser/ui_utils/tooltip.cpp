@@ -34,13 +34,15 @@ void Tooltip::renderTooltip(const CmagBrowserTheme &theme, const char *tooltip, 
     }
 
     if (ImGui::BeginTooltip()) {
-        {
-            auto textStyle = theme.setupPopup();
-            ImGui::Text("%s", tooltip);
-        }
         if (tooltipHyperlink) {
+            auto textStyle = theme.setupPopup(ImGui::CalcTextSize(tooltipHyperlink).x);
+            ImGui::Text("%s", tooltip);
+
             auto hyperlinkStyle = theme.setupHyperlink();
             ImGui::Text("%s", tooltipHyperlink);
+        } else {
+            auto textStyle = theme.setupPopup();
+            ImGui::Text("%s", tooltip);
         }
         ImGui::EndTooltip();
     }
