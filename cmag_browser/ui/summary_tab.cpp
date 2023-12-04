@@ -47,7 +47,9 @@ void SummaryTab::renderTableRowString(const char *name, const std::string &value
     ImGui::Text("%s", value.c_str());
     const ImVec2 posMax = ImGui::GetItemRectMax();
 
-    Tooltip::renderTooltip(theme, posMin, posMax, tooltip, tooltipHyperlink);
+    if (Tooltip::begin(theme, posMin, posMax, tooltip, tooltipHyperlink)) {
+        Tooltip::end();
+    }
 }
 void SummaryTab::renderTableRowSelectedConfig() {
     ImGui::TableNextRow();

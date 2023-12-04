@@ -22,13 +22,11 @@ void openHyperlink(const char *path) {
 #endif
 }
 
-void Tooltip::renderTooltip(const CmagBrowserTheme &theme, ImVec2 min, ImVec2 max, const char *tooltip, const char *tooltipHyperlink) {
-    if (isRectHovered(min, max)) {
-        renderTooltip(theme, tooltip, tooltipHyperlink);
+bool Tooltip::begin(const CmagBrowserTheme &theme, ImVec2 min, ImVec2 max, const char *tooltip, const char *tooltipHyperlink) {
+    if (!isRectHovered(min, max)) {
+        return false;
     }
-}
 
-void Tooltip::renderTooltip(const CmagBrowserTheme &theme, const char *tooltip, const char *tooltipHyperlink) {
     if (tooltipHyperlink != nullptr && ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
         openHyperlink(tooltipHyperlink);
     }
@@ -44,8 +42,15 @@ void Tooltip::renderTooltip(const CmagBrowserTheme &theme, const char *tooltip, 
             auto textStyle = theme.setupPopup();
             ImGui::Text("%s", tooltip);
         }
-        ImGui::EndTooltip();
+
+        return true;
     }
+
+    return false;
+}
+
+void Tooltip::end() {
+    ImGui::EndTooltip();
 }
 
 bool Tooltip::isRectHovered(ImVec2 min, ImVec2 max) {

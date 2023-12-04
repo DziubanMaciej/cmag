@@ -40,7 +40,9 @@ void ConfigSelector::renderTooltip() {
         char buffer[256];
         snprintf(buffer, sizeof(buffer), format, configs[0]);
 
-        Tooltip::renderTooltip(theme, buffer, nullptr);
+        if (Tooltip::begin(theme, {}, ImGui::GetWindowSize(), buffer, nullptr)) {
+            Tooltip::end();
+        }
     }
 }
 
