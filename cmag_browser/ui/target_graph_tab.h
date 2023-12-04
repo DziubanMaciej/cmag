@@ -4,11 +4,12 @@
 
 #include <imgui/imgui.h>
 
+class CmagBrowserTheme;
 class ConfigSelector;
 
 struct TargetGraphTab {
 public:
-    TargetGraphTab(CmagProject &project, ConfigSelector &configSelector);
+    TargetGraphTab(CmagBrowserTheme &theme, CmagProject &project, ConfigSelector &configSelector);
 
     void render(ImGuiIO &io);
 
@@ -22,6 +23,7 @@ private:
 
     void scheduleOpenPropertyPopupOnClick(const CmagTargetProperty &property);
 
+    CmagBrowserTheme &theme;
     TargetGraph targetGraph;
     ConfigSelector &configSelector;
     int dependencyTypeComboSelection = static_cast<int>(CmakeDependencyType::DEFAULT);
@@ -33,9 +35,4 @@ private:
         const CmagTargetProperty *property = nullptr;
         std::vector<std::string_view> propertyValueList;
     } popup;
-
-    struct {
-        const ImColor propertyName = ImColor::HSV(0.14f, 0.6f, 0.6f);
-        const ImColor inconsistentPropertyName = ImColor::HSV(0.9f, 0.6f, 0.6f);
-    } colors;
 };

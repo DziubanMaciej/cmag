@@ -1,4 +1,5 @@
 
+#include "cmag_browser/cmag_browser_theme.h"
 #include "cmag_browser/ui/config_selector.h"
 #include "cmag_browser/ui/listfile_tab.h"
 #include "cmag_browser/ui/summary_tab.h"
@@ -75,8 +76,9 @@ int main(int argc, char **argv) {
     io.IniFilename = nullptr;
     io.LogFilename = nullptr;
 
+    CmagBrowserTheme theme = CmagBrowserTheme::darkTheme;
     ConfigSelector configSelector{cmagProject};
-    TargetGraphTab targetGraphTab{cmagProject, configSelector};
+    TargetGraphTab targetGraphTab{theme, cmagProject, configSelector};
     ListFileTab listFileTab = {};
     SummaryTab summaryTab{cmagProject, configSelector};
 

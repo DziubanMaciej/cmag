@@ -1,11 +1,13 @@
 #include "target_graph_tab.h"
 
+#include "cmag_browser/cmag_browser_theme.h"
 #include "cmag_browser/ui/config_selector.h"
 #include "cmag_browser/util/imgui_utils.h"
 #include "cmag_lib/utils/string_utils.h"
 
-TargetGraphTab::TargetGraphTab(CmagProject &project, ConfigSelector &configSelector)
-    : targetGraph(project.getTargets()),
+TargetGraphTab::TargetGraphTab(CmagBrowserTheme &theme, CmagProject &project, ConfigSelector &configSelector)
+    : theme(theme),
+      targetGraph(project.getTargets()),
       configSelector(configSelector) {}
 
 void TargetGraphTab::render(ImGuiIO &io) {
@@ -132,22 +134,22 @@ void TargetGraphTab::renderPropertyTable(float width) {
         const CmagTargetConfig *config = selectedTarget->tryGetConfig(configSelector.getCurrentConfig());
         for (const CmagTargetProperty &property : config->properties) {
             ImGui::TableNextRow();
+
             ImGui::TableNextColumn();
-
-            {
-                RaiiImguiStyle style{};
-                style.color(ImGuiCol_Text, property.isConsistent ? colors.propertyName : colors.inconsistentPropertyName);
-                ImGui::Text("%s", property.name.c_str());
-            }
-
+            auto nameStyle = theme.setupPropertyName(property.value.empty(), property.isConsistent);
+            ImGui::Text("%s", property.name.c_str());
             scheduleOpenPropertyPopupOnClick(property);
-            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+            if (ImGui::IsItemHovered()) {
+                auto popupStyle = theme.setupPopup();
                 ImGui::SetTooltip("%s", property.name.c_str());
             }
+
             ImGui::TableNextColumn();
+            auto valueStyle = theme.setupPropertyValue();
             ImGui::Text("%s", property.value.c_str());
             scheduleOpenPropertyPopupOnClick(property);
-            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+            if (ImGui::IsItemHovered()) {
+                auto popupStyle = theme.setupPopup();
                 ImGui::SetTooltip("%s", property.value.c_str());
             }
         }
