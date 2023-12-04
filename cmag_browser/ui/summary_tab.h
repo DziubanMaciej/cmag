@@ -5,20 +5,19 @@
 
 class CmagProject;
 class ConfigSelector;
+class CmagBrowserTheme;
 
 class SummaryTab {
 public:
-    SummaryTab(CmagProject &project, ConfigSelector &configSelector);
+    SummaryTab(const CmagBrowserTheme &theme, CmagProject &project, ConfigSelector &configSelector);
     void render();
 
 private:
-    static void renderTableRowString(const char *name, const std::string &value, const char *tooltip, const char *tooltipHyperlink = nullptr);
-    static void renderTooltip(const char *tooltip, const char *tooltipHyperlink);
+    void renderTableRowString(const char *name, const std::string &value, const char *tooltip, const char *tooltipHyperlink = nullptr);
     void renderTableRowSelectedConfig();
-    static bool isRectHovered(ImVec2 min, ImVec2 max);
-
     static void renderTableRowSpacer();
 
+    const CmagBrowserTheme &theme;
     CmagProject &project;
     ConfigSelector &configSelector;
     std::string compiler;

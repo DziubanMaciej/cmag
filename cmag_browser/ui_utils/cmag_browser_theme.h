@@ -10,6 +10,7 @@ public:
     RaiiImguiStyle setupPropertyName(bool isEmpty, bool isConsistent) const;
     RaiiImguiStyle setupPropertyValue() const;
     RaiiImguiStyle setupPopup() const;
+    RaiiImguiStyle setupHyperlink() const;
 
     const static CmagBrowserTheme darkTheme;
 
@@ -19,5 +20,6 @@ public:
     ImColor colorPropertyNameInconsistent = {};
     ImColor colorPropertyValue = {};
     ImColor colorPopup = {};
+    ImColor colorHyperlink = {};
     float maxWidthPopup = {};
 };

@@ -11,6 +11,7 @@ const CmagBrowserTheme CmagBrowserTheme::darkTheme{
     ImColor::HSV(0.9f, 0.6f, 0.6f),  // colorPropertyNameInconsistent;
     ImColorGrey(0.7f),               // colorPropertyValue;
     ImColorGrey(0.8f),               // colorPopup;
+    ImColor(48, 73, 96, 255),        // colorHyperlink;
     300.f,                           // maxWidthPopup;
 };
 
@@ -44,5 +45,10 @@ RaiiImguiStyle CmagBrowserTheme::setupPopup() const {
     RaiiImguiStyle style{};
     style.color(ImGuiCol_Text, colorPopup);
     style.textWrapWidth(maxWidthPopup);
+    return style;
+}
+RaiiImguiStyle CmagBrowserTheme::setupHyperlink() const {
+    RaiiImguiStyle style{};
+    style.color(ImGuiCol_Text, colorHyperlink);
     return style;
 }

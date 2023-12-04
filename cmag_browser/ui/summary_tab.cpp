@@ -2,27 +2,12 @@
 
 #include "cmag_browser/ui/config_selector.h"
 #include "cmag_browser/ui_utils/raii_imgui_style.h"
+#include "cmag_browser/ui_utils/tooltip.h"
 #include "cmag_lib/core/cmag_project.h"
 
-// TODO refactor into utils
-void openHyperlink(const char *path) {
-#ifdef _WIN32
-    // Note: executable path must use backslashes!
-    ::ShellExecuteA(NULL, "open", path, NULL, NULL, SW_SHOWDEFAULT);
-#else
-#if __APPLE__
-    const char *open_executable = "open";
-#else
-    const char *open_executable = "xdg-open";
-#endif
-    char command[256];
-    snprintf(command, 256, "%s \"%s\"", open_executable, path);
-    system(command);
-#endif
-}
-
-SummaryTab::SummaryTab(CmagProject &project, ConfigSelector &configSelector)
-    : project(project),
+SummaryTab::SummaryTab(const CmagBrowserTheme &theme, CmagProject &project, ConfigSelector &configSelector)
+    : theme(theme),
+      project(project),
       configSelector(configSelector),
       compiler(project.getGlobals().compilerId + " " + project.getGlobals().compilerVersion) {
 }
@@ -63,9 +48,7 @@ void SummaryTab::renderTableRowString(const char *name, const std::string &value
     ImGui::Text("%s", value.c_str());
     const ImVec2 posMax = ImGui::GetItemRectMax();
 
-    if (isRectHovered(posMin, posMax)) {
-        renderTooltip(tooltip, tooltipHyperlink);
-    }
+    Tooltip::renderTooltip(theme, posMin, posMax, tooltip, tooltipHyperlink);
 }
 void SummaryTab::renderTableRowSelectedConfig() {
     ImGui::TableNextRow();
@@ -76,7 +59,7 @@ void SummaryTab::renderTableRowSelectedConfig() {
     configSelector.render(0, true);
     const ImVec2 posMax = ImGui::GetItemRectMax();
 
-    if (isRectHovered(posMin, posMax)) {
+    if (Tooltip::isRectHovered(posMin, posMax)) {
         configSelector.renderTooltip();
     }
 }
@@ -85,24 +68,4 @@ void SummaryTab::renderTableRowSpacer() {
     ImGui::TableNextRow();
     ImGui::TableNextColumn();
     ImGui::Text(" ");
-}
-
-void SummaryTab::renderTooltip(const char *tooltip, const char *tooltipHyperlink) {
-    if (tooltipHyperlink != nullptr && ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-        openHyperlink(tooltipHyperlink);
-    }
-
-    if (ImGui::BeginTooltip()) {
-        ImGui::Text("%s", tooltip);
-        if (tooltipHyperlink) {
-            RaiiImguiStyle style{};
-            style.color(ImGuiCol_Text, ImColor{48, 73, 96, 255});
-            ImGui::Text("%s", tooltipHyperlink);
-        }
-        ImGui::EndTooltip();
-    }
-}
-bool SummaryTab::isRectHovered(ImVec2 min, ImVec2 max) {
-    const ImVec2 mousePos = ImGui::GetMousePos();
-    return min.x <= mousePos.x && mousePos.x <= max.x && min.y <= mousePos.y && mousePos.y <= max.y;
 }

@@ -80,7 +80,7 @@ int main(int argc, char **argv) {
     ConfigSelector configSelector{cmagProject};
     TargetGraphTab targetGraphTab{theme, cmagProject, configSelector};
     ListFileTab listFileTab = {};
-    SummaryTab summaryTab{cmagProject, configSelector};
+    SummaryTab summaryTab{theme, cmagProject, configSelector};
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
