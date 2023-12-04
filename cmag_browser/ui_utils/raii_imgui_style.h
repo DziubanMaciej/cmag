@@ -1,8 +1,7 @@
 #pragma once
 
 #include "cmag_browser/util/movable_primitive.h"
-
-#include <imgui/imgui.h>
+#include "third_party/imgui/imgui/imgui.h"
 
 class RaiiImguiStyle {
 public:

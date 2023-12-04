@@ -1,4 +1,4 @@
-#include "imgui_utils.h"
+#include "raii_imgui_style.h"
 
 RaiiImguiStyle::~RaiiImguiStyle() {
     if (colorsCount > 0) {

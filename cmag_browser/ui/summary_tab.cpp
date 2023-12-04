@@ -1,7 +1,7 @@
 #include "summary_tab.h"
 
 #include "cmag_browser/ui/config_selector.h"
-#include "cmag_browser/util/imgui_utils.h"
+#include "cmag_browser/ui_utils/raii_imgui_style.h"
 #include "cmag_lib/core/cmag_project.h"
 
 // TODO refactor into utils

@@ -1,8 +1,8 @@
 #include "target_graph_tab.h"
 
-#include "cmag_browser/cmag_browser_theme.h"
 #include "cmag_browser/ui/config_selector.h"
-#include "cmag_browser/util/imgui_utils.h"
+#include "cmag_browser/ui_utils/cmag_browser_theme.h"
+#include "cmag_browser/ui_utils/raii_imgui_style.h"
 #include "cmag_lib/utils/string_utils.h"
 
 TargetGraphTab::TargetGraphTab(CmagBrowserTheme &theme, CmagProject &project, ConfigSelector &configSelector)

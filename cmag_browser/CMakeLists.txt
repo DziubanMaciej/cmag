@@ -1,6 +1,4 @@
-add_executable(cmag_browser
-        ui/target_graph/shapes.h
-        ui/target_graph/shapes.cpp)
+add_executable(cmag_browser)
 target_common_setup(cmag_browser)
 target_find_sources_and_add(cmag_browser)
 target_include_directories(cmag_browser PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)

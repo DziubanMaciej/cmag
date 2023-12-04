@@ -1,9 +1,9 @@
 
-#include "cmag_browser/cmag_browser_theme.h"
 #include "cmag_browser/ui/config_selector.h"
 #include "cmag_browser/ui/listfile_tab.h"
 #include "cmag_browser/ui/summary_tab.h"
 #include "cmag_browser/ui/target_graph_tab.h"
+#include "cmag_browser/ui_utils/cmag_browser_theme.h"
 #include "cmag_lib/parse/cmag_json_parser.h"
 #include "cmag_lib/utils/error.h"
 #include "cmag_lib/utils/file_utils.h"
