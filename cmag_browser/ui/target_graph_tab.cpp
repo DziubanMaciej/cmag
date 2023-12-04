@@ -118,34 +118,37 @@ void TargetGraphTab::renderPropertyPopup() {
 }
 
 void TargetGraphTab::renderPropertyTable(float width) {
+    CmagTarget *selectedTarget = targetGraph.getSelectedTarget();
+    if (selectedTarget == nullptr) {
+        return;
+    }
+
     ImVec2 propertyTableSize = ImGui::GetContentRegionAvail();
     propertyTableSize.x = width;
     const ImGuiTableFlags tableFlags = ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders;
 
     if (ImGui::BeginTable("Table populating", 2, tableFlags, propertyTableSize)) {
-        CmagTarget *selectedTarget = targetGraph.getSelectedTarget();
-        if (selectedTarget != nullptr) {
-            const CmagTargetConfig *config = selectedTarget->tryGetConfig(configSelector.getCurrentConfig());
-            for (const CmagTargetProperty &property : config->properties) {
-                ImGui::TableNextRow();
-                ImGui::TableNextColumn();
 
-                {
-                    RaiiImguiStyle style{};
-                    style.color(ImGuiCol_Text, property.isConsistent ? colors.propertyName : colors.inconsistentPropertyName);
-                    ImGui::Text("%s", property.name.c_str());
-                }
+        const CmagTargetConfig *config = selectedTarget->tryGetConfig(configSelector.getCurrentConfig());
+        for (const CmagTargetProperty &property : config->properties) {
+            ImGui::TableNextRow();
+            ImGui::TableNextColumn();
 
-                scheduleOpenPropertyPopupOnClick(property);
-                if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-                    ImGui::SetTooltip("%s", property.name.c_str());
-                }
-                ImGui::TableNextColumn();
-                ImGui::Text("%s", property.value.c_str());
-                scheduleOpenPropertyPopupOnClick(property);
-                if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-                    ImGui::SetTooltip("%s", property.value.c_str());
-                }
+            {
+                RaiiImguiStyle style{};
+                style.color(ImGuiCol_Text, property.isConsistent ? colors.propertyName : colors.inconsistentPropertyName);
+                ImGui::Text("%s", property.name.c_str());
+            }
+
+            scheduleOpenPropertyPopupOnClick(property);
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+                ImGui::SetTooltip("%s", property.name.c_str());
+            }
+            ImGui::TableNextColumn();
+            ImGui::Text("%s", property.value.c_str());
+            scheduleOpenPropertyPopupOnClick(property);
+            if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
+                ImGui::SetTooltip("%s", property.value.c_str());
             }
         }
     }
