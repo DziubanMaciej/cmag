@@ -38,6 +38,11 @@ function(json_append_object_end OUT_VARIABLE INDENT)
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
 endfunction()
 
+function(json_append_array_end OUT_VARIABLE INDENT)
+    json_strip_trailing_comma()
+    string(APPEND ${OUT_VARIABLE} "${INDENT}],\n")
+    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
+endfunction()
 
 # -------------------------------------------------------------------- Assembling JSON for .cmag-targets file
 macro(json_append_target_property OUT_VARIABLE TGT NAME PROPERTY INDENT GENEX_EVAL)
@@ -185,23 +190,27 @@ endfunction()
 
 
 # -------------------------------------------------------------------- Assembling JSON for .cmag-globals file
-function (json_append_lists_files OUT_VARIABLE PARENT_DIR DIR INDENT)
-    # Append current dir to json
-    if (NOT "${PARENT_DIR}d" STREQUAL "d")
-        string(APPEND ${OUT_VARIABLE} ",\n")
-    endif()
-    string(APPEND ${OUT_VARIABLE} "${INDENT}\"${DIR}\": \"${PARENT_DIR}\"")
+function (json_append_lists_files OUT_VARIABLE DIR INDENT INDENT_INCREMENT)
+    set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
 
-    # Call for subdirectories recursively
+    # Get immediate subdirectories
     get_property(SUBDIRS DIRECTORY ${DIR} PROPERTY SUBDIRECTORIES)
-    foreach (SUBDIR ${SUBDIRS})
-        json_append_lists_files(${OUT_VARIABLE} ${DIR} ${SUBDIR} ${INDENT})
-    endforeach ()
 
-    # Add trailing newline
-    if ("${PARENT_DIR}d" STREQUAL "d")
-        string(APPEND ${OUT_VARIABLE} "\n")
+    # Write current dir and its immediate subdirectories
+    if ("${SUBDIRS}d" STREQUAL "d")
+        string(APPEND ${OUT_VARIABLE} "${INDENT}\"${DIR}\": [],\n")
+    else ()
+        string(APPEND ${OUT_VARIABLE} "${INDENT}\"${DIR}\": [\n")
+        foreach (SUBDIR ${SUBDIRS})
+            json_append_line(${OUT_VARIABLE} "\"${SUBDIR}\"," ${INNER_INDENT})
+        endforeach ()
+        json_append_array_end(${OUT_VARIABLE} ${INDENT})
     endif()
+
+    # Execute recursively
+    foreach (SUBDIR ${SUBDIRS})
+        json_append_lists_files(${OUT_VARIABLE} ${SUBDIR} ${INDENT} ${INDENT_INCREMENT})
+    endforeach ()
 
     # Propagate to outer scope
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
@@ -225,10 +234,11 @@ function(json_append_globals OUT_VARIABLE SELECTED_CONFIG INDENT INDENT_INCREMEN
     json_append_key_value(${OUT_VARIABLE} compilerVersion "${CMAKE_CXX_COMPILER_VERSION}" ${INNER_INDENT})
     json_append_key_value(${OUT_VARIABLE} os "${CMAKE_SYSTEM_NAME}" ${INNER_INDENT})
 
-    json_append_line(${OUT_VARIABLE} "\"listFiles\": {" ${INNER_INDENT})
-    json_append_lists_files(${OUT_VARIABLE} "" ${CMAKE_CURRENT_SOURCE_DIR} ${INNER_INNER_INDENT})
-    json_append_line(${OUT_VARIABLE} "}" ${INNER_INDENT})
+    json_append_object_begin(${OUT_VARIABLE} "listFiles" ${INNER_INDENT})
+    json_append_lists_files(${OUT_VARIABLE} ${CMAKE_CURRENT_SOURCE_DIR} ${INNER_INNER_INDENT} ${INDENT_INCREMENT})
+    json_append_object_end(${OUT_VARIABLE} ${INNER_INDENT})
 
+    json_strip_trailing_comma()
     json_append_line(${OUT_VARIABLE} "}" ${INDENT})
 
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
