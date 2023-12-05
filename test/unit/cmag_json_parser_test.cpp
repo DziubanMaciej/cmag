@@ -103,7 +103,7 @@ TEST_F(CmagProjectParseTest, givenProjectWithGlobalsSetThenParseCorrectly) {
 
     ASSERT_EQ(4, globals.listDirs.size());
     EXPECT_STREQ("a", globals.listDirs[0].name.c_str());
-    EXPECT_EQ((std::vector<size_t>{1,2}), globals.listDirs[0].childIndices);
+    EXPECT_EQ((std::vector<size_t>{1, 2}), globals.listDirs[0].childIndices);
     EXPECT_STREQ("b", globals.listDirs[1].name.c_str());
     EXPECT_EQ((std::vector<size_t>{}), globals.listDirs[1].childIndices);
     EXPECT_STREQ("c", globals.listDirs[2].name.c_str());
