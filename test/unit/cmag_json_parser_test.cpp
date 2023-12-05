@@ -21,7 +21,7 @@ struct CmagParseTest : ::testing::Test {
                 "compilerId": "",
                 "compilerVersion": "",
                 "os": "",
-                "listDirs": {}
+                "listDirs": { "a": [] }
             }
         )DELIMETER";
 
@@ -140,8 +140,9 @@ TEST_F(CmagProjectParseTest, givenTargetWithNoPropertiesThenParseCorrectly) {
                 },
                 "graphical": {
                     "x": 10,
-                    "y": 10
-                }
+                    "y": 20
+                },
+                "listDir": "a"
             }
         }
     }
@@ -159,6 +160,11 @@ TEST_F(CmagProjectParseTest, givenTargetWithNoPropertiesThenParseCorrectly) {
     };
     ASSERT_EQ(1u, target.configs.size());
     compareTargetProperties(expectedProperties, target.configs[0]);
+
+    EXPECT_EQ(10, target.graphical.x);
+    EXPECT_EQ(20, target.graphical.y);
+
+    EXPECT_STREQ("a", target.listDirName.c_str());
 }
 
 TEST_F(CmagProjectParseTest, givenTargetWithPropertiesThenParseCorrectly) {
@@ -177,7 +183,8 @@ TEST_F(CmagProjectParseTest, givenTargetWithPropertiesThenParseCorrectly) {
                 "graphical": {
                     "x": 10,
                     "y": 10
-                }
+                },
+                "listDir": "a"
             }
         }
     }
@@ -220,7 +227,8 @@ TEST_F(CmagProjectParseTest, givenTargetWithMultipleConfigsThenParseCorrectly) {
                 "graphical": {
                     "x": 10,
                     "y": 10
-                }
+                },
+                "listDir": "a"
             }
         }
     }
@@ -271,7 +279,8 @@ TEST_F(CmagProjectParseTest, givenMultipleTargetsThenParseCorrectly) {
                 "graphical": {
                     "x": 10,
                     "y": 10
-                }
+                },
+                "listDir": "a"
             },
             "myTarget2" : {
                 "type": "EXECUTABLE",
@@ -283,7 +292,8 @@ TEST_F(CmagProjectParseTest, givenMultipleTargetsThenParseCorrectly) {
                 "graphical": {
                     "x": 10,
                     "y": 10
-                }
+                },
+                "listDir": "a"
             }
         }
     }
@@ -340,7 +350,8 @@ TEST_F(CmagProjectParseTest, givenVariousTargetTypesTheParseThemCorrectly) {
                     "graphical": {
                         "x": 10,
                         "y": 10
-                    }
+                    },
+                    "listDir": "a"
                 }
             }
         }
@@ -518,7 +529,8 @@ TEST(CmagTargetsFileParseTest, givenTargetWithNoPropertesThenParseCorrectly) {
                     "genexable": {},
                     "genexable_evaled": {}
                 }
-            }
+            },
+            "listDir" : "a"
         }
     }
     )DELIMETER";
@@ -536,6 +548,8 @@ TEST(CmagTargetsFileParseTest, givenTargetWithNoPropertesThenParseCorrectly) {
     };
     ASSERT_EQ(1u, target.configs.size());
     compareTargetProperties(expectedProperties, target.configs[0]);
+
+    EXPECT_STREQ("a", target.listDirName.c_str());
 }
 
 TEST(CmagTargetsFileParseTest, givenTargetWithNonGenexablePropertesThenParseCorrectly) {
@@ -552,7 +566,8 @@ TEST(CmagTargetsFileParseTest, givenTargetWithNonGenexablePropertesThenParseCorr
                     "genexable": {},
                     "genexable_evaled": {}
                 }
-            }
+            },
+            "listDir" : "a"
         }
     }
     )DELIMETER";
@@ -589,7 +604,8 @@ TEST(CmagTargetsFileParseTest, givenMultipleTargetsThenParseCorrectly) {
                     "genexable": {},
                     "genexable_evaled": {}
                 }
-            }
+            },
+            "listDir" : "a"
         },
         "myTarget2" : {
             "type": "EXECUTABLE",
@@ -602,7 +618,8 @@ TEST(CmagTargetsFileParseTest, givenMultipleTargetsThenParseCorrectly) {
                     "genexable": {},
                     "genexable_evaled": {}
                 }
-            }
+            },
+            "listDir" : "a"
         }
     }
     )DELIMETER";
@@ -659,7 +676,8 @@ TEST(CmagTargetsFileParseTest, givenTargetWithGenexablePropertesThenParseCorrect
                         "two": "2"
                     }
                 }
-            }
+            },
+            "listDir" : "a"
         }
     }
     )DELIMETER";
@@ -699,7 +717,8 @@ TEST(CmagTargetsFileParseTest, givenTargetWithLinkOnlyGenexPropertesThenParseAnd
                         "LINK_LIBRARIES": "Lib1;Lib2;Lib3"
                     }
                 }
-            }
+            },
+            "listDir" : "a"
         }
     }
     )DELIMETER";

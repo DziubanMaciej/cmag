@@ -77,6 +77,11 @@ struct CmagTarget {
     std::vector<CmagTargetConfig> configs;
     CmagTargetGraphicalData graphical = {};
     void *userData = {};
+    std::string listDirName = {};
+
+    struct {
+        size_t listFileIndex = 0; // index within globals.listFiles
+    } derived = {};
 
     const CmagTargetConfig *tryGetConfig(std::string_view configName) const;
     CmagTargetConfig &getOrCreateConfig(std::string_view configName);

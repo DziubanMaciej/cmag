@@ -235,6 +235,11 @@ ParseResult CmagJsonParser::parseTarget(const nlohmann::json &node, CmagTarget &
         return ParseResult::MissingField;
     }
 
+    result = parseObjectField(node, "listDir", outTarget.listDirName);
+    if (result != ParseResult::Success) {
+        return result;
+    }
+
     return ParseResult::Success;
 }
 

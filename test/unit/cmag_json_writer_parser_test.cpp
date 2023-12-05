@@ -59,6 +59,7 @@ struct CmagWriterParserTest : ::testing::Test {
 
             EXPECT_EQ(expTarget.name, actTarget.name);
             EXPECT_EQ(expTarget.type, actTarget.type);
+            EXPECT_EQ(expTarget.listDirName, actTarget.listDirName);
 
             ASSERT_EQ(expTarget.configs.size(), actTarget.configs.size());
             for (size_t j = 0; j < expTarget.configs.size(); j++) {
