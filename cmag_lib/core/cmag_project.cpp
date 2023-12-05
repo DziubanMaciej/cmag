@@ -63,10 +63,14 @@ void CmagProject::addConfig(std::string_view config) {
         configs.emplace_back(config);
     }
 }
-void CmagProject::deriveData() {
+bool CmagProject::deriveData() {
     for (CmagTarget &target : targets) {
-        target.deriveData(targets);
+        const bool success = target.deriveData(targets, globals);
+        if (!success) {
+            return false;
+        }
     }
+    return true;
 }
 
 void CmagTargetConfig::fixupWithNonEvaled(std::string_view propertyName, std::string_view nonEvaledValue) {
@@ -276,12 +280,14 @@ CmagTargetConfig &CmagTarget::getOrCreateConfig(std::string_view configName) {
         return *propertiesIt;
     }
 }
-void CmagTarget::deriveData(const std::vector<CmagTarget> &targets) {
+bool CmagTarget::deriveData(const std::vector<CmagTarget> &targets, const CmagGlobals &globals) {
     for (CmagTargetConfig &config : configs) {
         config.deriveData(targets);
     }
     deriveDataPropertyConsistency();
+    return deriveDataListDirIndex(globals);
 }
+
 void CmagTarget::deriveDataPropertyConsistency() {
     if (configs.size() < 2) {
         return;
@@ -326,4 +332,15 @@ void CmagTarget::deriveDataPropertyConsistency() {
             property->isConsistent = isConsistent;
         }
     }
+}
+
+bool CmagTarget::deriveDataListDirIndex(const CmagGlobals &globals) {
+    for (size_t index = 0u; index < globals.listDirs.size(); index++) {
+        const CmagListDir &listDir = globals.listDirs[index];
+        if (listDir.name == listDirName) {
+            derived.listFileIndex = index;
+            return true;
+        }
+    }
+    return false;
 }

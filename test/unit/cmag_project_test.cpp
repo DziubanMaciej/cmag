@@ -157,36 +157,32 @@ TEST(CmagProjectTest, givenTargetsWithVariousConfigsAreAddedThenCollectAllConfig
 TEST(CmagProjectTest, givenTargetsWithDependenciesWhenDerivingDataThenDependenciesAreSavedToTheVectors) {
     CmagProject project = {};
 
-    EXPECT_TRUE(project.addTarget(CmagTarget{
-        "target",
-        CmagTargetType::Executable,
-        {
+    project.getGlobals().listDirs = {CmagListDir{"a", {}}};
+
+    auto createTarget = [](const char *name, std::vector<CmagTargetProperty> properties) {
+        CmagTarget target = {};
+        target.name = name;
+        target.type = CmagTargetType::Executable;
+        target.configs = {
             {
                 "Debug",
-                {
-                    {"LINK_LIBRARIES", "dep1;dep2"},
-                    {"MANUALLY_ADDED_DEPENDENCIES", "depExternal;dep3"},
-                },
-            },
-        },
-    }));
-    EXPECT_TRUE(project.addTarget(CmagTarget{
-        "dep1",
-        CmagTargetType::Executable,
-        {{"Debug", {}}},
-    }));
-    EXPECT_TRUE(project.addTarget(CmagTarget{
-        "dep2",
-        CmagTargetType::Executable,
-        {{"Debug", {}}},
-    }));
-    EXPECT_TRUE(project.addTarget(CmagTarget{
-        "dep3",
-        CmagTargetType::Executable,
-        {{"Debug", {}}},
-    }));
+                properties,
+            }};
+        target.listDirName = "a";
+        return target;
+    };
 
-    project.deriveData();
+    EXPECT_TRUE(project.addTarget(createTarget(
+        "target",
+        {
+            {"LINK_LIBRARIES", "dep1;dep2"},
+            {"MANUALLY_ADDED_DEPENDENCIES", "depExternal;dep3"},
+        })));
+    EXPECT_TRUE(project.addTarget(createTarget("dep1", {})));
+    EXPECT_TRUE(project.addTarget(createTarget("dep2", {})));
+    EXPECT_TRUE(project.addTarget(createTarget("dep3", {})));
+
+    ASSERT_TRUE(project.deriveData());
 
     const std::vector<CmagTarget> &targets = project.getTargets();
     ASSERT_EQ(4u, targets.size());
@@ -200,6 +196,8 @@ TEST(CmagProjectTest, givenTargetsWithDependenciesWhenDerivingDataThenDependenci
 TEST(CmagProjectTest, givenTargetWithOneConfigWhenDerivingDataThenAllPropertiesAreConsistent) {
     CmagProject project = {};
 
+    project.getGlobals().listDirs = {CmagListDir{"a", {}}};
+
     EXPECT_TRUE(project.addTarget(CmagTarget{
         "target",
         CmagTargetType::Executable,
@@ -212,9 +210,12 @@ TEST(CmagProjectTest, givenTargetWithOneConfigWhenDerivingDataThenAllPropertiesA
                 },
             },
         },
+        CmagTargetGraphicalData{},
+        nullptr,
+        "a",
     }));
     ASSERT_EQ(1u, project.getTargets().size());
-    project.deriveData();
+    ASSERT_TRUE(project.deriveData());
 
     const CmagTarget &target = project.getTargets()[0];
     const auto &propertiesDebug = target.configs[0].properties;
@@ -224,6 +225,8 @@ TEST(CmagProjectTest, givenTargetWithOneConfigWhenDerivingDataThenAllPropertiesA
 
 TEST(CmagProjectTest, givenTargetWithMultipleConfigsWhenDerivingDataThenDifferingPropertiesAreNotConsistent) {
     CmagProject project = {};
+
+    project.getGlobals().listDirs = {CmagListDir{"a", {}}};
 
     EXPECT_TRUE(project.addTarget(CmagTarget{
         "target",
@@ -260,9 +263,12 @@ TEST(CmagProjectTest, givenTargetWithMultipleConfigsWhenDerivingDataThenDifferin
                 },
             },
         },
+        CmagTargetGraphicalData{},
+        nullptr,
+        "a",
     }));
     ASSERT_EQ(1u, project.getTargets().size());
-    project.deriveData();
+    ASSERT_TRUE(project.deriveData());
 
     const CmagTarget &target = project.getTargets()[0];
 
@@ -286,6 +292,55 @@ TEST(CmagProjectTest, givenTargetWithMultipleConfigsWhenDerivingDataThenDifferin
     EXPECT_FALSE(propertiesRelWithDeb[2].isConsistent);
     EXPECT_TRUE(propertiesRelWithDeb[3].isConsistent);
     EXPECT_FALSE(propertiesRelWithDeb[4].isConsistent);
+}
+
+TEST(CmagProjectTest, givenTargetsWithListDirsWhenDerivingDataThenListDirIndicesAreCorrectlyDerived) {
+    CmagProject project = {};
+
+    project.getGlobals().listDirs = {
+        CmagListDir{
+            "aaa",
+            {1, 2},
+        },
+        CmagListDir{
+            "aaa/bbb",
+            {},
+        },
+        CmagListDir{
+            "aaa/ccc",
+            {3},
+        },
+        CmagListDir{
+            "aaa/ccc/ddd",
+            {},
+        },
+    };
+
+    auto createTarget = [](const char *name, const char *listDir) {
+        CmagTarget target = {};
+        target.name = name;
+        target.type = CmagTargetType::Executable;
+        target.configs = {{"Debug", {}}};
+        target.listDirName = listDir;
+        return target;
+    };
+
+    EXPECT_TRUE(project.addTarget(createTarget("A", "aaa")));
+    EXPECT_TRUE(project.addTarget(createTarget("B", "aaa/bbb")));
+    EXPECT_TRUE(project.addTarget(createTarget("C", "aaa/ccc")));
+    EXPECT_TRUE(project.addTarget(createTarget("D", "aaa/ccc")));
+    EXPECT_TRUE(project.addTarget(createTarget("E", "aaa")));
+    EXPECT_TRUE(project.addTarget(createTarget("F", "aaa/ccc/ddd")));
+    ASSERT_TRUE(project.deriveData());
+
+    const std::vector<CmagTarget> &targets = project.getTargets();
+    ASSERT_EQ(6u, targets.size());
+    EXPECT_EQ(0, targets[0].derived.listFileIndex);
+    EXPECT_EQ(1, targets[1].derived.listFileIndex);
+    EXPECT_EQ(2, targets[2].derived.listFileIndex);
+    EXPECT_EQ(2, targets[3].derived.listFileIndex);
+    EXPECT_EQ(0, targets[4].derived.listFileIndex);
+    EXPECT_EQ(3, targets[5].derived.listFileIndex);
 }
 
 TEST(CmagTargetTest, givenConfigExistsWhenGetOrCreateConfigIsCalledThenReturnExistingConfig) {

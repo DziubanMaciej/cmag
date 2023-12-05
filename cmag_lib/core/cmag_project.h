@@ -88,8 +88,9 @@ struct CmagTarget {
 
 private:
     friend CmagProject;
-    void deriveData(const std::vector<CmagTarget> &targets);
+    bool deriveData(const std::vector<CmagTarget> &targets, const CmagGlobals &globals);
     void deriveDataPropertyConsistency();
+    bool deriveDataListDirIndex(const CmagGlobals &globals);
 };
 
 using CmagConfigs = std::vector<std::string>;
@@ -101,7 +102,7 @@ public:
     void addTargetGraphical(std::string_view targetName, float x, float y);
     bool addTarget(CmagTarget &&newTarget);
 
-    void deriveData();
+    bool deriveData();
 
     const auto &getConfigs() const { return configs; }
     const auto &getTargets() const { return targets; }

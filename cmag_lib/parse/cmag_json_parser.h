@@ -17,6 +17,7 @@ enum class ParseResult {
     InvalidNodeType,
     InvalidValue,
     MissingField,
+    DataDerivationFailed,
 };
 
 class CmagJsonParser {

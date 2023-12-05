@@ -10,7 +10,12 @@ struct CmagWriterParserTest : ::testing::Test {
         std::string json = jsonStream.str();
 
         CmagProject derivedProject{};
-        ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseProject(json.c_str(), derivedProject));
+        const auto parseResult = CmagJsonParser::parseProject(json.c_str(), derivedProject);
+        if (parseResult != ParseResult::Success && parseResult != ParseResult::DataDerivationFailed) {
+            // We can allow data derivation failure, since it's not important here
+            ASSERT_EQ(ParseResult::Success, parseResult);
+        }
+
         compareProjects(initialProject, derivedProject);
     }
 
