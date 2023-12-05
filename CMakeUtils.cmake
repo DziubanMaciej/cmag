@@ -75,6 +75,7 @@ function (generate_header_from_text TARGET TEXT_FILE_NAME GENERATED_HEADER_NAME 
     # target's source files, then this target will start depending on the custom command.
     add_custom_command(
         OUTPUT "${OUTPUT_PATH}"
+        COMMAND ${CMAKE_COMMAND} ARGS -E make_directory "${OUTPUT_DIR}"
         COMMAND ${CMAKE_COMMAND} ARGS -E echo "${PREFIX}" > "${OUTPUT_PATH}"
         COMMAND ${CMAKE_COMMAND} ARGS -E cat "${INPUT_PATH}" >> "${OUTPUT_PATH}"
         COMMAND ${CMAKE_COMMAND} ARGS -E echo "${SUFFIX}" >> "${OUTPUT_PATH}"
