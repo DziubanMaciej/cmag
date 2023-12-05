@@ -20,7 +20,8 @@ struct CmagParseTest : ::testing::Test {
                 "generator": "",
                 "compilerId": "",
                 "compilerVersion": "",
-                "os": ""
+                "os": "",
+                "listDirs": {}
             }
         )DELIMETER";
 
@@ -73,7 +74,13 @@ TEST_F(CmagProjectParseTest, givenProjectWithGlobalsSetThenParseCorrectly) {
                 "generator": "G",
                 "compilerId": "H",
                 "compilerVersion": "I",
-                "os": "J"
+                "os": "J",
+                "listDirs": {
+                    "a": [ "b", "c" ],
+                    "b": [],
+                    "c": [ "d" ],
+                    "d": []
+                }
             },
             "targets" : {}
         }
@@ -93,6 +100,16 @@ TEST_F(CmagProjectParseTest, givenProjectWithGlobalsSetThenParseCorrectly) {
     EXPECT_STREQ(globals.compilerId.c_str(), "H");
     EXPECT_STREQ(globals.compilerVersion.c_str(), "I");
     EXPECT_STREQ(globals.os.c_str(), "J");
+
+    ASSERT_EQ(4, globals.listDirs.size());
+    EXPECT_STREQ("a", globals.listDirs[0].name.c_str());
+    EXPECT_EQ((std::vector<size_t>{1,2}), globals.listDirs[0].childIndices);
+    EXPECT_STREQ("b", globals.listDirs[1].name.c_str());
+    EXPECT_EQ((std::vector<size_t>{}), globals.listDirs[1].childIndices);
+    EXPECT_STREQ("c", globals.listDirs[2].name.c_str());
+    EXPECT_EQ((std::vector<size_t>{3}), globals.listDirs[2].childIndices);
+    EXPECT_STREQ("d", globals.listDirs[3].name.c_str());
+    EXPECT_EQ((std::vector<size_t>{}), globals.listDirs[3].childIndices);
 }
 
 TEST_F(CmagProjectParseTest, givenTargetWithNoConfigsThenReturnError) {
@@ -440,7 +457,8 @@ TEST(CmagGlobalsFileParseTest, givenAllFieldsSpecifiedThenParseCorrectly) {
         "generator": "G",
         "compilerId": "H",
         "compilerVersion": "I",
-        "os": "J"
+        "os": "J",
+        "listDirs": { "K": [ "L" ], "L": [] }
     }
     )DELIMETER";
     CmagGlobals globals{};
@@ -457,6 +475,13 @@ TEST(CmagGlobalsFileParseTest, givenAllFieldsSpecifiedThenParseCorrectly) {
     EXPECT_STREQ(globals.compilerId.c_str(), "H");
     EXPECT_STREQ(globals.compilerVersion.c_str(), "I");
     EXPECT_STREQ(globals.os.c_str(), "J");
+
+    ASSERT_EQ(2u, globals.listDirs.size());
+    EXPECT_STREQ("K", globals.listDirs[0].name.c_str());
+    EXPECT_EQ(1u, globals.listDirs[0].childIndices.size());
+    EXPECT_EQ(1u, globals.listDirs[0].childIndices[0]);
+    EXPECT_STREQ("L", globals.listDirs[1].name.c_str());
+    EXPECT_EQ(0u, globals.listDirs[1].childIndices.size());
 }
 
 TEST(CmagTargetsFileParseTest, givenNoTargetsThenParseCorrectly) {

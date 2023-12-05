@@ -234,7 +234,7 @@ function(json_append_globals OUT_VARIABLE SELECTED_CONFIG INDENT INDENT_INCREMEN
     json_append_key_value(${OUT_VARIABLE} compilerVersion "${CMAKE_CXX_COMPILER_VERSION}" ${INNER_INDENT})
     json_append_key_value(${OUT_VARIABLE} os "${CMAKE_SYSTEM_NAME}" ${INNER_INDENT})
 
-    json_append_object_begin(${OUT_VARIABLE} "listFiles" ${INNER_INDENT})
+    json_append_object_begin(${OUT_VARIABLE} "listDirs" ${INNER_INDENT})
     json_append_lists_files(${OUT_VARIABLE} ${CMAKE_CURRENT_SOURCE_DIR} ${INNER_INNER_INDENT} ${INDENT_INCREMENT})
     json_append_object_end(${OUT_VARIABLE} ${INNER_INDENT})
 

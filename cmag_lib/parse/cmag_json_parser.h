@@ -29,6 +29,7 @@ public:
 
 private:
     static ParseResult parseGlobalValues(const nlohmann::json &node, CmagGlobals &outGlobals);
+    static ParseResult parseGlobalValueListDirs(const nlohmann::json &node, CmagGlobals &outGlobals);
 
     static ParseResult parseTargets(const nlohmann::json &node, std::vector<CmagTarget> &outTargets, bool isProjectFile);
     static ParseResult parseTarget(const nlohmann::json &node, CmagTarget &outTarget, bool isProjectFile);

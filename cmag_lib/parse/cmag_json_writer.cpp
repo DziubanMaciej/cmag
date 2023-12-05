@@ -27,6 +27,24 @@ nlohmann::json CmagJsonWriter::createGlobalsNode(const CmagGlobals &globals) {
     WRITE_GLOBAL_FIELD(compilerVersion);
     WRITE_GLOBAL_FIELD(os);
 #undef WRITE_GLOBAL_FIELD
+    node["listDirs"] = createGlobalValueListDirs(globals);
+    return node;
+}
+
+nlohmann::json CmagJsonWriter::createGlobalValueListDirs(const CmagGlobals &globals) {
+    nlohmann::json node = nlohmann::json::object();
+    for (const CmagListDir &listDir : globals.listDirs) {
+        node[listDir.name] = createListDirsNode(listDir, globals);
+    }
+    return node;
+}
+
+nlohmann::json CmagJsonWriter::createListDirsNode(const CmagListDir &listDir, const CmagGlobals &globals) {
+    nlohmann::json node = nlohmann::json::array();
+    for (const size_t childIndex : listDir.childIndices) {
+        const std::string &childName = globals.listDirs[childIndex].name;
+        node.push_back(childName);
+    }
     return node;
 }
 

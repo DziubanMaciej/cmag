@@ -37,6 +37,19 @@ struct CmagWriterParserTest : ::testing::Test {
         EXPECT_EQ(expGlobals.compilerVersion, actGlobals.compilerVersion);
         EXPECT_EQ(expGlobals.os, actGlobals.os);
 
+        ASSERT_EQ(expGlobals.listDirs.size(), actGlobals.listDirs.size());
+        for (size_t i = 0; i < expGlobals.listDirs.size(); i++) {
+            const auto &expListDir = expGlobals.listDirs[i];
+            const auto &actListDir = actGlobals.listDirs[i];
+            EXPECT_EQ(expListDir.name, actListDir.name);
+            ASSERT_EQ(expListDir.childIndices.size(), actListDir.childIndices.size());
+            for (size_t j = 0; j < expListDir.childIndices.size(); j++) {
+                const auto &expChildIndex = expListDir.childIndices[j];
+                const auto &actChildIndex = actListDir.childIndices[j];
+                EXPECT_EQ(expChildIndex, actChildIndex);
+            }
+        }
+
         const auto &expTargets = exp.getTargets();
         const auto &actTargets = act.getTargets();
         ASSERT_EQ(expTargets.size(), actTargets.size());
@@ -222,5 +235,11 @@ TEST_F(CmagWriterParserTest, givenProjectWithSetGlobalsThenWriteAndReadCorrectly
     globals.compilerId = "1.0.0.0.0";
     globals.compilerVersion = "GNU Clang";
     globals.os = "Serenity";
+    globals.listDirs = {
+        CmagListDir{"a", {1, 2}},
+        CmagListDir{"b", {}},
+        CmagListDir{"c", {3}},
+        CmagListDir{"d", {}},
+    };
     verify(project);
 }

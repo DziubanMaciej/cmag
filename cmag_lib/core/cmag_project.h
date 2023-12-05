@@ -21,6 +21,11 @@ enum class CmagTargetType {
     COUNT,
 };
 
+struct CmagListDir {
+    std::string name;
+    std::vector<size_t> childIndices; // indices within globals.listDirs
+};
+
 struct CmagGlobals {
     bool darkMode = false;
     std::string selectedConfig = {};
@@ -34,6 +39,7 @@ struct CmagGlobals {
     std::string compilerId = {};
     std::string compilerVersion = {};
     std::string os = {};
+    std::vector<CmagListDir> listDirs = {};
 };
 
 struct CmagTargetProperty {

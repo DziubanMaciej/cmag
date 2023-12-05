@@ -14,6 +14,8 @@ public:
 
 private:
     static nlohmann::json createGlobalsNode(const CmagGlobals &globals);
+    static nlohmann::json createGlobalValueListDirs(const CmagGlobals &globals);
+    static nlohmann::json createListDirsNode(const CmagListDir &listDir, const CmagGlobals &globals);
 
     static nlohmann::json createTargetsNode(const std::vector<CmagTarget> &targets);
     static nlohmann::json createTargetNode(const CmagTarget &target);

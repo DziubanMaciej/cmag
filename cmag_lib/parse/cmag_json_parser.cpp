@@ -118,6 +118,62 @@ ParseResult CmagJsonParser::parseGlobalValues(const nlohmann::json &node, CmagGl
     PARSE_GLOBAL_FIELD(os);
 #undef PARSE_GLOBAL_FIELD
 
+    if (auto listDirsNodeIt = node.find("listDirs"); listDirsNodeIt != node.end()) {
+        ParseResult result = parseGlobalValueListDirs(*listDirsNodeIt, outGlobals);
+        if (result != ParseResult::Success) {
+            return result;
+        }
+    } else {
+        return ParseResult::MissingField;
+    }
+
+    return ParseResult::Success;
+}
+
+ParseResult CmagJsonParser::parseGlobalValueListDirs(const nlohmann::json &node, CmagGlobals &outGlobals) {
+    if (!node.is_object()) {
+        return ParseResult::InvalidNodeType;
+    }
+
+    // First pass - gather all files
+    for (auto listDirNodeIt = node.begin(); listDirNodeIt != node.end(); listDirNodeIt++) {
+        CmagListDir listDir = {};
+        listDir.name = listDirNodeIt.key();
+        outGlobals.listDirs.push_back(listDir);
+    }
+
+    // Second pass - scan for children indices. This has quadratic complexity, but there usually aren't
+    // thousands of CMakeLists.txt files, so we should be good.
+    size_t i = 0u;
+    for (auto listDirNodeIt = node.begin(); listDirNodeIt != node.end(); listDirNodeIt++, i++) {
+        CmagListDir &listDir = outGlobals.listDirs[i];
+
+        nlohmann::json childrenNode = listDirNodeIt.value();
+        if (!childrenNode.is_array()) {
+            return ParseResult::InvalidNodeType;
+        }
+
+        for (auto &childNodeIt : childrenNode) {
+            if (!childNodeIt.is_string()) {
+                return ParseResult::InvalidNodeType;
+            }
+
+            const std::string childName = childNodeIt.get<std::string>();
+            bool foundIndex = false;
+            for (size_t j = 0; j < outGlobals.listDirs.size(); j++) {
+                if (outGlobals.listDirs[j].name == childName) {
+                    listDir.childIndices.push_back(j);
+                    foundIndex = true;
+                    break;
+                }
+            }
+
+            if (!foundIndex) {
+                return ParseResult::MissingField;
+            }
+        }
+    }
+
     return ParseResult::Success;
 }
 
