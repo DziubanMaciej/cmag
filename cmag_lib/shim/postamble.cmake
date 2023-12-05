@@ -1,5 +1,3 @@
-const char *postamble = R"DELIMETER(
-
 # -----------------------------CMAG POSTAMBLE BEGIN-------------------------------------------
 cmake_minimum_required(VERSION 3.9.0)
 
@@ -310,4 +308,3 @@ if (CMAG_JSON_DEBUG)
 endif()
 
 # -----------------------------CMAG POSTAMBLE END---------------------------------------------
-)DELIMETER";

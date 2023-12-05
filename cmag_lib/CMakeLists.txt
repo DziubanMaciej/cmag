@@ -11,3 +11,5 @@ if (WIN32)
     set(CMAG_BROWSER_BINARY_NAME "${CMAG_BROWSER_BINARY_NAME}.exe")
 endif()
 target_compile_definitions(cmag_lib PRIVATE -DCMAG_BROWSER_BINARY_NAME="${CMAG_BROWSER_BINARY_NAME}")
+
+generate_header_from_text(cmag_lib shim/postamble.cmake postamble.h postamble)

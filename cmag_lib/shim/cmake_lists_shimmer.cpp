@@ -1,7 +1,7 @@
 #include "cmake_lists_shimmer.h"
 
-#include "cmag_lib/shim/postamble.h"
 #include "cmag_lib/utils/error.h"
+#include "generated/postamble.h"
 
 #include <cstdio>
 #include <fstream>
