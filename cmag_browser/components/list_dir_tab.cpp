@@ -1,11 +1,13 @@
 #include "list_dir_tab.h"
 
+#include "cmag_browser/components/target_graph_tab.h"
 #include "cmag_browser/ui_utils/tooltip.h"
 #include "cmag_lib/core/cmag_project.h"
 
-ListDirTab::ListDirTab(const CmagBrowserTheme &theme, const CmagProject &project)
+ListDirTab::ListDirTab(const CmagBrowserTheme &theme, CmagProject &project, TargetGraphTab &targetGraphTab)
     : theme(theme),
-      project(project) {}
+      project(project),
+      targetGraphTab(targetGraphTab) {}
 
 void ListDirTab::render() {
     renderListDir(nullptr, project.getGlobals().listDirs[0]);
@@ -28,7 +30,7 @@ void ListDirTab::renderListDir(const char *parentName, const CmagListDir &listDi
         }
 
         for (const size_t targetIndex : listDir.derived.targetIndices) {
-            const CmagTarget &target = project.getTargets()[targetIndex];
+            CmagTarget &target = project.getTargets()[targetIndex];
             renderTarget(target);
         }
 
@@ -36,11 +38,17 @@ void ListDirTab::renderListDir(const char *parentName, const CmagListDir &listDi
     }
 }
 
-void ListDirTab::renderTarget(const CmagTarget &target) {
+void ListDirTab::renderTarget(CmagTarget &target) {
     const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_Leaf;
     const char *targetName = target.name.c_str();
     const char *targetType = cmagTargetTypeToString(target.type);
-    if (ImGui::TreeNodeEx(targetName, treeNodeFlags, "%s (%s)", targetName, targetType)) {
+    const bool treeNodeOpen = ImGui::TreeNodeEx(targetName, treeNodeFlags, "%s (%s)", targetName, targetType);
+
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+        targetGraphTab.selectTargetAndFocus(&target);
+    }
+
+    if (treeNodeOpen) {
         ImGui::TreePop();
     }
 }

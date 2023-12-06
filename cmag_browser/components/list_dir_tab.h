@@ -7,19 +7,21 @@ class CmagBrowserTheme;
 class CmagProject;
 struct CmagTarget;
 struct CmagListDir;
+class TargetGraphTab;
 
 class ListDirTab {
 public:
-    ListDirTab(const CmagBrowserTheme &theme, const CmagProject &project);
+    ListDirTab(const CmagBrowserTheme &theme, CmagProject &project, TargetGraphTab &targetGraphTab);
 
     void render();
 
 private:
     void renderListDir(const char *parentName, const CmagListDir &listDir);
-    static void renderTarget(const CmagTarget &target);
+    void renderTarget(CmagTarget &target);
     void renderTooltip(const std::string &currentName);
     static const char *deriveRelativeName(const char *parentName, const std::string &currentName);
 
     const CmagBrowserTheme &theme;
-    const CmagProject &project;
+    CmagProject &project;
+    TargetGraphTab &targetGraphTab;
 };

@@ -308,6 +308,13 @@ void TargetGraph::setDisplayedDependencyType(CmakeDependencyType newType) {
     refreshConnections();
 }
 
+void TargetGraph::setSelectedTarget(CmagTarget *target) {
+    if (target == selectedTarget) {
+        return;
+    }
+    selectedTarget = target;
+}
+
 void TargetGraph::TargetData::allocate(std::vector<CmagTarget> &targets, float nodeScale, float textScale) {
     storage.resize(targets.size());
     for (size_t i = 0; i < targets.size(); i++) {

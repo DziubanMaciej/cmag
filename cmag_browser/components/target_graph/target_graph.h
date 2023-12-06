@@ -31,10 +31,12 @@ public:
     void setScreenSpacePosition(size_t x, size_t y);
     void setCurrentCmakeConfig(std::string_view newConfig);
     void setDisplayedDependencyType(CmakeDependencyType newType);
+    void setSelectedTarget(CmagTarget *target);
     void update(ImGuiIO &io);
-    void render();
 
+    void render();
     CmagTarget *getSelectedTarget() { return selectedTarget; }
+
     auto getTexture() const { return framebuffer.colorTex; }
     auto getTextureWidth() const { return bounds.width; }
     auto getTextureHeight() const { return bounds.height; }

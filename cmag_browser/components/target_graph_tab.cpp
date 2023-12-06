@@ -10,6 +10,17 @@ TargetGraphTab::TargetGraphTab(CmagBrowserTheme &theme, CmagProject &project, Co
       targetGraph(theme, project.getTargets()),
       configSelector(configSelector) {}
 
+void TargetGraphTab::selectTargetAndFocus(CmagTarget *target) {
+    targetGraph.setSelectedTarget(target);
+    forceSelection = true;
+}
+
+bool TargetGraphTab::fetchForceSelection() {
+    const bool result = forceSelection;
+    forceSelection = false;
+    return result;
+}
+
 void TargetGraphTab::render(ImGuiIO &io) {
     const float windowWidth = ImGui::GetContentRegionAvail().x;
     const float sidePaneWidth = windowWidth * 0.2f;

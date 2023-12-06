@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
     CmagBrowserTheme theme = CmagBrowserTheme::createDarkTheme();
     ConfigSelector configSelector{theme, cmagProject};
     TargetGraphTab targetGraphTab{theme, cmagProject, configSelector};
-    ListDirTab listFileTab{theme, cmagProject};
+    ListDirTab listFileTab{theme, cmagProject, targetGraphTab};
     SummaryTab summaryTab{theme, cmagProject, configSelector};
 
     theme.setup();
@@ -98,8 +98,14 @@ int main(int argc, char **argv) {
         ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
         ImGui::Begin("ContentWindow", nullptr, windowFlags);
         if (ImGui::BeginTabBar("root")) {
-            if (ImGui::BeginTabItem("Target graph")) {
+            ImGuiTabItemFlags targetGraphTabFlags = 0;
+            if (targetGraphTab.fetchForceSelection()) {
+                targetGraphTabFlags |= ImGuiTabItemFlags_SetSelected;
+            }
+
+            if (ImGui::BeginTabItem("Target graph", nullptr, targetGraphTabFlags)) {
                 targetGraphTab.render(io);
+                targetGraphTabFlags = 0;
                 ImGui::EndTabItem();
             }
 

@@ -11,6 +11,9 @@ struct TargetGraphTab {
 public:
     TargetGraphTab(CmagBrowserTheme &theme, CmagProject &project, ConfigSelector &configSelector);
 
+    void selectTargetAndFocus(CmagTarget *target);
+    bool fetchForceSelection();
+
     void render(ImGuiIO &io);
 
 private:
@@ -28,6 +31,7 @@ private:
     TargetGraph targetGraph;
     ConfigSelector &configSelector;
     int dependencyTypeComboSelection = static_cast<int>(CmakeDependencyType::DEFAULT);
+    bool forceSelection = false;
 
     bool showDemoWindow = false;
     bool showStyleSelector = false;
