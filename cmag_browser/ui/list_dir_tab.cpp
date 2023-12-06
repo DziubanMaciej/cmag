@@ -15,18 +15,30 @@ void ListDirTab::renderListDir(const char *parentName, const CmagListDir &listDi
     const char *relativeName = deriveRelativeName(parentName, listDir.name);
 
     ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen;
-    if (listDir.childIndices.empty()) {
+    if (listDir.childIndices.empty() && listDir.derived.targetIndices.empty()) {
         treeNodeFlags |= ImGuiTreeNodeFlags_Leaf;
     }
 
     const bool treeNodeOpen = ImGui::TreeNodeEx(listDir.name.c_str(), treeNodeFlags, "%s", relativeName);
     renderTooltip(listDir.name);
     if (treeNodeOpen) {
-
         for (const size_t listDirIndex : listDir.childIndices) {
             const CmagListDir &childListDir = project.getGlobals().listDirs[listDirIndex];
             renderListDir(listDir.name.c_str(), childListDir);
         }
+
+        for (const size_t targetIndex : listDir.derived.targetIndices) {
+            const CmagTarget &target = project.getTargets()[targetIndex];
+            renderTarget(target);
+        }
+
+        ImGui::TreePop();
+    }
+}
+
+void ListDirTab::renderTarget(const CmagTarget &target) {
+    const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_Leaf;
+    if (ImGui::TreeNodeEx(target.name.c_str(), treeNodeFlags, "%s", target.name.c_str())) {
         ImGui::TreePop();
     }
 }
