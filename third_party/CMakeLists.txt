@@ -5,6 +5,8 @@ if (CMAG_BUILD_TESTS)
     set_target_properties(gtest gtest_main gmock gmock_main PROPERTIES FOLDER ThirdParty)
 endif()
 
+add_subdirectory(header_pack)
+
 if (CMAG_BUILD_BROWSER)
     add_subdirectory(gl)
     add_subdirectory(glm)
