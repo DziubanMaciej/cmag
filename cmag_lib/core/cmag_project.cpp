@@ -65,12 +65,9 @@ void CmagProject::addConfig(std::string_view config) {
 }
 bool CmagProject::deriveData() {
     for (CmagTarget &target : targets) {
-        const bool success = target.deriveData(targets, globals);
-        if (!success) {
-            return false;
-        }
+        target.deriveData(targets);
     }
-    return true;
+    return globals.deriveData(targets);
 }
 
 void CmagTargetConfig::fixupWithNonEvaled(std::string_view propertyName, std::string_view nonEvaledValue) {
@@ -280,12 +277,35 @@ CmagTargetConfig &CmagTarget::getOrCreateConfig(std::string_view configName) {
         return *propertiesIt;
     }
 }
-bool CmagTarget::deriveData(const std::vector<CmagTarget> &targets, const CmagGlobals &globals) {
+
+bool CmagGlobals::deriveData(const std::vector<CmagTarget> &targets) {
+    for (size_t targetIndex = 0u; targetIndex < targets.size(); targetIndex++) {
+        const CmagTarget &target = targets[targetIndex];
+
+        bool found = false;
+        for (CmagListDir &listDir : listDirs) {
+            if (listDir.name != target.listDirName) {
+                continue;
+            }
+
+            listDir.derived.targetIndices.push_back(targetIndex);
+            found = true;
+            break;
+        }
+
+        if (!found) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void CmagTarget::deriveData(const std::vector<CmagTarget> &targets) {
     for (CmagTargetConfig &config : configs) {
         config.deriveData(targets);
     }
     deriveDataPropertyConsistency();
-    return deriveDataListDirIndex(globals);
 }
 
 void CmagTarget::deriveDataPropertyConsistency() {
@@ -332,15 +352,4 @@ void CmagTarget::deriveDataPropertyConsistency() {
             property->isConsistent = isConsistent;
         }
     }
-}
-
-bool CmagTarget::deriveDataListDirIndex(const CmagGlobals &globals) {
-    for (size_t index = 0u; index < globals.listDirs.size(); index++) {
-        const CmagListDir &listDir = globals.listDirs[index];
-        if (listDir.name == listDirName) {
-            derived.listFileIndex = index;
-            return true;
-        }
-    }
-    return false;
 }

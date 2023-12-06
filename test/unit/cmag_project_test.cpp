@@ -333,14 +333,11 @@ TEST(CmagProjectTest, givenTargetsWithListDirsWhenDerivingDataThenListDirIndices
     EXPECT_TRUE(project.addTarget(createTarget("F", "aaa/ccc/ddd")));
     ASSERT_TRUE(project.deriveData());
 
-    const std::vector<CmagTarget> &targets = project.getTargets();
-    ASSERT_EQ(6u, targets.size());
-    EXPECT_EQ(0, targets[0].derived.listFileIndex);
-    EXPECT_EQ(1, targets[1].derived.listFileIndex);
-    EXPECT_EQ(2, targets[2].derived.listFileIndex);
-    EXPECT_EQ(2, targets[3].derived.listFileIndex);
-    EXPECT_EQ(0, targets[4].derived.listFileIndex);
-    EXPECT_EQ(3, targets[5].derived.listFileIndex);
+    const std::vector<CmagListDir> &listDirs = project.getGlobals().listDirs;
+    EXPECT_EQ((std::vector<size_t>{0, 4}), listDirs[0].derived.targetIndices);
+    EXPECT_EQ((std::vector<size_t>{1}), listDirs[1].derived.targetIndices);
+    EXPECT_EQ((std::vector<size_t>{2, 3}), listDirs[2].derived.targetIndices);
+    EXPECT_EQ((std::vector<size_t>{5}), listDirs[3].derived.targetIndices);
 }
 
 TEST(CmagTargetTest, givenConfigExistsWhenGetOrCreateConfigIsCalledThenReturnExistingConfig) {

@@ -24,6 +24,10 @@ enum class CmagTargetType {
 struct CmagListDir {
     std::string name;
     std::vector<size_t> childIndices; // indices within globals.listDirs
+
+    struct {
+        std::vector<size_t> targetIndices = {};
+    } derived = {};
 };
 
 struct CmagGlobals {
@@ -40,6 +44,8 @@ struct CmagGlobals {
     std::string compilerVersion = {};
     std::string os = {};
     std::vector<CmagListDir> listDirs = {};
+
+    bool deriveData(const std::vector<CmagTarget> &targets);
 };
 
 struct CmagTargetProperty {
@@ -79,18 +85,13 @@ struct CmagTarget {
     void *userData = {};
     std::string listDirName = {};
 
-    struct {
-        size_t listFileIndex = 0; // index within globals.listFiles
-    } derived = {};
-
     const CmagTargetConfig *tryGetConfig(std::string_view configName) const;
     CmagTargetConfig &getOrCreateConfig(std::string_view configName);
 
 private:
     friend CmagProject;
-    bool deriveData(const std::vector<CmagTarget> &targets, const CmagGlobals &globals);
+    void deriveData(const std::vector<CmagTarget> &targets);
     void deriveDataPropertyConsistency();
-    bool deriveDataListDirIndex(const CmagGlobals &globals);
 };
 
 using CmagConfigs = std::vector<std::string>;
