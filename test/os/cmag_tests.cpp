@@ -202,15 +202,15 @@ TEST_P(CmagTest, givenProjectWithTargetsDefinedInSubdirectoriesThenAllTargetAreD
     ASSERT_EQ(6u, listDirs.size());
     EXPECT_EQ(workspace.sourcePath.string(), listDirs[0].name);
     EXPECT_EQ((std::vector<size_t>{1, 2}), listDirs[0].childIndices);
-    EXPECT_EQ((workspace.sourcePath / "a").string(), listDirs[1].name);
+    EXPECT_EQ(workspace.sourcePath.string() + "/a", listDirs[1].name);
     EXPECT_EQ((std::vector<size_t>{}), listDirs[1].childIndices);
-    EXPECT_EQ((workspace.sourcePath / "b").string(), listDirs[2].name);
+    EXPECT_EQ(workspace.sourcePath.string() + "/b", listDirs[2].name);
     EXPECT_EQ((std::vector<size_t>{3, 4, 5}), listDirs[2].childIndices);
-    EXPECT_EQ((workspace.sourcePath / "b" / "c").string(), listDirs[3].name);
+    EXPECT_EQ(workspace.sourcePath.string() + "/b/c", listDirs[3].name);
     EXPECT_EQ((std::vector<size_t>{}), listDirs[3].childIndices);
-    EXPECT_EQ((workspace.sourcePath / "b" / "d").string(), listDirs[4].name);
+    EXPECT_EQ(workspace.sourcePath.string() + "/b/d", listDirs[4].name);
     EXPECT_EQ((std::vector<size_t>{}), listDirs[4].childIndices);
-    EXPECT_EQ((workspace.sourcePath / "b" / "e").string(), listDirs[5].name);
+    EXPECT_EQ(workspace.sourcePath.string() + "/b/e", listDirs[5].name);
     EXPECT_EQ((std::vector<size_t>{}), listDirs[5].childIndices);
 
     auto targets = getSortedTargets(cmag.project);
@@ -220,7 +220,7 @@ TEST_P(CmagTest, givenProjectWithTargetsDefinedInSubdirectoriesThenAllTargetAreD
         const CmagTarget &target = targets[0];
         EXPECT_STREQ("Executable", target.name.c_str());
         EXPECT_EQ(CmagTargetType::Executable, target.type);
-        EXPECT_EQ(workspace.sourcePath.string(), target.listDirName);
+        EXPECT_EQ(listDirs[target.derived.listFileIndex].name, target.listDirName);
         EXPECT_EQ(0, target.derived.listFileIndex);
         verifyPropertyForEachConfig(target, "LINK_LIBRARIES", "LibA;LibB");
     }
@@ -228,7 +228,7 @@ TEST_P(CmagTest, givenProjectWithTargetsDefinedInSubdirectoriesThenAllTargetAreD
         const CmagTarget &target = targets[1];
         EXPECT_STREQ("LibA", target.name.c_str());
         EXPECT_EQ(CmagTargetType::StaticLibrary, target.type);
-        EXPECT_EQ((workspace.sourcePath / "a").string(), target.listDirName);
+        EXPECT_EQ(listDirs[target.derived.listFileIndex].name, target.listDirName);
         EXPECT_EQ(1, target.derived.listFileIndex);
         verifyPropertyForEachConfig(target, "LINK_LIBRARIES", "");
     }
@@ -236,7 +236,7 @@ TEST_P(CmagTest, givenProjectWithTargetsDefinedInSubdirectoriesThenAllTargetAreD
         const CmagTarget &target = targets[2];
         EXPECT_STREQ("LibB", target.name.c_str());
         EXPECT_EQ(CmagTargetType::StaticLibrary, target.type);
-        EXPECT_EQ((workspace.sourcePath / "b").string(), target.listDirName);
+        EXPECT_EQ(listDirs[target.derived.listFileIndex].name, target.listDirName);
         EXPECT_EQ(2, target.derived.listFileIndex);
         verifyPropertyForEachConfig(target, "LINK_LIBRARIES", "LibC;LibD");
         verifyPropertyForEachConfig(target, "INTERFACE_LINK_LIBRARIES", "LibC;LibE");
@@ -247,7 +247,7 @@ TEST_P(CmagTest, givenProjectWithTargetsDefinedInSubdirectoriesThenAllTargetAreD
         const CmagTarget &target = targets[3];
         EXPECT_STREQ("LibC", target.name.c_str());
         EXPECT_EQ(CmagTargetType::StaticLibrary, target.type);
-        EXPECT_EQ((workspace.sourcePath / "b" / "c").string(), target.listDirName);
+        EXPECT_EQ(listDirs[target.derived.listFileIndex].name, target.listDirName);
         EXPECT_EQ(3, target.derived.listFileIndex);
         verifyPropertyForEachConfig(target, "LINK_LIBRARIES", "");
         verifyPropertyForEachConfig(target, "INTERFACE_LINK_LIBRARIES", "");
@@ -258,7 +258,7 @@ TEST_P(CmagTest, givenProjectWithTargetsDefinedInSubdirectoriesThenAllTargetAreD
         const CmagTarget &target = targets[4];
         EXPECT_STREQ("LibD", target.name.c_str());
         EXPECT_EQ(CmagTargetType::StaticLibrary, target.type);
-        EXPECT_EQ((workspace.sourcePath / "b" / "d").string(), target.listDirName);
+        EXPECT_EQ(listDirs[target.derived.listFileIndex].name, target.listDirName);
         EXPECT_EQ(4, target.derived.listFileIndex);
         verifyPropertyForEachConfig(target, "LINK_LIBRARIES", "");
         verifyPropertyForEachConfig(target, "INTERFACE_LINK_LIBRARIES", "");
@@ -269,7 +269,7 @@ TEST_P(CmagTest, givenProjectWithTargetsDefinedInSubdirectoriesThenAllTargetAreD
         const CmagTarget &target = targets[5];
         EXPECT_STREQ("LibE", target.name.c_str());
         EXPECT_EQ(CmagTargetType::StaticLibrary, target.type);
-        EXPECT_EQ((workspace.sourcePath / "b" / "e").string(), target.listDirName);
+        EXPECT_EQ(listDirs[target.derived.listFileIndex].name, target.listDirName);
         EXPECT_EQ(5, target.derived.listFileIndex);
         verifyPropertyForEachConfig(target, "LINK_LIBRARIES", "");
         verifyPropertyForEachConfig(target, "INTERFACE_LINK_LIBRARIES", "");
