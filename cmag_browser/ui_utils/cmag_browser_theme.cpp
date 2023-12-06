@@ -122,7 +122,9 @@ RaiiImguiStyle CmagBrowserTheme::setupPopup() const {
 RaiiImguiStyle CmagBrowserTheme::setupPopup(float textWrapWidth) const {
     RaiiImguiStyle style{};
     style.color(ImGuiCol_Text, colorPopup);
-    style.textWrapWidth(textWrapWidth);
+    if (textWrapWidth > 0) {
+        style.textWrapWidth(textWrapWidth);
+    }
     return style;
 }
 

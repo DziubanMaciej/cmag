@@ -22,7 +22,7 @@ void openHyperlink(const char *path) {
 #endif
 }
 
-bool Tooltip::begin(const CmagBrowserTheme &theme, ImVec2 min, ImVec2 max, const char *tooltip, const char *tooltipHyperlink) {
+bool Tooltip::begin(const CmagBrowserTheme &theme, ImVec2 min, ImVec2 max, const char *tooltip, const char *tooltipHyperlink, bool forceOneLine) {
     if (!isRectHovered(min, max)) {
         return false;
     }
@@ -39,7 +39,7 @@ bool Tooltip::begin(const CmagBrowserTheme &theme, ImVec2 min, ImVec2 max, const
             auto hyperlinkStyle = theme.setupHyperlink();
             ImGui::Text("%s", tooltipHyperlink);
         } else {
-            auto textStyle = theme.setupPopup();
+            auto textStyle = forceOneLine ? theme.setupPopup(0) : theme.setupPopup();
             ImGui::Text("%s", tooltip);
         }
 

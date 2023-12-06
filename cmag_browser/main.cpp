@@ -1,6 +1,6 @@
 
 #include "cmag_browser/ui/config_selector.h"
-#include "cmag_browser/ui/listfile_tab.h"
+#include "cmag_browser/ui/list_dir_tab.h"
 #include "cmag_browser/ui/summary_tab.h"
 #include "cmag_browser/ui/target_graph_tab.h"
 #include "cmag_browser/ui_utils/cmag_browser_theme.h"
@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
     CmagBrowserTheme theme = CmagBrowserTheme::createDarkTheme();
     ConfigSelector configSelector{theme, cmagProject};
     TargetGraphTab targetGraphTab{theme, cmagProject, configSelector};
-    ListFileTab listFileTab = {};
+    ListDirTab listFileTab{theme, cmagProject};
     SummaryTab summaryTab{theme, cmagProject, configSelector};
 
     theme.setup();
