@@ -6,6 +6,10 @@
 #include <cstdlib>
 
 // TODO refactor into utils
+#ifdef _WIN32
+#include <Windows.h>
+#include <shellapi.h>
+#endif
 void openHyperlink(const char *path) {
 #ifdef _WIN32
     // Note: executable path must use backslashes!
