@@ -20,6 +20,7 @@ enum class CmagTargetType {
 
     COUNT,
 };
+const char *cmagTargetTypeToString(CmagTargetType type);
 
 struct CmagListDir {
     std::string name;

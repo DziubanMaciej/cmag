@@ -38,7 +38,9 @@ void ListDirTab::renderListDir(const char *parentName, const CmagListDir &listDi
 
 void ListDirTab::renderTarget(const CmagTarget &target) {
     const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_Leaf;
-    if (ImGui::TreeNodeEx(target.name.c_str(), treeNodeFlags, "%s", target.name.c_str())) {
+    const char *targetName = target.name.c_str();
+    const char *targetType = cmagTargetTypeToString(target.type);
+    if (ImGui::TreeNodeEx(targetName, treeNodeFlags, "%s (%s)", targetName, targetType)) {
         ImGui::TreePop();
     }
 }

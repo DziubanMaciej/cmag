@@ -5,6 +5,27 @@
 #include <algorithm>
 #include <cstring>
 
+const char *cmagTargetTypeToString(CmagTargetType type) {
+    switch (type) {
+    case CmagTargetType::StaticLibrary:
+        return "static library";
+    case CmagTargetType::ModuleLibrary:
+        return "module library";
+    case CmagTargetType::SharedLibrary:
+        return "shared library";
+    case CmagTargetType::ObjectLibrary:
+        return "object library";
+    case CmagTargetType::InterfaceLibrary:
+        return "interface library";
+    case CmagTargetType::Executable:
+        return "executable";
+    case CmagTargetType::Utility:
+        return "utility target";
+    default:
+        return "unknown target";
+    }
+}
+
 void CmagProject::addTargetGraphical(std::string_view targetName, float x, float y) {
     auto targetIt = std::find_if(targets.begin(), targets.end(), [targetName](const CmagTarget &target) {
         return target.name == targetName;
