@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cmag_browser/ui/target_graph/text_renderer.h"
+#include "cmag_browser/components/target_graph/text_renderer.h"
 #include "cmag_browser/util/gl_extensions.h"
 #include "cmag_lib/core/cmag_project.h"
 

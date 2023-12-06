@@ -1,6 +1,6 @@
 #include "summary_tab.h"
 
-#include "cmag_browser/ui/config_selector.h"
+#include "cmag_browser/components/config_selector.h"
 #include "cmag_browser/ui_utils/raii_imgui_style.h"
 #include "cmag_browser/ui_utils/tooltip.h"
 #include "cmag_lib/core/cmag_project.h"

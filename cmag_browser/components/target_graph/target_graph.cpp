@@ -1,7 +1,7 @@
 #include "target_graph.h"
 
-#include "cmag_browser/ui/target_graph/coordinate_space.h"
-#include "cmag_browser/ui/target_graph/shapes.h"
+#include "cmag_browser/components/target_graph/coordinate_space.h"
+#include "cmag_browser/components/target_graph/shapes.h"
 #include "cmag_browser/ui_utils/cmag_browser_theme.h"
 #include "cmag_browser/util/gl_helpers.h"
 #include "cmag_browser/util/math_utils.h"

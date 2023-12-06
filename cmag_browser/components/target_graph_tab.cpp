@@ -1,6 +1,6 @@
 #include "target_graph_tab.h"
 
-#include "cmag_browser/ui/config_selector.h"
+#include "cmag_browser/components/config_selector.h"
 #include "cmag_browser/ui_utils/cmag_browser_theme.h"
 #include "cmag_browser/ui_utils/tooltip.h"
 #include "cmag_lib/utils/string_utils.h"
