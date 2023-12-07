@@ -2,7 +2,6 @@
 #include "cmag_core/parse/cmag_json_parser.h"
 
 #include <gtest/gtest.h>
-#include <stdarg.h>
 
 struct CmagParseTest : ::testing::Test {
     template <typename... Args>

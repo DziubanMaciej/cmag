@@ -89,6 +89,7 @@ function (json_append_target_properties OUT_VARIABLE TGT INDENT INDENT_INCREMENT
         INTERFACE_LINK_OPTIONS
         SOURCES
         MANUALLY_ADDED_DEPENDENCIES
+        FOLDER
         ${CMAG_EXTRA_TARGET_PROPERTIES}
     )
 

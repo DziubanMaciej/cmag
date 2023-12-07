@@ -340,6 +340,146 @@ TEST(CmagProjectTest, givenTargetsWithListDirsWhenDerivingDataThenListDirIndices
     EXPECT_EQ((std::vector<size_t>{5}), listDirs[3].derived.targetIndices);
 }
 
+TEST(CmagProjectTest, givenTargetsWithoutFoldersWhenDerivingDataThenAssignAllOfThemToRootFolder) {
+    CmagProject project = {};
+
+    project.getGlobals().listDirs = {CmagListDir{"a", {}}};
+
+    auto createTarget = [](const char *name) {
+        CmagTarget target = {};
+        target.name = name;
+        target.type = CmagTargetType::Executable;
+        target.configs = {{"Debug", {}}};
+        target.listDirName = "a";
+        return target;
+    };
+
+    EXPECT_TRUE(project.addTarget(createTarget("A")));
+    EXPECT_TRUE(project.addTarget(createTarget("B")));
+    EXPECT_TRUE(project.addTarget(createTarget("C")));
+    ASSERT_TRUE(project.deriveData());
+
+    const std::vector<CmagFolder> &folders = project.getGlobals().derived.folders;
+    ASSERT_EQ(1u, folders.size());
+    {
+        const CmagFolder &folder = folders[0];
+        EXPECT_STREQ("", folder.fullName.c_str());
+        EXPECT_STREQ("", folder.relativeName.c_str());
+        EXPECT_EQ(0u, folder.childIndices.size());
+        EXPECT_EQ((std::vector<size_t>{0, 1, 2}), folder.targetIndices);
+    }
+}
+
+TEST(CmagProjectTest, givenTargetsWithEmptyFoldersWhenDerivingDataThenAssignAllOfThemToRootFolder) {
+    CmagProject project = {};
+
+    project.getGlobals().listDirs = {CmagListDir{"a", {}}};
+
+    auto createTarget = [](const char *name) {
+        CmagTarget target = {};
+        target.name = name;
+        target.type = CmagTargetType::Executable;
+        target.configs = {{
+            "Debug",
+            {
+                {"FOLDER", ""},
+            },
+        }};
+        target.listDirName = "a";
+        return target;
+    };
+
+    EXPECT_TRUE(project.addTarget(createTarget("A")));
+    EXPECT_TRUE(project.addTarget(createTarget("B")));
+    EXPECT_TRUE(project.addTarget(createTarget("C")));
+    ASSERT_TRUE(project.deriveData());
+
+    const std::vector<CmagFolder> &folders = project.getGlobals().derived.folders;
+    ASSERT_EQ(1u, folders.size());
+    {
+        const CmagFolder &folder = folders[0];
+        EXPECT_STREQ("", folder.fullName.c_str());
+        EXPECT_STREQ("", folder.relativeName.c_str());
+        EXPECT_EQ(0u, folder.childIndices.size());
+        EXPECT_EQ((std::vector<size_t>{0, 1, 2}), folder.targetIndices);
+    }
+}
+
+TEST(CmagProjectTest, givenTargetsWithFoldersWhenDerivingDataThenAssignThemAccordingly) {
+    CmagProject project = {};
+
+    project.getGlobals().listDirs = {CmagListDir{"a", {}}};
+
+    auto createTarget = [](const char *name, const char *folder) {
+        CmagTarget target = {};
+        target.name = name;
+        target.type = CmagTargetType::Executable;
+        target.configs = {{
+            "Debug",
+            {
+                {"FOLDER", folder},
+            },
+        }};
+        target.listDirName = "a";
+        return target;
+    };
+
+    EXPECT_TRUE(project.addTarget(createTarget("A", "")));
+    EXPECT_TRUE(project.addTarget(createTarget("B", "b")));
+    EXPECT_TRUE(project.addTarget(createTarget("C", "c")));
+    EXPECT_TRUE(project.addTarget(createTarget("BC1", "b/c")));
+    EXPECT_TRUE(project.addTarget(createTarget("BD", "b/d")));
+    EXPECT_TRUE(project.addTarget(createTarget("BDE1", "b/d/e")));
+    EXPECT_TRUE(project.addTarget(createTarget("BDE2", "b/d/e")));
+    EXPECT_TRUE(project.addTarget(createTarget("BC2", "b/c")));
+    ASSERT_TRUE(project.deriveData());
+
+    const std::vector<CmagFolder> &folders = project.getGlobals().derived.folders;
+    ASSERT_EQ(6u, folders.size());
+    {
+        const CmagFolder &folder = folders[0];
+        EXPECT_STREQ("", folder.fullName.c_str());
+        EXPECT_STREQ("", folder.relativeName.c_str());
+        EXPECT_EQ((std::vector<size_t>{1, 2}), folder.childIndices); // { a, b }
+        EXPECT_EQ((std::vector<size_t>{0}), folder.targetIndices);   // {A}
+    }
+    {
+        const CmagFolder &folder = folders[1];
+        EXPECT_STREQ("b", folder.fullName.c_str());
+        EXPECT_STREQ("b", folder.relativeName.c_str());
+        EXPECT_EQ((std::vector<size_t>{3, 4}), folder.childIndices); // { b/c, b/d }
+        EXPECT_EQ((std::vector<size_t>{1}), folder.targetIndices);   // {B}
+    }
+    {
+        const CmagFolder &folder = folders[2];
+        EXPECT_STREQ("c", folder.fullName.c_str());
+        EXPECT_STREQ("c", folder.relativeName.c_str());
+        EXPECT_EQ((std::vector<size_t>{}), folder.childIndices);   // { }
+        EXPECT_EQ((std::vector<size_t>{2}), folder.targetIndices); // {C}
+    }
+    {
+        const CmagFolder &folder = folders[3];
+        EXPECT_STREQ("b/c", folder.fullName.c_str());
+        EXPECT_STREQ("c", folder.relativeName.c_str());
+        EXPECT_EQ((std::vector<size_t>{}), folder.childIndices);      // { }
+        EXPECT_EQ((std::vector<size_t>{3, 7}), folder.targetIndices); // { BC1, BC2}
+    }
+    {
+        const CmagFolder &folder = folders[4];
+        EXPECT_STREQ("b/d", folder.fullName.c_str());
+        EXPECT_STREQ("d", folder.relativeName.c_str());
+        EXPECT_EQ((std::vector<size_t>{5}), folder.childIndices);  // { b/d/e }
+        EXPECT_EQ((std::vector<size_t>{4}), folder.targetIndices); // { BD }
+    }
+    {
+        const CmagFolder &folder = folders[5];
+        EXPECT_STREQ("b/d/e", folder.fullName.c_str());
+        EXPECT_STREQ("e", folder.relativeName.c_str());
+        EXPECT_EQ((std::vector<size_t>{}), folder.childIndices);      // { }
+        EXPECT_EQ((std::vector<size_t>{5, 6}), folder.targetIndices); // { BDE1, BDE2}
+    }
+}
+
 TEST(CmagTargetTest, givenConfigExistsWhenGetOrCreateConfigIsCalledThenReturnExistingConfig) {
     CmagTarget target = {
         "target",

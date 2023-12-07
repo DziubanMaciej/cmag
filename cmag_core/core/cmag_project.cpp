@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <optional>
 
 const char *cmagTargetTypeToString(CmagTargetType type) {
     switch (type) {
@@ -276,6 +277,16 @@ CmagTargetProperty *CmagTargetConfig::findProperty(std::string_view propertyName
     return nullptr;
 }
 
+const CmagTargetProperty *CmagTargetConfig::findProperty(std::string_view propertyName) const {
+    auto it = std::find_if(properties.begin(), properties.end(), [propertyName](const CmagTargetProperty &p) {
+        return p.name == propertyName;
+    });
+    if (it != properties.end()) {
+        return &*it;
+    }
+    return nullptr;
+}
+
 const CmagTargetConfig *CmagTarget::tryGetConfig(std::string_view configName) const {
     auto configIt = std::find_if(configs.begin(), configs.end(), [configName](const auto &config) {
         return configName == config.name;
@@ -300,6 +311,10 @@ CmagTargetConfig &CmagTarget::getOrCreateConfig(std::string_view configName) {
 }
 
 bool CmagGlobals::deriveData(const std::vector<CmagTarget> &targets) {
+    return deriveDataListDirs(targets) && deriveDataFolders(targets);
+}
+
+bool CmagGlobals::deriveDataListDirs(const std::vector<CmagTarget> &targets) {
     for (size_t targetIndex = 0u; targetIndex < targets.size(); targetIndex++) {
         const CmagTarget &target = targets[targetIndex];
 
@@ -320,6 +335,66 @@ bool CmagGlobals::deriveData(const std::vector<CmagTarget> &targets) {
     }
 
     return true;
+}
+
+bool CmagGlobals::deriveDataFolders(const std::vector<CmagTarget> &targets) {
+    derived.folders.clear();
+    derived.folders.push_back(CmagFolder{"", ""});
+
+    for (size_t targetIndex = 0u; targetIndex < targets.size(); targetIndex++) {
+        const CmagTarget &target = targets[targetIndex];
+        const CmagTargetProperty *property = target.getPropertyValue("FOLDER");
+        if (property == nullptr) {
+            derived.folders[0].targetIndices.push_back(targetIndex);
+            continue; // this shouldn't really happen, since we force FOLDER to be dumped, but let's be liberal.
+        }
+        if (!property->isConsistent) {
+            return false;
+        }
+        const std::vector<std::string_view> folders = splitStringByChar(property->value, false, '/');
+        insertDerivedTargetWithFolder(targetIndex, folders);
+    }
+    return true;
+}
+
+void CmagGlobals::insertDerivedTargetWithFolder(size_t targetIndex, const std::vector<std::string_view> &folders) {
+    // Initialize the current folder we are looking at. Zero is the root folder.
+    size_t currentFolderIndex = 0;
+
+    // Find leaf folder containing the target
+    for (std::string_view currentTargetFolderName : folders) {
+        // Get index of the child folder
+        std::optional<size_t> matchingChildIndex = {};
+        for (size_t childIndex : derived.folders[currentFolderIndex].childIndices) {
+            if (derived.folders[childIndex].relativeName == currentTargetFolderName) {
+                matchingChildIndex = childIndex;
+                break;
+            }
+        }
+
+        // If index of child folder was not found, we have to create it
+        if (!matchingChildIndex.has_value()) {
+            CmagFolder &currentFolder = derived.folders[currentFolderIndex];
+
+            matchingChildIndex = derived.folders.size();
+            currentFolder.childIndices.push_back(matchingChildIndex.value());
+
+            std::string relativeName = std::string(currentTargetFolderName);
+            std::string fullName;
+            if (currentFolder.fullName.empty()) {
+                fullName = relativeName;
+            } else {
+                fullName = currentFolder.fullName + "/" + relativeName;
+            }
+            derived.folders.push_back(CmagFolder{std::move(fullName), std::move(relativeName)});
+        }
+
+        // Advance to the child folder
+        currentFolderIndex = matchingChildIndex.value();
+    }
+
+    // Assign target's index to the folder
+    derived.folders[currentFolderIndex].targetIndices.push_back(targetIndex);
 }
 
 void CmagTarget::deriveData(const std::vector<CmagTarget> &targets) {
@@ -373,4 +448,9 @@ void CmagTarget::deriveDataPropertyConsistency() {
             property->isConsistent = isConsistent;
         }
     }
+}
+const CmagTargetProperty *CmagTarget::getPropertyValue(std::string_view propertyName) const {
+    // Select any config. User of this method should check whether the acquired property
+    // is consistent.
+    return configs[0].findProperty(propertyName);
 }

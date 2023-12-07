@@ -22,6 +22,16 @@ enum class CmagTargetType {
 };
 const char *cmagTargetTypeToString(CmagTargetType type);
 
+struct CmagFolder {
+    // These structures are built based on values of FOLDER CMake property of all the target in
+    // the project. There are no global list of the folders, so we derive their structure from
+    // available targets.
+    std::string fullName;
+    std::string relativeName;
+    std::vector<size_t> childIndices = {};
+    std::vector<size_t> targetIndices = {};
+};
+
 struct CmagListDir {
     std::string name;
     std::vector<size_t> childIndices; // indices within globals.listDirs
@@ -46,7 +56,16 @@ struct CmagGlobals {
     std::string os = {};
     std::vector<CmagListDir> listDirs = {};
 
+    struct {
+        std::vector<CmagFolder> folders;
+    } derived = {};
+
+private:
+    friend CmagProject;
     bool deriveData(const std::vector<CmagTarget> &targets);
+    bool deriveDataListDirs(const std::vector<CmagTarget> &targets);
+    bool deriveDataFolders(const std::vector<CmagTarget> &targets);
+    void insertDerivedTargetWithFolder(size_t targetIndex, const std::vector<std::string_view> &folders);
 };
 
 struct CmagTargetProperty {
@@ -67,8 +86,10 @@ struct CmagTargetConfig {
     void deriveData(const std::vector<CmagTarget> &targets);
     void fixupWithNonEvaled(std::string_view propertyName, std::string_view nonEvaledValue);
     CmagTargetProperty *findProperty(std::string_view propertyName);
+    const CmagTargetProperty *findProperty(std::string_view propertyName) const;
 
 private:
+    friend CmagTarget;
     static void fixupLinkLibrariesDirectoryId(std::string &value);
     static void fixupLinkLibrariesGenex(CmagTargetProperty &property, std::string_view nonEvaledValue);
 };
@@ -88,6 +109,7 @@ struct CmagTarget {
 
     const CmagTargetConfig *tryGetConfig(std::string_view configName) const;
     CmagTargetConfig &getOrCreateConfig(std::string_view configName);
+    const CmagTargetProperty *getPropertyValue(std::string_view propertyName) const;
 
 private:
     friend CmagProject;
