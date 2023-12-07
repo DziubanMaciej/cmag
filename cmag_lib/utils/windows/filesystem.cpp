@@ -2,6 +2,7 @@
 #include "cmag_lib/utils/filesystem.h"
 
 #include <Windows.h>
+#include <shellapi.h>
 
 fs::path getExeLocation() {
     char buffer[4096];
@@ -11,4 +12,8 @@ fs::path getExeLocation() {
     }
 
     return buffer;
+}
+
+void openHyperlink(const char *path) {
+    ::ShellExecuteA(NULL, "open", path, NULL, NULL, SW_SHOWDEFAULT);
 }

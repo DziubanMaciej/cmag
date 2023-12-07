@@ -197,7 +197,6 @@ bool ArgumentParser::skipIrrelevantKeyValueArgument(int &argIndex, std::string_v
     return false;
 }
 
-
 std::vector<std::string> ArgumentParser::constructArgsForCmake() const {
     std::vector<std::string> result = {};
     result.reserve(argc - 1 + extraArgs.size());

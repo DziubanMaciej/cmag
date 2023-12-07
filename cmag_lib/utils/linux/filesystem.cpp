@@ -14,3 +14,9 @@ fs::path getExeLocation() {
     }
     return buffer;
 }
+
+void openHyperlink(const char *path) {
+    char command[4096];
+    snprintf(command, sizeof(command), "xdg-open \"%s\"", path);
+    system(command);
+}

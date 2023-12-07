@@ -1,30 +1,7 @@
 #include "tooltip.h"
 
 #include "cmag_browser/ui_utils/cmag_browser_theme.h"
-
-#include <cstdio>
-#include <cstdlib>
-
-// TODO refactor into utils
-#ifdef _WIN32
-#include <Windows.h>
-#include <shellapi.h>
-#endif
-void openHyperlink(const char *path) {
-#ifdef _WIN32
-    // Note: executable path must use backslashes!
-    ::ShellExecuteA(NULL, "open", path, NULL, NULL, SW_SHOWDEFAULT);
-#else
-#if __APPLE__
-    const char *open_executable = "open";
-#else
-    const char *open_executable = "xdg-open";
-#endif
-    char command[256];
-    snprintf(command, 256, "%s \"%s\"", open_executable, path);
-    system(command);
-#endif
-}
+#include "cmag_lib/utils/filesystem.h"
 
 bool Tooltip::begin(const CmagBrowserTheme &theme, ImVec2 min, ImVec2 max, const char *tooltip, const char *tooltipHyperlink, bool forceOneLine) {
     if (!isRectHovered(min, max)) {
