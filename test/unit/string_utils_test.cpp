@@ -1,4 +1,4 @@
-#include "cmag_lib/utils/string_utils.h"
+#include "cmag_core/utils/string_utils.h"
 
 #include <gtest/gtest.h>
 

@@ -1,7 +1,7 @@
 #include "config_selector.h"
 
 #include "cmag_browser/ui_utils/tooltip.h"
-#include "cmag_lib/core/cmag_project.h"
+#include "cmag_core/core/cmag_project.h"
 
 #include <imgui.h>
 

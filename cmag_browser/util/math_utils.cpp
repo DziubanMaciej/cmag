@@ -1,6 +1,6 @@
 #include "math_utils.h"
 
-#include "cmag_lib/utils/error.h"
+#include "cmag_core/utils/error.h"
 
 #include <cmath>
 

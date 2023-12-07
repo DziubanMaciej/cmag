@@ -1,7 +1,7 @@
 #pragma once
 
-#include "cmag_lib/core/cmag_project.h"
-#include "cmag_lib/utils/error.h"
+#include "cmag_core/core/cmag_project.h"
+#include "cmag_core/utils/error.h"
 
 #include <array>
 #include <cstddef>

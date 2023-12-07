@@ -1,6 +1,6 @@
-#include "cmag_lib/core/cmag.h"
-#include "cmag_lib/parse/cmag_json_parser.h"
-#include "cmag_lib/utils/file_utils.h"
+#include "cmag_core/core/cmag.h"
+#include "cmag_core/parse/cmag_json_parser.h"
+#include "cmag_core/utils/file_utils.h"
 #include "test/os/cmake_generator_db.h"
 #include "test/os/fixtures.h"
 

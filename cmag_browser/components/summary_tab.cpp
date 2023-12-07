@@ -3,7 +3,7 @@
 #include "cmag_browser/components/config_selector.h"
 #include "cmag_browser/ui_utils/raii_imgui_style.h"
 #include "cmag_browser/ui_utils/tooltip.h"
-#include "cmag_lib/core/cmag_project.h"
+#include "cmag_core/core/cmag_project.h"
 
 SummaryTab::SummaryTab(const CmagBrowserTheme &theme, CmagProject &project, ConfigSelector &configSelector)
     : theme(theme),

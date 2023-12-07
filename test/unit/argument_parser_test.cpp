@@ -1,4 +1,4 @@
-#include "cmag_lib/core/argument_parser.h"
+#include "cmag_core/core/argument_parser.h"
 
 #include <gtest/gtest.h>
 

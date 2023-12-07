@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cmag_lib/utils/filesystem.h"
+#include "cmag_core/utils/filesystem.h"
 
 #include <gtest/gtest.h>
 

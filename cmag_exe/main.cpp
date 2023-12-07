@@ -1,6 +1,6 @@
-#include "cmag_lib/core/argument_parser.h"
-#include "cmag_lib/core/cmag.h"
-#include "cmag_lib/utils/error.h"
+#include "cmag_core/core/argument_parser.h"
+#include "cmag_core/core/cmag.h"
+#include "cmag_core/utils/error.h"
 
 #define RETURN_ERROR(expr)                \
     do {                                  \

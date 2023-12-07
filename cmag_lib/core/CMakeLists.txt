@@ -1,2 +1,0 @@
-target_find_sources_and_add(cmag_lib)
-add_subdirectories()

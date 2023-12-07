@@ -4,9 +4,9 @@
 #include "cmag_browser/components/summary_tab.h"
 #include "cmag_browser/components/target_graph_tab.h"
 #include "cmag_browser/ui_utils/cmag_browser_theme.h"
-#include "cmag_lib/parse/cmag_json_parser.h"
-#include "cmag_lib/utils/error.h"
-#include "cmag_lib/utils/file_utils.h"
+#include "cmag_core/parse/cmag_json_parser.h"
+#include "cmag_core/utils/error.h"
+#include "cmag_core/utils/file_utils.h"
 
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 #include <imgui/backends/imgui_impl_glfw.h>

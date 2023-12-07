@@ -1,6 +1,6 @@
 #include "cmake_generator_db.h"
 
-#include "cmag_lib/utils/error.h"
+#include "cmag_core/utils/error.h"
 #include "test/os/utils/test_workspace.h"
 
 CmakeGeneratorDb::CmakeGeneratorDb(bool allGenerators) {

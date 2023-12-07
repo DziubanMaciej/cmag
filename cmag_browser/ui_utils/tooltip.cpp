@@ -1,7 +1,7 @@
 #include "tooltip.h"
 
 #include "cmag_browser/ui_utils/cmag_browser_theme.h"
-#include "cmag_lib/utils/filesystem.h"
+#include "cmag_core/utils/filesystem.h"
 
 bool Tooltip::begin(const CmagBrowserTheme &theme, ImVec2 min, ImVec2 max, const char *tooltip, const char *tooltipHyperlink, bool forceOneLine) {
     if (!isRectHovered(min, max)) {

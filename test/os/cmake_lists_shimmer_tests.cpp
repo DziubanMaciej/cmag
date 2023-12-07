@@ -1,5 +1,5 @@
-#include "cmag_lib/shim/cmake_lists_shimmer.h"
-#include "cmag_lib/utils/file_utils.h"
+#include "cmag_core/shim/cmake_lists_shimmer.h"
+#include "cmag_core/utils/file_utils.h"
 #include "test/os/fixtures.h"
 
 struct CMakeListsShimmerTests : CmagOsTest {

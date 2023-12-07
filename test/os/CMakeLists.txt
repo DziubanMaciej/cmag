@@ -1,7 +1,7 @@
 add_executable(cmag_os_tests)
 target_common_setup(cmag_os_tests)
 target_find_sources_and_add(cmag_os_tests)
-target_link_libraries(cmag_os_tests PRIVATE cmag_lib gtest)
+target_link_libraries(cmag_os_tests PRIVATE cmag_core gtest)
 target_compile_definitions(cmag_os_tests PRIVATE
     -DSRC_PROJECTS_ROOT="${CMAKE_CURRENT_SOURCE_DIR}/../projects"
     -DDST_PROJECTS_ROOT="${CMAKE_BINARY_DIR}/os_tests_projects/"

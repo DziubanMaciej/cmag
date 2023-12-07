@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cmag_lib/utils/subprocess.h"
+#include "cmag_core/utils/subprocess.h"
 
 #include <memory>
 

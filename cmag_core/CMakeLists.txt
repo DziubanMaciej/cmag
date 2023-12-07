@@ -1,0 +1,15 @@
+add_library(cmag_core STATIC CMakeLists.txt)
+target_common_setup(cmag_core)
+target_find_sources_and_add(cmag_core)
+target_include_directories(cmag_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
+target_link_libraries(cmag_core PUBLIC nlohmann_json::nlohmann_json)
+add_subdirectories()
+target_setup_vs_folders(cmag_core)
+
+set(CMAG_BROWSER_BINARY_NAME "cmag_browser")
+if (WIN32)
+    set(CMAG_BROWSER_BINARY_NAME "${CMAG_BROWSER_BINARY_NAME}.exe")
+endif()
+target_compile_definitions(cmag_core PRIVATE -DCMAG_BROWSER_BINARY_NAME="${CMAG_BROWSER_BINARY_NAME}")
+
+header_pack_generate_from_text(cmag_core shim/postamble.cmake postamble.h postamble)

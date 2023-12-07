@@ -1,4 +1,4 @@
-#include "cmag_lib/core/cmag_project.h"
+#include "cmag_core/core/cmag_project.h"
 
 #include <gtest/gtest.h>
 

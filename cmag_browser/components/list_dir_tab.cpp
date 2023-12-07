@@ -2,7 +2,7 @@
 
 #include "cmag_browser/components/target_graph_tab.h"
 #include "cmag_browser/ui_utils/tooltip.h"
-#include "cmag_lib/core/cmag_project.h"
+#include "cmag_core/core/cmag_project.h"
 
 ListDirTab::ListDirTab(const CmagBrowserTheme &theme, CmagProject &project, TargetGraphTab &targetGraphTab)
     : theme(theme),
