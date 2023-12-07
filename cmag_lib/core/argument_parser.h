@@ -25,6 +25,7 @@ public:
 
 private:
     const char *parseKeyValueArgument(std::string_view prefix, int &argIndex, std::string_view currentArg, const char *nextArg);
+    static bool skipIrrelevantKeyValueArgument(int &argIndex, std::string_view currentArg);
 
     int cmakeArgsStartIndex = {};
     int argc = {};

@@ -4,12 +4,6 @@
 
 #include <cstring>
 
-static const char *keyValueArgs[] = {
-    "-G",
-    "-P",
-    // TODO specify rest of them. See cmake -h
-};
-
 ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(argv) {
     if (argc == 1) {
         valid = false;
@@ -81,20 +75,20 @@ ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(a
         // Handle arguments that we care about
         if (const char *value = parseKeyValueArgument("-S", argIndex, arg, nextArg); value) {
             sourcePath = value;
+            continue;
         }
         if (const char *value = parseKeyValueArgument("-B", argIndex, arg, nextArg); value) {
             buildPath = value;
+            continue;
         }
         if (const char *value = parseKeyValueArgument("--graphviz", argIndex, arg, nextArg); value) {
             graphvizPath = value;
+            continue;
         }
 
-        // Skip key-value options spanning two arguments
-        for (const char *keyValueArg : keyValueArgs) {
-            if (arg == keyValueArg) {
-                argIndex++;
-                continue;
-            }
+        // Skip key-value options spanning two arguments.
+        if (skipIrrelevantKeyValueArgument(argIndex, arg)) {
+            continue;
         }
 
         // Skip rest of CMake options. This cover both valueless options like "-Wdev" and key-value options in
@@ -111,8 +105,11 @@ ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(a
     if (projectName.empty()) {
         projectName = "project";
     }
-    if (sourcePath.empty()) {
+    if (sourcePath.empty() && buildPath.empty()) {
         valid = false;
+    }
+    if (sourcePath.empty()) {
+        sourcePath = ".";
     }
     if (buildPath.empty()) {
         buildPath = ".";
@@ -164,6 +161,42 @@ const char *ArgumentParser::parseKeyValueArgument(std::string_view prefix, int &
 
     return nullptr;
 }
+
+bool ArgumentParser::skipIrrelevantKeyValueArgument(int &argIndex, std::string_view currentArg) {
+    static const char *keyValueArgs[] = {
+        "-G",
+        "-P",
+        "-C",
+        "-U",
+        "-G",
+        "-T",
+        "-A",
+        "--toolchain",
+        "--install-prefix",
+        "--preset",
+        "-P",
+        "--find-package",
+        "--system-information",
+        "--log-level",
+        "--debug-find-pkg",
+        "--debug-find-var",
+        "--trace-format",
+        "--trace-source",
+        "--trace-redirect",
+        "--profiling-format",
+        "--profiling-output",
+    };
+
+    // We need to list them manually, because they change the meaning of the next argument.
+    for (const char *keyValueArg : keyValueArgs) {
+        if (currentArg == keyValueArg) {
+            argIndex++;
+            return true;
+        }
+    }
+    return false;
+}
+
 
 std::vector<std::string> ArgumentParser::constructArgsForCmake() const {
     std::vector<std::string> result = {};

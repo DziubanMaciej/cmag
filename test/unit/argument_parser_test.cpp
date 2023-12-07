@@ -23,6 +23,15 @@ TEST(ArgumentParserTest, givenNoCmakeArgumentsThenArgumentsAreInvalid) {
     EXPECT_FALSE(parser.isValid());
 }
 
+TEST(ArgumentParserTest, givenOnlyBuildPathArgumentThenSourcePathDefaultsToCwd) {
+    const char *argv[] = {"cmag", "cmake", "-B", "build"};
+    const int argc = sizeof(argv) / sizeof(argv[0]);
+    ArgumentParser parser{argc, argv};
+    EXPECT_TRUE(parser.isValid());
+    EXPECT_STREQ(".", parser.getSourcePath().string().c_str());
+    EXPECT_STREQ("build", parser.getBuildPath().string().c_str());
+}
+
 TEST(ArgumentParserTest, givenSourcePathArgumentThenSourcePathIsValid) {
     const char *argv[] = {"cmag", "cmake", ".."};
     const int argc = sizeof(argv) / sizeof(argv[0]);
