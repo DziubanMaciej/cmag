@@ -2,6 +2,7 @@
 #include "cmag_browser/components/config_selector.h"
 #include "cmag_browser/components/list_dir_tab.h"
 #include "cmag_browser/components/summary_tab.h"
+#include "cmag_browser/components/target_folder_tab.h"
 #include "cmag_browser/components/target_graph_tab.h"
 #include "cmag_browser/ui_utils/cmag_browser_theme.h"
 #include "cmag_core/parse/cmag_json_parser.h"
@@ -9,10 +10,10 @@
 #include "cmag_core/utils/file_utils.h"
 
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
+#include <cstdio>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <imgui/imgui.h>
-#include <stdio.h>
 
 static void glfw_error_callback(int error, const char *description) {
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
@@ -80,6 +81,7 @@ int main(int argc, char **argv) {
     ConfigSelector configSelector{theme, cmagProject};
     TargetGraphTab targetGraphTab{theme, cmagProject, configSelector};
     ListDirTab listFileTab{theme, cmagProject, targetGraphTab};
+    TargetFolderTab targetFolderTab{theme, cmagProject, targetGraphTab};
     SummaryTab summaryTab{theme, cmagProject, configSelector};
 
     theme.setup();
@@ -111,6 +113,11 @@ int main(int argc, char **argv) {
 
             if (ImGui::BeginTabItem("List files")) {
                 listFileTab.render();
+                ImGui::EndTabItem();
+            }
+
+            if (ImGui::BeginTabItem("Target folders")) {
+                targetFolderTab.render();
                 ImGui::EndTabItem();
             }
 

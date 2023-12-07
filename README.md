@@ -27,7 +27,7 @@ cmag_browser project.cmag-project
 
 
 # Installation
-Currently *cmag* is not distributed in any open repositories.
+Currently, *cmag* is not distributed in any open repositories.
 
 To build from source, install `git`, `graphviz`, `cmake` and a C++ compiler.
 ```
@@ -41,12 +41,12 @@ cmake --build build
 # Roadmap
 This is a current list of items left to do in this project. It may shrink and grow over time, but should be kept relatively up to date.
 - project wide
-  - [ ] Implement installing to PATH with `make install`. Update README build instrunctons, so it installs *cmag*.
+  - [ ] Implement installing to PATH with `make install`. Update README build instructions, so it installs *cmag*.
   - [ ] Add some presentation and screenshots of the browser in this README.
   - [ ] Add cmag version. Store it in project files, return it from binaries and validate it when loading projects.
 - cmag
-  - [ ] Explore if handling targets created in [included](https://cmake.org/cmake/help/latest/command/include.html) files is possible. Currently we make it look as if they were created in CMakeLists.txt itself.
-  - [ ] Explore if handling CMake `find_package()` is possible. Currently we ignore these targets. We could probably get them from [cmake-file-api](https://cmake.org/cmake/help/latest/manual/cmake-file-api.7.html), but that would require an additional pass.
+  - [ ] Explore if handling targets created in [included](https://cmake.org/cmake/help/latest/command/include.html) files is possible. Currently, we make it look as if they were created in CMakeLists.txt itself.
+  - [ ] Explore if handling CMake `find_package()` is possible. Currently, we ignore these targets. We could probably get them from [cmake-file-api](https://cmake.org/cmake/help/latest/manual/cmake-file-api.7.html), but that would require an additional pass.
   - [ ] Break the dependency from graphviz. Graph layout should be handled in a more robust way.
   - [ ] Add textual errors to parsers. We often get "failed parsing X" without any more helpful information.
   - [ ] Implement `--merge` argument. For single config generators, such as `Unix Makefiles` we should be able to merge outputs of two `cmag` analyses into a one project to be able to compare different configs.
@@ -57,5 +57,4 @@ This is a current list of items left to do in this project. It may shrink and gr
   - [ ] Make ListFileTab look nicer with some icons. To achieve this, some [ImGui font magic](https://github.com/ocornut/imgui/blob/master/docs/FONTS.md) must be used.
   - [ ] Hide debug controls from the UI. Add some option to show it. CMake option? Cmdline arg? Env variable?
   - [ ] Make sure we don't throw exceptions when something is wrong with the file. End gracefully.
-  - [ ] Add TargetFolderTab and display the logical hierarchy derived from [FOLDER](https://cmake.org/cmake/help/latest/prop_tgt/FOLDER.html).
-  
+  - [ ] Add warning in target folders tab when [USE_FOLDERS](https://cmake.org/cmake/help/latest/prop_gbl/USE_FOLDERS.html) is OFF. See also [CMP0143](https://cmake.org/cmake/help/latest/policy/CMP0143.html).
