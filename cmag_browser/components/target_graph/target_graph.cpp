@@ -74,27 +74,16 @@ void TargetGraph::update(ImGuiIO &io) {
     const bool mouseInside = -1 <= mouseX && mouseX <= 1 && -1 <= mouseY && mouseY <= 1;
     const bool mouseMoved = io.MousePos.x != io.MousePosPrev.x || io.MousePos.y != io.MousePosPrev.y;
 
-    float verticesTransformed[ShapeInfo::maxVerticesCount];
-
     focusedTarget = nullptr;
     if (mouseInside && !targetDrag.active) {
         for (CmagTarget &target : targets) {
+            // Vertices are in their local space. Transform mouse coordinates to this local space, so they are comparable.
+            glm::mat4 screenToLocalMatrix = glm::inverse(projectionMatrix * TargetData::get(target).modelMatrix);
+            glm::vec4 mouseLocal = screenToLocalMatrix * glm::vec4{mouseX, mouseY, 0, 1};
+
+            // Check if mouse cursor is within the shape.
             const ShapeInfo *shapeInfo = shapes.shapeInfos[static_cast<int>(target.type)];
-            const float *targetVertices = shapeInfo->vertices;
-            const size_t targetVerticesSize = shapeInfo->verticesCount;
-
-            // Transform vertices from local space to screen space, so we're able to compare it with mouse position.
-            // TODO wouldn't it be possible/better to transform mouse position to local space of each target?
-            glm::mat4 viewModelMatrix = projectionMatrix * TargetData::get(target).modelMatrix;
-            for (size_t i = 0; i < targetVerticesSize; i += 2) {
-                glm::vec4 vertex{targetVertices[i], targetVertices[i + 1], 0, 1};
-                vertex = viewModelMatrix * vertex;
-                verticesTransformed[i + 0] = vertex.x;
-                verticesTransformed[i + 1] = vertex.y;
-            }
-
-            // Check focus
-            if (isPointInsidePolygon(mouseX, mouseY, verticesTransformed, targetVerticesSize)) {
+            if (isPointInsidePolygon(mouseLocal.x, mouseLocal.y, shapeInfo->vertices, shapeInfo->verticesCount)) {
                 focusedTarget = &target;
             }
         }
