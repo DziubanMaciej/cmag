@@ -14,6 +14,7 @@ fs::path getExeLocation() {
     return buffer;
 }
 
-void openHyperlink(const char *path) {
-    ::ShellExecuteA(NULL, "open", path, NULL, NULL, SW_SHOWDEFAULT);
+bool openHyperlink(const char *path) {
+    HINSTANCE result = ::ShellExecuteA(NULL, "open", path, NULL, NULL, SW_SHOWDEFAULT);
+    return reinterpret_cast<INT_PTR>(result) > 32; // yes, this is what the documentation says...
 }
