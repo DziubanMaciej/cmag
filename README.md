@@ -41,7 +41,6 @@ cmake --build build
 # Roadmap
 This is a current list of items left to do in this project. It may shrink and grow over time, but should be kept relatively up to date.
 - project wide
-  - [ ] Rename directories: cmag_lib -> cmag_core and cmag_exe -> cmag
   - [ ] Implement installing to PATH with `make install`. Update README build instrunctons, so it installs *cmag*.
   - [ ] Add some presentation and screenshots of the browser in this README.
   - [ ] Add cmag version. Store it in project files, return it from binaries and validate it when loading projects.

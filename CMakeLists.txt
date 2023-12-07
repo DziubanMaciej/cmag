@@ -18,7 +18,7 @@ include(CMakeUtils.cmake)
 # Add actual code
 add_subdirectory(third_party)
 add_subdirectory(cmag_core)
-add_subdirectory(cmag_exe)
+add_subdirectory(cmag)
 if (CMAG_BUILD_BROWSER)
     add_subdirectory(cmag_browser)
 endif()
