@@ -83,7 +83,7 @@ void TargetGraph::update(ImGuiIO &io) {
 
             // Check if mouse cursor is within the shape.
             const ShapeInfo *shapeInfo = shapes.shapeInfos[static_cast<int>(target.type)];
-            if (isPointInsidePolygon(mouseLocal.x, mouseLocal.y, shapeInfo->vertices, shapeInfo->verticesCount)) {
+            if (isPointInsidePolygon(mouseLocal.x, mouseLocal.y, shapeInfo->floats, shapeInfo->floatsCount)) {
                 focusedTarget = &target;
             }
         }
@@ -146,14 +146,14 @@ void TargetGraph::render() {
             SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, colorNode));
         }
         SAFE_GL(glUniform1f(program.uniformLocation.depthValue, calculateDepthValueForTarget(target, false)));
-        SAFE_GL(glDrawArrays(GL_TRIANGLE_FAN, vbBaseOffset, shape.subShapes[0].count / 2));
+        SAFE_GL(glDrawArrays(GL_TRIANGLE_FAN, vbBaseOffset, shape.subShapes[0].vertexCount));
 
-        // Render outline
+        // Render outlines
         SAFE_GL(glUniform1f(program.uniformLocation.depthValue, calculateDepthValueForTarget(target, true)));
         SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, colorNodeOutline));
         for (size_t subShapeIndex = 0; subShapeIndex < shape.subShapesCount; subShapeIndex++) {
             const ShapeInfo::SubShape &subShape = shape.subShapes[subShapeIndex];
-            SAFE_GL(glDrawArrays(GL_LINE_LOOP, vbBaseOffset + subShape.offset / 2, subShape.count / 2));
+            SAFE_GL(glDrawArrays(GL_LINE_LOOP, vbBaseOffset + subShape.vertexOffset, subShape.vertexCount));
         }
     }
     SAFE_GL(glUseProgram(0));
@@ -262,8 +262,8 @@ float TargetGraph::calculateDepthValueForTarget(const CmagTarget &target, bool f
 void TargetGraph::calculateWorldSpaceVerticesForTarget(const CmagTarget &target, const Shapes &shapes, float *outVertices, size_t *outVerticesCount) {
     const ShapeInfo *shapeInfo = shapes.shapeInfos[static_cast<int>(target.type)];
     FATAL_ERROR_IF(shapeInfo == nullptr, "Unknown shape");
-    const float *targetVertices = shapeInfo->vertices;
-    const size_t targetVerticesSize = shapeInfo->verticesCount;
+    const float *targetVertices = shapeInfo->floats;
+    const size_t targetVerticesSize = shapeInfo->floatsCount;
 
     glm::mat4 modelMatrix = TargetData::get(target).modelMatrix;
     for (size_t i = 0; i < targetVerticesSize; i += 2) {
@@ -376,7 +376,7 @@ void TargetGraph::Shapes::allocate() {
         if (shapeInfo == nullptr) {
             continue;
         }
-        verticesCount += shapeInfo->verticesCount;
+        verticesCount += shapeInfo->floatsCount;
     }
 
     // Allocate one big array that will contain all the shapes and copy the vertices.
@@ -387,9 +387,9 @@ void TargetGraph::Shapes::allocate() {
         if (shapeInfo == nullptr) {
             continue;
         }
-        memcpy(data.get() + dataSize, shapeInfo->vertices, shapeInfo->verticesCount * sizeof(float));
+        memcpy(data.get() + dataSize, shapeInfo->floats, shapeInfo->floatsCount * sizeof(float));
         offsets[i] = dataSize;
-        dataSize += shapeInfo->verticesCount;
+        dataSize += shapeInfo->floatsCount;
     }
     dataSize *= sizeof(float);
 

@@ -1,5 +1,47 @@
 #include "shapes.h"
 
+inline ShapeInfo::ShapeInfo(const float *floats, size_t floatsCount, std::array<size_t, ShapeInfo::maxSubShapesCount> subShapesOffsets)
+    : floats(floats),
+      floatsCount(floatsCount) {
+
+    FATAL_ERROR_IF(floatsCount == 0, "Shape has no vertices");
+    FATAL_ERROR_IF(floatsCount % floatsPerVertex != 0, "Shape has incorrect number of vertices. Must be a multiple of ", floatsPerVertex, ".");
+
+    for (size_t subShapeIndex = 0; subShapeIndex < maxSubShapesCount; subShapeIndex++) {
+        const size_t currentVertexOffset = subShapesOffsets[subShapeIndex];
+
+        if (subShapeIndex == 0) {
+            FATAL_ERROR_IF(currentVertexOffset != 0, "First subshape offset should be 0");
+            subShapesCount++;
+            continue;
+        }
+
+        SubShape &currentSubShape = subShapes[subShapeIndex];
+        SubShape &previousSubShape = subShapes[subShapeIndex - 1];
+        if (currentVertexOffset > previousSubShape.vertexOffset) {
+            previousSubShape.vertexCount = currentVertexOffset - previousSubShape.vertexOffset;
+            currentSubShape.vertexOffset = currentVertexOffset;
+            subShapesCount++;
+        } else {
+            break;
+        }
+    }
+
+    SubShape &lastSubShape = subShapes[subShapesCount - 1];
+    const size_t verticesCount = floatsCount / floatsPerVertex;
+    lastSubShape.vertexCount = verticesCount - lastSubShape.vertexOffset;
+
+    for (size_t i = 0; i < verticesCount; i += 2) {
+        bounds.minX = std::min(bounds.minX, floats[i]);
+        bounds.maxX = std::max(bounds.maxX, floats[i]);
+        bounds.minY = std::min(bounds.minY, floats[i + 1]);
+        bounds.maxY = std::max(bounds.maxY, floats[i + 1]);
+    }
+}
+
+#define COUNT(arr) (sizeof(arr) / sizeof(arr[0]))
+#define ARRAY_WITH_COUNT(arr) (arr), (COUNT(arr))
+
 const static float staticLibVertices[] = {
     1.0f,
     -0.16577777777777733f,
@@ -18,7 +60,7 @@ const static float staticLibVertices[] = {
     0.4142156862745099f,
     -0.4f,
 };
-const ShapeInfo ShapeInfo::staticLib(staticLibVertices);
+const ShapeInfo ShapeInfo::staticLib(ARRAY_WITH_COUNT(staticLibVertices));
 
 const static float executableVertices[] = {
     0.09259589652096345f,
@@ -262,7 +304,7 @@ const static float executableVertices[] = {
     0.03086529884032152f,
     -0.4f,
 };
-const ShapeInfo ShapeInfo::executable(executableVertices);
+const ShapeInfo ShapeInfo::executable(ARRAY_WITH_COUNT(executableVertices));
 
 const static float sharedLibVertices[] = {
     1.0f,
@@ -299,7 +341,7 @@ const static float sharedLibVertices[] = {
     0.39321862348178227f,
     -0.32727272727272727f,
 };
-const ShapeInfo ShapeInfo::sharedLib(sharedLibVertices, {0, 16});
+const ShapeInfo ShapeInfo::sharedLib(ARRAY_WITH_COUNT(sharedLibVertices), {0, 8});
 
 const static float moduleLibVertices[] = {
     1.0f,
@@ -353,7 +395,7 @@ const static float moduleLibVertices[] = {
     0.374806708695135f,
     -0.27692307692307694f,
 };
-const ShapeInfo ShapeInfo::moduleLib(moduleLibVertices, {0, 16, 24});
+const ShapeInfo ShapeInfo::moduleLib(ARRAY_WITH_COUNT(moduleLibVertices), {0, 8, 16});
 
 const static float customTargetVertices[] = {
     1.0f,
@@ -365,7 +407,7 @@ const static float customTargetVertices[] = {
     1.0f,
     -0.4f,
 };
-const ShapeInfo ShapeInfo::customTarget(customTargetVertices);
+const ShapeInfo ShapeInfo::customTarget(ARRAY_WITH_COUNT(customTargetVertices));
 
 const static float interfaceLibVertices[] = {
     1.0f,
@@ -377,7 +419,7 @@ const static float interfaceLibVertices[] = {
     1.0f,
     -0.4f,
 };
-const ShapeInfo ShapeInfo::interfaceLib(interfaceLibVertices);
+const ShapeInfo ShapeInfo::interfaceLib(ARRAY_WITH_COUNT(interfaceLibVertices));
 
 const static float objectLibVertices[] = {
     1.0f,
@@ -393,7 +435,7 @@ const static float objectLibVertices[] = {
     0.4999348534201955f,
     -0.4f,
 };
-const ShapeInfo ShapeInfo::objectLib(objectLibVertices);
+const ShapeInfo ShapeInfo::objectLib(ARRAY_WITH_COUNT(objectLibVertices));
 
 const static float unknownLibVertices[] = {
     1.0f,
@@ -411,4 +453,4 @@ const static float unknownLibVertices[] = {
     0.4450063211125159f,
     -0.4f,
 };
-const ShapeInfo ShapeInfo::unknownLib(unknownLibVertices);
+const ShapeInfo ShapeInfo::unknownLib(ARRAY_WITH_COUNT(unknownLibVertices));
