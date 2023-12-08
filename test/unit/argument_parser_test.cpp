@@ -200,7 +200,7 @@ TEST(ArgumentParserTest, givenDefinitionArgWhenParsingThenParseCorrectly) {
     const int argc = sizeof(argv) / sizeof(argv[0]);
     ArgumentParser parser{argc, argv};
     EXPECT_TRUE(parser.isValid());
-    EXPECT_STREQ("..", parser.getSourcePath().c_str());
+    EXPECT_STREQ("..", parser.getSourcePath().string().c_str());
 }
 
 TEST(ArgumentParserTest, givenDefinitionArgWithSpaceWhenParsingThenParseCorrectly) {
@@ -208,7 +208,7 @@ TEST(ArgumentParserTest, givenDefinitionArgWithSpaceWhenParsingThenParseCorrectl
     const int argc = sizeof(argv) / sizeof(argv[0]);
     ArgumentParser parser{argc, argv};
     EXPECT_TRUE(parser.isValid());
-    EXPECT_STREQ("..", parser.getSourcePath().c_str());
+    EXPECT_STREQ("..", parser.getSourcePath().string().c_str());
 }
 
 TEST(ArgumentParserTest, givenNoExtraArgsWhenConstructingArgsForCMakeThenReturnArgumentsVerbatim) {
