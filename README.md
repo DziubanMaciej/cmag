@@ -29,11 +29,16 @@ cmag_browser project.cmag-project
 # Installation
 Currently, *cmag* is not distributed in any open repositories.
 
-To build from source, install `git`, `graphviz`, `cmake` and a C++ compiler.
+# From source
+Compilation requirements: `git`, `graphviz`, `cmake` and a C++ compiler. Run the following commands:
 ```
+git submodule init
+git submodule upate
 mkdir build
-cmake -B build
-cmake --build build
+cd build
+cmake -B .
+cmake --build .
+cmake --install .
 ```
 
 
@@ -41,7 +46,6 @@ cmake --build build
 # Roadmap
 This is a current list of items left to do in this project. It may shrink and grow over time, but should be kept relatively up to date.
 - project wide
-  - [ ] Implement installing to PATH with `make install`. Update README build instructions, so it installs *cmag*.
   - [ ] Add some presentation and screenshots of the browser in this README.
   - [ ] Add cmag version. Store it in project files, return it from binaries and validate it when loading projects.
 - cmag
