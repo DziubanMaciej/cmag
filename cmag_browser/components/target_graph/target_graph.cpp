@@ -242,9 +242,9 @@ void TargetGraph::clampTargetPositionToVisibleWorldSpace(CmagTarget &target) con
 
 float TargetGraph::calculateDepthValueForTarget(const CmagTarget &target, bool forText) const {
     constexpr float valueDefault = 0;
-    constexpr float valueSelected = 0.1;
-    constexpr float valueFocused = 0.2;
-    constexpr float textOffset = 0.01;
+    constexpr float valueSelected = 0.1f;
+    constexpr float valueFocused = 0.2f;
+    constexpr float textOffset = 0.01f;
 
     float result = valueDefault;
     if (&target == selectedTarget) {

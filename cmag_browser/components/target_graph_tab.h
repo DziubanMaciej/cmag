@@ -7,7 +7,7 @@
 class CmagBrowserTheme;
 class ConfigSelector;
 
-struct TargetGraphTab {
+class TargetGraphTab {
 public:
     TargetGraphTab(CmagBrowserTheme &theme, CmagProject &project, ConfigSelector &configSelector);
 

@@ -65,10 +65,10 @@ private:
     glm::mat4 projectionMatrix = {};
     std::string_view cmakeConfig = {};
     CmakeDependencyType displayedDependencyType = CmakeDependencyType::Build;
-    float nodeScale = 25;
-    float textScale = 3;
-    float arrowLengthScale = 9.3;
-    float arrowWidthScale = 3.15;
+    float nodeScale = 25.f;
+    float textScale = 3.f;
+    float arrowLengthScale = 9.3f;
+    float arrowWidthScale = 3.15f;
 
     // Every target has a void* userData field to track custom, gui-specific data. We allocate a vector of our data structs
     // and bind them to each target.

@@ -69,7 +69,6 @@ void readPipeForStd(HANDLE readHandle, std::string &outContent) {
     DWORD bytesRead;
     while (true) {
         if (!ReadFile(readHandle, buffer, sizeof(buffer), &bytesRead, NULL) || bytesRead == 0) {
-            int a = GetLastError();
             break;
         }
         outContent.append(buffer, bytesRead);

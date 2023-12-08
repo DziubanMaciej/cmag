@@ -19,7 +19,8 @@ void createVertexBuffer(GLuint *outVao, GLuint *outVbo, const void *data, size_t
 
     GLsizei offset = 0;
     for (size_t i = 0; i < attribSizesCount; i++) {
-        SAFE_GL(glVertexAttribPointer(i, attribsSizes[i], GL_FLOAT, GL_FALSE, sizeof(GL_FLOAT) * stride, reinterpret_cast<void *>(offset)));
+        void *voidPtrOffset = reinterpret_cast<void *>(static_cast<uintptr_t>(offset));
+        SAFE_GL(glVertexAttribPointer(static_cast<GLuint>(i), attribsSizes[i], GL_FLOAT, GL_FALSE, sizeof(GL_FLOAT) * stride, voidPtrOffset));
         offset += attribsSizes[i] * sizeof(GL_FLOAT);
     }
 
