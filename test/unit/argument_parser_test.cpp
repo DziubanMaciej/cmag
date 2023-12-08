@@ -195,6 +195,22 @@ TEST(ArgumentParserTest, givenUndefinedGraphvizOptionWithEqualsSignThenArguments
     EXPECT_FALSE(parser.isValid());
 }
 
+TEST(ArgumentParserTest, givenDefinitionArgWhenParsingThenParseCorrectly) {
+    const char *argv[] = {"cmag", "cmake", "-DCMAKE_BUILD_TYPE=Debug", ".."};
+    const int argc = sizeof(argv) / sizeof(argv[0]);
+    ArgumentParser parser{argc, argv};
+    EXPECT_TRUE(parser.isValid());
+    EXPECT_STREQ("..", parser.getSourcePath().c_str());
+}
+
+TEST(ArgumentParserTest, givenDefinitionArgWithSpaceWhenParsingThenParseCorrectly) {
+    const char *argv[] = {"cmag", "cmake", "-D", "CMAKE_BUILD_TYPE=Debug", ".."};
+    const int argc = sizeof(argv) / sizeof(argv[0]);
+    ArgumentParser parser{argc, argv};
+    EXPECT_TRUE(parser.isValid());
+    EXPECT_STREQ("..", parser.getSourcePath().c_str());
+}
+
 TEST(ArgumentParserTest, givenNoExtraArgsWhenConstructingArgsForCMakeThenReturnArgumentsVerbatim) {
     const char *argv[] = {"cmag", "cmake", "..", "--graphviz=a.graph", "-B", "bbb"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
@@ -213,7 +229,7 @@ TEST(ArgumentParserTest, givenNoExtraArgsWhenConstructingArgsForCMakeThenReturnA
     compareArgs(expectedArgs, cmakeArgs);
 }
 
-TEST(ArgumentParserTest, givenExtraArgsWhenConstructingArgsForCMakeThenReturnAppendThemAtTheEnd) {
+TEST(ArgumentParserTest, givenExtraArgsWhenConstructingArgsForCMakeThenAppendThemAtTheEnd) {
     const char *argv[] = {"cmag", "cmake", "..", "-B", "bbb"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     ArgumentParser parser{argc, argv};
