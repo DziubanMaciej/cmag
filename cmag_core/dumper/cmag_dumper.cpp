@@ -11,7 +11,17 @@
 
 #include <string_view>
 
-CmagResult CmagDumper::generateCmake(const fs::path &sourcePath, const fs::path &buildPath, std::vector<std::string> cmakeArgs, std::string_view extraTargetProperties, bool jsonDebug) {
+CmagDumper::CmagDumper(std::string_view projectName, bool generationDebug)
+    : projectName(projectName),
+      generationDebug(generationDebug) {}
+
+CmagDumper::~CmagDumper() {
+    if (!generationDebug) {
+        cleanupTemporaryFiles();
+    }
+}
+
+CmagResult CmagDumper::generateCmake(const fs::path &sourcePath, const fs::path &buildPath, std::vector<std::string> cmakeArgs, std::string_view extraTargetProperties) {
     // Shim original CMakeLists.txt and insert extra CMake code to query information about the build-system
     // and save it to a file.
     CMakeListsShimmer shimmer{sourcePath};
@@ -33,7 +43,7 @@ CmagResult CmagDumper::generateCmake(const fs::path &sourcePath, const fs::path 
     cmakeArgs.push_back(std::string{"-DCMAG_PROJECT_NAME="} + projectName);
     cmakeArgs.push_back(std::string{"-DCMAG_VERSION="} + cmagVersion.toString());
     cmakeArgs.push_back(std::string{"-DCMAG_EXTRA_TARGET_PROPERTIES="} + extraTargetProperties.data()); // this could be bad if string_view doesn't end with \0
-    cmakeArgs.push_back(std::string{"-DCMAG_JSON_DEBUG="} + std::to_string(jsonDebug));
+    cmakeArgs.push_back(std::string{"-DCMAG_JSON_DEBUG="} + std::to_string(generationDebug));
 
     // Prepare graphviz file
     {
@@ -72,12 +82,13 @@ CmagResult CmagDumper::readCmagProjectFromGeneration(const fs::path &buildPath) 
     std::vector<fs::path> targetsFiles = {};
     {
         std::string fileName = projectName + ".cmag-targets-list";
-        auto fileContent = readFile(buildPath / fileName.c_str());
+        fs::path file = buildPath / fileName;
+        auto fileContent = readFile(file);
         if (!fileContent.has_value()) {
             LOG_ERROR("failed to read ", fileName);
             return CmagResult::FileAccessError;
         }
-
+        temporaryFiles.push_back(file);
         ParseResult parseResult = CmagJsonParser::parseTargetsFilesListFile(fileContent.value(), targetsFiles);
         if (parseResult != ParseResult::Success) {
             LOG_ERROR("failed to parse ", fileName);
@@ -89,11 +100,13 @@ CmagResult CmagDumper::readCmagProjectFromGeneration(const fs::path &buildPath) 
     CmagGlobals globals = {};
     {
         std::string fileName = std::string(projectName) + ".cmag-globals";
-        auto fileContent = readFile(buildPath / fileName.c_str());
+        fs::path file = buildPath / fileName;
+        auto fileContent = readFile(file);
         if (!fileContent.has_value()) {
             LOG_ERROR("failed to read ", fileName);
             return CmagResult::FileAccessError;
         }
+        temporaryFiles.push_back(file);
         ParseResult parseResult = CmagJsonParser::parseGlobalsFile(fileContent.value(), globals);
         if (parseResult != ParseResult::Success) {
             LOG_ERROR("failed to parse ", fileName);
@@ -105,11 +118,13 @@ CmagResult CmagDumper::readCmagProjectFromGeneration(const fs::path &buildPath) 
     std::vector<CmagTarget> targets = {};
     {
         for (const fs::path &fileName : targetsFiles) {
-            auto fileContent = readFile(buildPath / fileName);
+            fs::path file = buildPath / fileName;
+            auto fileContent = readFile(file);
             if (!fileContent.has_value()) {
                 LOG_ERROR("failed to read ", fileName);
                 return CmagResult::FileAccessError;
             }
+            temporaryFiles.push_back(file);
             ParseResult parseResult = CmagJsonParser::parseTargetsFile(fileContent.value(), targets);
             if (parseResult != ParseResult::Success) {
                 LOG_ERROR("failed to parse ", fileName);
@@ -157,6 +172,7 @@ CmagResult CmagDumper::generateGraphPositionsForProject(const fs::path &buildPat
             LOG_ERROR("failed to read ", xdotPath);
             return CmagResult::FileAccessError;
         }
+        temporaryFiles.push_back(xdotPath);
         XdotParseResult parseResult = XdotParser::parse(xdotContent.value(), xdotData);
         if (parseResult != XdotParseResult::Success) {
             LOG_ERROR("failed to parse ", xdotPath, " (errorCode=", static_cast<int>(parseResult), ")");
@@ -191,6 +207,17 @@ CmagResult CmagDumper::writeProjectToFile(const fs::path &buildPath) {
     LOG_INFO("Successfully written project file to ", filePath.string());
     return CmagResult::Success;
 }
+
+CmagResult CmagDumper::cleanupTemporaryFiles() {
+    for (const fs::path &file : temporaryFiles) {
+        if (fs::exists(file)) {
+            fs::remove(file);
+        }
+    }
+    temporaryFiles.clear();
+    return CmagResult::Success;
+}
+
 CmagResult CmagDumper::launchProjectInGui(const fs::path &buildPath) {
     const fs::path browserBinaryPath = getExeLocation().parent_path() / CMAG_BROWSER_BINARY_NAME;
 

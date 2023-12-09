@@ -34,11 +34,14 @@ int main(int argc, const char **argv) {
         return 1;
     }
 
-    CmagDumper dumper{argParser.getProjectName()};
-    RETURN_ERROR(dumper.generateCmake(argParser.getSourcePath(), argParser.getBuildPath(), argParser.constructArgsForCmake(), argParser.getExtraTargetProperties(), argParser.getJsonDebug()));
+    CmagDumper dumper{argParser.getProjectName(), argParser.getJsonDebug()};
+    RETURN_ERROR(dumper.generateCmake(argParser.getSourcePath(), argParser.getBuildPath(), argParser.constructArgsForCmake(), argParser.getExtraTargetProperties()));
     RETURN_ERROR(dumper.readCmagProjectFromGeneration(argParser.getBuildPath()));
     RETURN_ERROR(dumper.generateGraphPositionsForProject(argParser.getBuildPath(), argParser.getGraphvizPath()));
     RETURN_ERROR(dumper.writeProjectToFile(argParser.getBuildPath()));
+    if (!argParser.getJsonDebug()) {
+        RETURN_ERROR(dumper.cleanupTemporaryFiles());
+    }
     if (argParser.getLaunchGui()) {
         RETURN_ERROR(dumper.launchProjectInGui(argParser.getBuildPath()));
     }
