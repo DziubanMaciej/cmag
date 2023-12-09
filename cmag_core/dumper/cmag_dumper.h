@@ -27,9 +27,8 @@ public:
     CmagResult launchProjectInGui(const fs::path &buildPath);
 
 protected:
-    bool generationDebug;
     std::string projectName;
-    CmagProject project;
-
+    bool generationDebug;
+    CmagProject project = {};
     std::vector<fs::path> temporaryFiles = {};
 };
