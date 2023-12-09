@@ -58,6 +58,5 @@ This is a current list of items left to do in this project. It may shrink and gr
   - [ ] Use a custom font.
   - [ ] Add a tooltip on target hovering.
   - [ ] Make ListFileTab look nicer with some icons. To achieve this, some [ImGui font magic](https://github.com/ocornut/imgui/blob/master/docs/FONTS.md) must be used.
-  - [ ] Hide debug controls from the UI. Add some option to show it. CMake option? Cmdline arg? Env variable?
   - [ ] Add warning in target folders tab when [USE_FOLDERS](https://cmake.org/cmake/help/latest/prop_gbl/USE_FOLDERS.html) is OFF. See also [CMP0143](https://cmake.org/cmake/help/latest/policy/CMP0143.html).
   - [ ] Fix tooltip rendering in tables. Currently, we calculate area to check for hover based on size of the text. But this text could be shorter or longer than the table cell, so it will be wrong. Looks like it isn't that simple. Maybe we could use sizes from previous frame?

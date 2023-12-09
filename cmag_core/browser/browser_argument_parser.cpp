@@ -18,7 +18,12 @@ BrowserArgumentParser::BrowserArgumentParser(int argc, const char **argv) {
         if (arg == "-v") {
             showVersion = true;
             validArg = true;
-        } else if (arg[0] != '-') {
+        } else if (arg == "-d") {
+            showDebugWidgets = true;
+            validArg = true;
+        } else if (arg[0] == '-') {
+            setErrorMessage(LOG_TO_STRING("Unknown option: ", arg));
+        } else {
             if (!projectFilePath.empty()) {
                 setErrorMessage(LOG_TO_STRING("Too many files specified: ", projectFilePath, ", ", arg));
             } else {
@@ -50,6 +55,7 @@ to render UI, graphs and menus and visualize you CMake project.
 
 Currently supported options:
     -v    show version of cmag_browser. This version is kept in sync with cmag.
+    -d    show debug widgets used for cmag_browser development.
 
 )DELIMETER";
     printf("%s", message);

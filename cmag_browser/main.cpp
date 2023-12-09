@@ -5,9 +5,9 @@
 #include "cmag_browser/components/target_folder_tab.h"
 #include "cmag_browser/components/target_graph_tab.h"
 #include "cmag_browser/ui_utils/cmag_browser_theme.h"
-#include "cmag_core/parse/cmag_json_parser.h"
 #include "cmag_core/browser/browser_argument_parser.h"
 #include "cmag_core/core/version.h"
+#include "cmag_core/parse/cmag_json_parser.h"
 #include "cmag_core/utils/error.h"
 #include "cmag_core/utils/file_utils.h"
 
@@ -63,7 +63,7 @@ void initializeImgui(GLFWwindow *window, const char *glslVersion) {
 int main(int argc, const char **argv) {
     // Parse arguments
     BrowserArgumentParser argParser{argc, argv};
-    if (argParser.getShowVersion()){
+    if (argParser.getShowVersion()) {
         LOG_INFO(cmagVersion.toString());
         return 0;
     }
@@ -88,12 +88,12 @@ int main(int argc, const char **argv) {
     // Init OpenGL
     const char *glslVersion = {};
     GLFWwindow *window = initializeWindow(true, &glslVersion);
-    if (window == nullptr){
+    if (window == nullptr) {
         LOG_ERROR("could not initialize OpenGL context");
         return 1;
     }
     glext::GetProcAddressFn getProcAddress = +[](const char *name) { return reinterpret_cast<void *>(::glfwGetProcAddress(name)); };
-    if (!glext::initialize(getProcAddress)){
+    if (!glext::initialize(getProcAddress)) {
         LOG_ERROR("could not initialize OpenGL extensions");
         return 1;
     }
@@ -107,7 +107,7 @@ int main(int argc, const char **argv) {
     // Init browser components
     CmagBrowserTheme theme = CmagBrowserTheme::createDarkTheme();
     ConfigSelector configSelector{theme, cmagProject};
-    TargetGraphTab targetGraphTab{theme, cmagProject, configSelector};
+    TargetGraphTab targetGraphTab{theme, cmagProject, configSelector, argParser.getShowDebugWidgets()};
     ListDirTab listFileTab{theme, cmagProject, targetGraphTab};
     TargetFolderTab targetFolderTab{theme, cmagProject, targetGraphTab};
     SummaryTab summaryTab{theme, cmagProject, configSelector};
@@ -134,7 +134,6 @@ int main(int argc, const char **argv) {
 
             if (ImGui::BeginTabItem("Target graph", nullptr, targetGraphTabFlags)) {
                 targetGraphTab.render(io);
-                targetGraphTabFlags = 0;
                 ImGui::EndTabItem();
             }
 

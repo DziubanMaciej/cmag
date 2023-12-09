@@ -9,7 +9,7 @@ class ConfigSelector;
 
 class TargetGraphTab {
 public:
-    TargetGraphTab(CmagBrowserTheme &theme, CmagProject &project, ConfigSelector &configSelector);
+    TargetGraphTab(CmagBrowserTheme &theme, CmagProject &project, ConfigSelector &configSelector, bool showDebugWidgets);
 
     void selectTargetAndFocus(CmagTarget *target);
     bool fetchForceSelection();
@@ -32,6 +32,7 @@ private:
     ConfigSelector &configSelector;
     int dependencyTypeComboSelection = static_cast<int>(CmakeDependencyType::DEFAULT);
     bool forceSelection = false;
+    bool showDebugWidgets;
 
     bool showDemoWindow = false;
     bool showStyleSelector = false;

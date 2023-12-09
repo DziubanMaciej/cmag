@@ -5,10 +5,11 @@
 #include "cmag_browser/ui_utils/tooltip.h"
 #include "cmag_core/utils/string_utils.h"
 
-TargetGraphTab::TargetGraphTab(CmagBrowserTheme &theme, CmagProject &project, ConfigSelector &configSelector)
+TargetGraphTab::TargetGraphTab(CmagBrowserTheme &theme, CmagProject &project, ConfigSelector &configSelector, bool showDebugWidgets)
     : theme(theme),
       targetGraph(theme, project.getTargets()),
-      configSelector(configSelector) {}
+      configSelector(configSelector),
+      showDebugWidgets(showDebugWidgets) {}
 
 void TargetGraphTab::selectTargetAndFocus(CmagTarget *target) {
     targetGraph.setSelectedTarget(target);
@@ -34,23 +35,25 @@ void TargetGraphTab::render(ImGuiIO &io) {
 }
 
 void TargetGraphTab::renderSidePane(float width) {
-    ImGui::Checkbox("Demo Window", &showDemoWindow);
-    if (showDemoWindow) {
-        ImGui::ShowDemoWindow(&showDemoWindow);
-    }
-
-    ImGui::Checkbox("Style selector", &showStyleSelector);
-    if (showStyleSelector) {
-        if (ImGui::Begin("StyleSelectorWindow")) {
-            ImGui::ShowStyleEditor(&ImGui::GetStyle());
-            ImGui::End();
+    if (showDebugWidgets) {
+        ImGui::Checkbox("Demo Window", &showDemoWindow);
+        if (showDemoWindow) {
+            ImGui::ShowDemoWindow(&showDemoWindow);
         }
-    }
 
-    renderSidePaneSlider("node size", width, 5, 40, targetGraph.getNodeScalePtr());
-    renderSidePaneSlider("text size", width, 3, 12, targetGraph.getTextScalePtr());
-    renderSidePaneSlider("arrow length", width, 1, 15, targetGraph.getArrowLengthScalePtr());
-    renderSidePaneSlider("arrow width", width, 1, 15, targetGraph.getArrowWidthScalePtr());
+        ImGui::Checkbox("Style selector", &showStyleSelector);
+        if (showStyleSelector) {
+            if (ImGui::Begin("StyleSelectorWindow")) {
+                ImGui::ShowStyleEditor(&ImGui::GetStyle());
+                ImGui::End();
+            }
+        }
+
+        renderSidePaneSlider("node size", width, 5, 40, targetGraph.getNodeScalePtr());
+        renderSidePaneSlider("text size", width, 3, 12, targetGraph.getTextScalePtr());
+        renderSidePaneSlider("arrow length", width, 1, 15, targetGraph.getArrowLengthScalePtr());
+        renderSidePaneSlider("arrow width", width, 1, 15, targetGraph.getArrowWidthScalePtr());
+    }
 
     configSelector.render(width);
     renderSidePaneDependencyTypeSelection(width);

@@ -12,6 +12,7 @@ public:
     const auto &getErrorMessage() const { return errorMessage; }
     const auto &getProjectFilePath() const { return projectFilePath; }
     auto getShowVersion() const { return showVersion; }
+    auto getShowDebugWidgets() const { return showDebugWidgets; }
 
     void printHelp();
 
@@ -22,4 +23,5 @@ private:
     std::string errorMessage = {};
     std::string projectFilePath = {};
     bool showVersion = false;
+    bool showDebugWidgets = false;
 };
