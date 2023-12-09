@@ -47,7 +47,6 @@ cmake --install .
 This is a current list of items left to do in this project. It may shrink and grow over time, but should be kept relatively up to date.
 - project wide
   - [ ] Add some presentation and screenshots of the browser in this README.
-  - [ ] Add cmag version. Store it in project files, return it from binaries and validate it when loading projects.
 - cmag
   - [ ] Explore if handling targets created in [included](https://cmake.org/cmake/help/latest/command/include.html) files is possible. Currently, we make it look as if they were created in CMakeLists.txt itself.
   - [ ] Explore if handling CMake `find_package()` is possible. Currently, we ignore these targets. We could probably get them from [cmake-file-api](https://cmake.org/cmake/help/latest/manual/cmake-file-api.7.html), but that would require an additional pass.

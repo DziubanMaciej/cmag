@@ -1,5 +1,6 @@
 #include "cmag.h"
 
+#include "cmag_core/core/version.h"
 #include "cmag_core/parse/cmag_json_parser.h"
 #include "cmag_core/parse/cmag_json_writer.h"
 #include "cmag_core/parse/xdot_parser.h"
@@ -30,6 +31,7 @@ CmagResult Cmag::generateCmake(const fs::path &sourcePath, const fs::path &build
 
     // Prepare CMake args
     cmakeArgs.push_back(std::string{"-DCMAG_PROJECT_NAME="} + projectName);
+    cmakeArgs.push_back(std::string{"-DCMAG_VERSION="} + cmagVersion.toString());
     cmakeArgs.push_back(std::string{"-DCMAG_EXTRA_TARGET_PROPERTIES="} + extraTargetProperties.data()); // this could be bad if string_view doesn't end with \0
     cmakeArgs.push_back(std::string{"-DCMAG_JSON_DEBUG="} + std::to_string(jsonDebug));
 

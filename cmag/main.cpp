@@ -1,5 +1,6 @@
 #include "cmag_core/core/argument_parser.h"
 #include "cmag_core/core/cmag.h"
+#include "cmag_core/core/version.h"
 #include "cmag_core/utils/error.h"
 
 #define RETURN_ERROR(expr)                \
@@ -13,11 +14,15 @@
 int main(int argc, const char **argv) {
     // Parse arguments
     ArgumentParser argParser{argc, argv};
-    const fs::path &sourcePath = argParser.getSourcePath();
+    if (argParser.getShowVersion()) {
+        LOG_INFO(cmagVersion.toString());
+        return 0;
+    }
     if (!argParser.isValid()) {
         argParser.printHelp();
         return 1;
     }
+    const fs::path &sourcePath = argParser.getSourcePath();
     if (sourcePath.empty()) {
         LOG_ERROR("empty source dir.\n");
         argParser.printHelp();

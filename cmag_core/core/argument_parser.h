@@ -15,6 +15,7 @@ public:
     const auto &getExtraTargetProperties() const { return extraTargetProperties; }
     auto getJsonDebug() const { return jsonDebug; }
     auto getLaunchGui() const { return launchGui; }
+    auto getShowVersion() const { return showVersion; }
 
     const auto &getSourcePath() const { return sourcePath; }
     const auto &getBuildPath() const { return buildPath; }
@@ -37,6 +38,7 @@ private:
     // Cmag args
     std::string projectName = {};
     std::string extraTargetProperties = {};
+    bool showVersion = false;
     bool jsonDebug = false;
     bool launchGui = false;
 

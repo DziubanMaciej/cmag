@@ -43,6 +43,10 @@ ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(a
             extraTargetProperties += value;
             validArg = true;
         }
+        if (arg == "-v") {
+            showVersion = true;
+            validArg = true;
+        }
         if (arg == "-d") {
             jsonDebug = true;
             validArg = true;
@@ -220,6 +224,7 @@ directory. All arguments are then passed verbatim to CMake. Output .cmag-project
 in CMake's build directory.
 
 Cmag supports a number of additional arguments, all of which must be specified before the CMake command.
+    -v    show version of cmag.
     -p    name of the project. Used in filename before .cmag-project extension. Default is "project".
     -e    extra properties. By default Cmag dumps a predefined list of CMake properties. The user can extend this list
           by additional properties. Multiple properties are delimited by a semicolon.
