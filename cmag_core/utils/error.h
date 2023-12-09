@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <sstream>
 
 [[noreturn]] inline void performAbort() {
     throw std::exception{};
