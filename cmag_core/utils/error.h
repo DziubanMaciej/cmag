@@ -38,4 +38,11 @@ inline void dumpLog(std::ostream &out, Arg &&arg, Args &&...args) {
 #define LOG_INFO(...) dumpLog(std::cout, __VA_ARGS__)
 #define LOG_ERROR(...) dumpLog(std::cerr, "ERROR: ", __VA_ARGS__)
 
+#define LOG_TO_STRING(...)            \
+    [&]() {                           \
+        std::ostringstream stream{};  \
+        dumpLog(stream, __VA_ARGS__); \
+        return stream.str();          \
+    }()
+
 #define UNREACHABLE_CODE FATAL_ERROR("Unreachable code")

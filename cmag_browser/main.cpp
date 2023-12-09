@@ -6,6 +6,8 @@
 #include "cmag_browser/components/target_graph_tab.h"
 #include "cmag_browser/ui_utils/cmag_browser_theme.h"
 #include "cmag_core/parse/cmag_json_parser.h"
+#include "cmag_core/browser/browser_argument_parser.h"
+#include "cmag_core/core/version.h"
 #include "cmag_core/utils/error.h"
 #include "cmag_core/utils/file_utils.h"
 
@@ -58,32 +60,57 @@ void initializeImgui(GLFWwindow *window, const char *glslVersion) {
     FATAL_ERROR_IF(!ImGui_ImplOpenGL3_Init(glslVersion), "failed to initialized Imgui for OpenGL");
 }
 
-int main(int argc, char **argv) {
-    FATAL_ERROR_IF(argc < 2, "Specify cmag project file.");
-    const char *cmagProjectJsonPath = argv[1];
-    const auto cmagProjectJson = readFile(cmagProjectJsonPath);
-    FATAL_ERROR_IF(!cmagProjectJson.has_value(), "could not read ", cmagProjectJsonPath);
+int main(int argc, const char **argv) {
+    // Parse arguments
+    BrowserArgumentParser argParser{argc, argv};
+    if (argParser.getShowVersion()){
+        LOG_INFO(cmagVersion.toString());
+        return 0;
+    }
+    if (!argParser.isValid()) {
+        LOG_ERROR(argParser.getErrorMessage());
+        argParser.printHelp();
+        return 1;
+    }
+
+    // Load cmag project
+    const auto cmagProjectJson = readFile(argParser.getProjectFilePath());
+    if (!cmagProjectJson.has_value()) {
+        LOG_ERROR("could not read project file ", argParser.getProjectFilePath());
+        return 1;
+    }
     CmagProject cmagProject = {};
-    FATAL_ERROR_IF(CmagJsonParser::parseProject(cmagProjectJson.value(), cmagProject) != ParseResult::Success, "could not parse ", cmagProjectJsonPath);
+    if (CmagJsonParser::parseProject(cmagProjectJson.value(), cmagProject) != ParseResult::Success) {
+        LOG_ERROR("could not parse project file ", argParser.getProjectFilePath());
+        return 1;
+    }
+
+    // Init OpenGL
     const char *glslVersion = {};
     GLFWwindow *window = initializeWindow(true, &glslVersion);
-    FATAL_ERROR_IF(window == nullptr, "failed to initialize graphics context");
-
+    if (window == nullptr){
+        LOG_ERROR("could not initialize OpenGL context");
+        return 1;
+    }
     glext::GetProcAddressFn getProcAddress = +[](const char *name) { return reinterpret_cast<void *>(::glfwGetProcAddress(name)); };
-    FATAL_ERROR_IF(!glext::initialize(getProcAddress), "failed to initialize OpenGL extensions");
+    if (!glext::initialize(getProcAddress)){
+        LOG_ERROR("could not initialize OpenGL extensions");
+        return 1;
+    }
 
+    // Init ImGui
     initializeImgui(window, glslVersion);
     ImGuiIO &io = ImGui::GetIO();
     io.IniFilename = nullptr;
     io.LogFilename = nullptr;
 
+    // Init browser components
     CmagBrowserTheme theme = CmagBrowserTheme::createDarkTheme();
     ConfigSelector configSelector{theme, cmagProject};
     TargetGraphTab targetGraphTab{theme, cmagProject, configSelector};
     ListDirTab listFileTab{theme, cmagProject, targetGraphTab};
     TargetFolderTab targetFolderTab{theme, cmagProject, targetGraphTab};
     SummaryTab summaryTab{theme, cmagProject, configSelector};
-
     theme.setup();
 
     while (!glfwWindowShouldClose(window)) {
