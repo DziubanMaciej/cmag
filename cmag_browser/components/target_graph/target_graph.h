@@ -36,6 +36,7 @@ public:
 
     void render();
     CmagTarget *getSelectedTarget() { return selectedTarget; }
+    CmagTarget *getFocusedTarget() { return focusedTarget; }
 
     auto getTexture() const { return framebuffer.colorTex; }
     auto getTextureWidth() const { return bounds.width; }

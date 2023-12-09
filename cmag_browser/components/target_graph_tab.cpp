@@ -215,6 +215,10 @@ void TargetGraphTab::renderGraph(ImGuiIO &io) {
         ImGui::SetCursorPosX(textureX);
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + (space.y - textureHeight) / 2);
         ImGui::Image(texture, ImVec2(textureWidth, textureHeight));
+
+        if (const CmagTarget *target = targetGraph.getFocusedTarget(); target != nullptr) {
+            ImGui::SetTooltip("%s\n(%s)", target->name.c_str(), cmagTargetTypeToString(target->type));
+        }
     }
 }
 
