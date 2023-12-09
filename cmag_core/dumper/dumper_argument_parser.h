@@ -4,9 +4,9 @@
 
 #include <vector>
 
-class ArgumentParser {
+class DumperArgumentParser {
 public:
-    ArgumentParser(int argc, const char **argv);
+    DumperArgumentParser(int argc, const char **argv);
 
     const auto &getExtraArgs() const { return extraArgs; }
     auto isValid() const { return valid; }

@@ -14,9 +14,9 @@ enum class CmagResult {
     ProjectCreationError,
 };
 
-class Cmag {
+class CmagDumper {
 public:
-    Cmag(std::string_view projectName) : projectName(projectName) {}
+    CmagDumper(std::string_view projectName) : projectName(projectName) {}
 
     CmagResult generateCmake(const fs::path &sourcePath, const fs::path &buildPath, std::vector<std::string> cmakeArgs, std::string_view extraTargetProperties, bool jsonDebug);
     CmagResult readCmagProjectFromGeneration(const fs::path &buildPath);

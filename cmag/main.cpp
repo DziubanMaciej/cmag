@@ -1,6 +1,6 @@
-#include "cmag_core/core/argument_parser.h"
-#include "cmag_core/core/cmag.h"
 #include "cmag_core/core/version.h"
+#include "cmag_core/dumper/cmag_dumper.h"
+#include "cmag_core/dumper/dumper_argument_parser.h"
 #include "cmag_core/utils/error.h"
 
 #define RETURN_ERROR(expr)                \
@@ -13,7 +13,7 @@
 
 int main(int argc, const char **argv) {
     // Parse arguments
-    ArgumentParser argParser{argc, argv};
+    DumperArgumentParser argParser{argc, argv};
     if (argParser.getShowVersion()) {
         LOG_INFO(cmagVersion.toString());
         return 0;
@@ -34,13 +34,13 @@ int main(int argc, const char **argv) {
         return 1;
     }
 
-    Cmag cmag{argParser.getProjectName()};
-    RETURN_ERROR(cmag.generateCmake(argParser.getSourcePath(), argParser.getBuildPath(), argParser.constructArgsForCmake(), argParser.getExtraTargetProperties(), argParser.getJsonDebug()));
-    RETURN_ERROR(cmag.readCmagProjectFromGeneration(argParser.getBuildPath()));
-    RETURN_ERROR(cmag.generateGraphPositionsForProject(argParser.getBuildPath(), argParser.getGraphvizPath()));
-    RETURN_ERROR(cmag.writeProjectToFile(argParser.getBuildPath()));
+    CmagDumper dumper{argParser.getProjectName()};
+    RETURN_ERROR(dumper.generateCmake(argParser.getSourcePath(), argParser.getBuildPath(), argParser.constructArgsForCmake(), argParser.getExtraTargetProperties(), argParser.getJsonDebug()));
+    RETURN_ERROR(dumper.readCmagProjectFromGeneration(argParser.getBuildPath()));
+    RETURN_ERROR(dumper.generateGraphPositionsForProject(argParser.getBuildPath(), argParser.getGraphvizPath()));
+    RETURN_ERROR(dumper.writeProjectToFile(argParser.getBuildPath()));
     if (argParser.getLaunchGui()) {
-        RETURN_ERROR(cmag.launchProjectInGui(argParser.getBuildPath()));
+        RETURN_ERROR(dumper.launchProjectInGui(argParser.getBuildPath()));
     }
     return 0;
 }

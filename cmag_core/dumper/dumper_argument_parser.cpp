@@ -1,10 +1,10 @@
-#include "argument_parser.h"
+#include "dumper_argument_parser.h"
 
 #include "cmag_core/utils/error.h"
 
 #include <cstring>
 
-ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(argv) {
+DumperArgumentParser::DumperArgumentParser(int argc, const char **argv) : argc(argc), argv(argv) {
     if (argc == 1) {
         valid = false;
         return;
@@ -125,8 +125,8 @@ ArgumentParser::ArgumentParser(int argc, const char **argv) : argc(argc), argv(a
     }
 }
 
-const char *ArgumentParser::parseKeyValueArgument(std::string_view prefix, int &argIndex, std::string_view currentArg,
-                                                  const char *nextArg) {
+const char *DumperArgumentParser::parseKeyValueArgument(std::string_view prefix, int &argIndex, std::string_view currentArg,
+                                                        const char *nextArg) {
     FATAL_ERROR_IF(prefix[0] != '-', "Prefix must start with a dash");
     const bool isLongArgName = prefix[1] == '-';
     FATAL_ERROR_IF(isLongArgName && prefix[2] == '-', "Prefix cannot have three dashes");
@@ -166,7 +166,7 @@ const char *ArgumentParser::parseKeyValueArgument(std::string_view prefix, int &
     return nullptr;
 }
 
-bool ArgumentParser::skipIrrelevantKeyValueArgument(int &argIndex, std::string_view currentArg) {
+bool DumperArgumentParser::skipIrrelevantKeyValueArgument(int &argIndex, std::string_view currentArg) {
     static const char *keyValueArgs[] = {
         "-G",
         "-P",
@@ -201,7 +201,7 @@ bool ArgumentParser::skipIrrelevantKeyValueArgument(int &argIndex, std::string_v
     return false;
 }
 
-std::vector<std::string> ArgumentParser::constructArgsForCmake() const {
+std::vector<std::string> DumperArgumentParser::constructArgsForCmake() const {
     std::vector<std::string> result = {};
     result.reserve(argc - 1 + extraArgs.size());
     for (int i = cmakeArgsStartIndex; i < argc; i++) {
@@ -213,7 +213,7 @@ std::vector<std::string> ArgumentParser::constructArgsForCmake() const {
     return result;
 }
 
-void ArgumentParser::printHelp() {
+void DumperArgumentParser::printHelp() {
     const char *message = R"DELIMETER(Usage
 
     cmag [cmag_args] <cmake_command> <cmake_args>

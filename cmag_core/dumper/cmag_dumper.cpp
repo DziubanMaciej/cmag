@@ -1,4 +1,4 @@
-#include "cmag.h"
+#include "cmag_dumper.h"
 
 #include "cmag_core/core/version.h"
 #include "cmag_core/parse/cmag_json_parser.h"
@@ -11,7 +11,7 @@
 
 #include <string_view>
 
-CmagResult Cmag::generateCmake(const fs::path &sourcePath, const fs::path &buildPath, std::vector<std::string> cmakeArgs, std::string_view extraTargetProperties, bool jsonDebug) {
+CmagResult CmagDumper::generateCmake(const fs::path &sourcePath, const fs::path &buildPath, std::vector<std::string> cmakeArgs, std::string_view extraTargetProperties, bool jsonDebug) {
     // Shim original CMakeLists.txt and insert extra CMake code to query information about the build-system
     // and save it to a file.
     CMakeListsShimmer shimmer{sourcePath};
@@ -67,7 +67,7 @@ CmagResult Cmag::generateCmake(const fs::path &sourcePath, const fs::path &build
     return CmagResult::Success;
 }
 
-CmagResult Cmag::readCmagProjectFromGeneration(const fs::path &buildPath) {
+CmagResult CmagDumper::readCmagProjectFromGeneration(const fs::path &buildPath) {
     // Read targets list
     std::vector<fs::path> targetsFiles = {};
     {
@@ -130,7 +130,7 @@ CmagResult Cmag::readCmagProjectFromGeneration(const fs::path &buildPath) {
 
     return CmagResult::Success;
 }
-CmagResult Cmag::generateGraphPositionsForProject(const fs::path &buildPath, const fs::path &graphvizPath) {
+CmagResult CmagDumper::generateGraphPositionsForProject(const fs::path &buildPath, const fs::path &graphvizPath) {
     // Perform .dot->.xdot conversion
     const std::string xdotPath = (buildPath / (projectName + ".xdot")).string();
     {
@@ -174,7 +174,7 @@ CmagResult Cmag::generateGraphPositionsForProject(const fs::path &buildPath, con
     return CmagResult::Success;
 }
 
-CmagResult Cmag::writeProjectToFile(const fs::path &buildPath) {
+CmagResult CmagDumper::writeProjectToFile(const fs::path &buildPath) {
     std::string fileName = std::string(projectName) + ".cmag-project";
     fs::path filePath = buildPath / fileName;
     std::ofstream outFile{filePath, std::ios::out};
@@ -191,7 +191,7 @@ CmagResult Cmag::writeProjectToFile(const fs::path &buildPath) {
     LOG_INFO("Successfully written project file to ", filePath.string());
     return CmagResult::Success;
 }
-CmagResult Cmag::launchProjectInGui(const fs::path &buildPath) {
+CmagResult CmagDumper::launchProjectInGui(const fs::path &buildPath) {
     const fs::path browserBinaryPath = getExeLocation().parent_path() / CMAG_BROWSER_BINARY_NAME;
 
     std::string fileName = std::string(projectName) + ".cmag-project";
