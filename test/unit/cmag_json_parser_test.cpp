@@ -53,7 +53,7 @@ TEST_F(CmagProjectParseTest, givenProjectWithNoTargetsAndNoGlobalsThenParseCorre
     }
     )DELIMETER");
     CmagProject project{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseProject(json, project));
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseProject(json, project).status);
     ASSERT_EQ(0u, project.getTargets().size());
     EXPECT_FALSE(project.getGlobals().darkMode);
 }
@@ -85,7 +85,7 @@ TEST_F(CmagProjectParseTest, givenProjectWithGlobalsSetThenParseCorrectly) {
         }
         )DELIMETER";
     CmagProject project{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseProject(json, project));
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseProject(json, project).status);
     CmagGlobals &globals = project.getGlobals();
     EXPECT_TRUE(globals.darkMode);
     EXPECT_STREQ(globals.selectedConfig.c_str(), "Z");
@@ -124,7 +124,7 @@ TEST_F(CmagProjectParseTest, givenTargetWithNoConfigsThenReturnError) {
     }
     )DELIMETER");
     CmagProject project{};
-    ASSERT_EQ(ParseResult::MissingField, CmagJsonParser::parseProject(json, project));
+    ASSERT_EQ(ParseResultStatus::MissingField, CmagJsonParser::parseProject(json, project).status);
 }
 
 TEST_F(CmagProjectParseTest, givenTargetWithNoPropertiesThenParseCorrectly) {
@@ -147,7 +147,7 @@ TEST_F(CmagProjectParseTest, givenTargetWithNoPropertiesThenParseCorrectly) {
     }
     )DELIMETER");
     CmagProject project{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseProject(json, project));
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseProject(json, project).status);
     ASSERT_EQ(1u, project.getTargets().size());
     const CmagTarget &target = project.getTargets()[0];
     EXPECT_STREQ("myTarget", target.name.c_str());
@@ -189,7 +189,7 @@ TEST_F(CmagProjectParseTest, givenTargetWithPropertiesThenParseCorrectly) {
     }
     )DELIMETER");
     CmagProject project{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseProject(json, project));
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseProject(json, project).status);
     ASSERT_EQ(1u, project.getTargets().size());
     const CmagTarget &target = project.getTargets()[0];
     EXPECT_STREQ("myTarget", target.name.c_str());
@@ -233,7 +233,7 @@ TEST_F(CmagProjectParseTest, givenTargetWithMultipleConfigsThenParseCorrectly) {
     }
     )DELIMETER");
     CmagProject project{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseProject(json, project));
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseProject(json, project).status);
     ASSERT_EQ(1u, project.getTargets().size());
     const CmagTarget &target = project.getTargets()[0];
     EXPECT_STREQ("myTarget", target.name.c_str());
@@ -298,7 +298,7 @@ TEST_F(CmagProjectParseTest, givenMultipleTargetsThenParseCorrectly) {
     }
     )DELIMETER");
     CmagProject project{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseProject(json, project));
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseProject(json, project).status);
     ASSERT_EQ(2u, project.getTargets().size());
 
     {
@@ -358,7 +358,7 @@ TEST_F(CmagProjectParseTest, givenVariousTargetTypesTheParseThemCorrectly) {
                                          typeString);
 
         CmagProject project{};
-        ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseProject(json, project));
+        ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseProject(json, project).status);
         ASSERT_EQ(1u, project.getTargets().size());
         const CmagTarget &target = project.getTargets()[0];
         EXPECT_STREQ("myTarget", target.name.c_str());
@@ -388,7 +388,7 @@ TEST_F(CmagProjectParseTest, givenTargetWithInvalidTypeThenReturnError) {
     }
     )DELIMETER");
     CmagProject project{};
-    ASSERT_EQ(ParseResult::InvalidValue, CmagJsonParser::parseProject(json, project));
+    ASSERT_EQ(ParseResultStatus::InvalidValue, CmagJsonParser::parseProject(json, project).status);
 }
 
 TEST_F(CmagProjectParseTest, givenTargetWithEmptyNameThenReturnError) {
@@ -406,7 +406,7 @@ TEST_F(CmagProjectParseTest, givenTargetWithEmptyNameThenReturnError) {
     }
     )DELIMETER");
     CmagProject project{};
-    ASSERT_EQ(ParseResult::InvalidValue, CmagJsonParser::parseProject(json, project));
+    ASSERT_EQ(ParseResultStatus::InvalidValue, CmagJsonParser::parseProject(json, project).status);
 }
 
 TEST(CmagTargetsFilesListFileParseTest, givenEmptyConfigsListThenParseCorrectly) {
@@ -414,7 +414,7 @@ TEST(CmagTargetsFilesListFileParseTest, givenEmptyConfigsListThenParseCorrectly)
     []
     )DELIMETER";
     std::vector<fs::path> files{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseTargetsFilesListFile(json, files));
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseTargetsFilesListFile(json, files).status);
     ASSERT_EQ(0u, files.size());
 }
 
@@ -423,7 +423,7 @@ TEST(CmagTargetsFilesListFileParseTest, givenOneConfigThenParseCorrectly) {
     [ "project_Debug.cmag-targets-list" ]
     )DELIMETER";
     std::vector<fs::path> files{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseTargetsFilesListFile(json, files));
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseTargetsFilesListFile(json, files).status);
     ASSERT_EQ(1u, files.size());
     EXPECT_EQ("project_Debug.cmag-targets-list", files[0]);
 }
@@ -437,7 +437,7 @@ TEST(CmagTargetsFilesListFileParseTest, givenMultipleConfigsThenParseCorrectly) 
     ]
     )DELIMETER";
     std::vector<fs::path> files{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseTargetsFilesListFile(json, files));
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseTargetsFilesListFile(json, files).status);
     ASSERT_EQ(3u, files.size());
     EXPECT_EQ("project_Debug.cmag-targets-list", files[0]);
     EXPECT_EQ("project_Release.cmag-targets-list", files[1]);
@@ -449,7 +449,7 @@ TEST(CmagGlobalsFileParseTest, givenEmptyGlobalsThenReturnError) {
     {}
     )DELIMETER";
     CmagGlobals globals{};
-    ASSERT_EQ(ParseResult::MissingField, CmagJsonParser::parseGlobalsFile(json, globals));
+    ASSERT_EQ(ParseResultStatus::MissingField, CmagJsonParser::parseGlobalsFile(json, globals).status);
     EXPECT_FALSE(globals.darkMode);
 }
 
@@ -472,7 +472,7 @@ TEST(CmagGlobalsFileParseTest, givenAllFieldsSpecifiedThenParseCorrectly) {
     }
     )DELIMETER";
     CmagGlobals globals{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseGlobalsFile(json, globals));
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseGlobalsFile(json, globals).status);
     EXPECT_TRUE(globals.darkMode);
     EXPECT_STREQ(globals.selectedConfig.c_str(), "Z");
     EXPECT_STREQ(globals.cmagVersion.c_str(), "A");
@@ -500,7 +500,7 @@ TEST(CmagTargetsFileParseTest, givenNoTargetsThenParseCorrectly) {
     }
     )DELIMETER";
     std::vector<CmagTarget> targets{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseTargetsFile(json, targets));
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseTargetsFile(json, targets).status);
     ASSERT_EQ(0u, targets.size());
 }
 
@@ -514,7 +514,7 @@ TEST(CmagTargetsFileParseTest, givenTargetWithNoConfigsThenReturnError) {
     }
     )DELIMETER";
     std::vector<CmagTarget> targets{};
-    ASSERT_EQ(ParseResult::MissingField, CmagJsonParser::parseTargetsFile(json, targets));
+    ASSERT_EQ(ParseResultStatus::MissingField, CmagJsonParser::parseTargetsFile(json, targets).status);
 }
 
 TEST(CmagTargetsFileParseTest, givenTargetWithNoPropertesThenParseCorrectly) {
@@ -534,7 +534,7 @@ TEST(CmagTargetsFileParseTest, givenTargetWithNoPropertesThenParseCorrectly) {
     }
     )DELIMETER";
     std::vector<CmagTarget> targets{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseTargetsFile(json, targets));
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseTargetsFile(json, targets).status);
     ASSERT_EQ(1u, targets.size());
 
     const CmagTarget &target = targets[0];
@@ -571,7 +571,7 @@ TEST(CmagTargetsFileParseTest, givenTargetWithNonGenexablePropertesThenParseCorr
     }
     )DELIMETER";
     std::vector<CmagTarget> targets{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseTargetsFile(json, targets));
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseTargetsFile(json, targets).status);
     ASSERT_EQ(1u, targets.size());
 
     const CmagTarget &target = targets[0];
@@ -623,7 +623,7 @@ TEST(CmagTargetsFileParseTest, givenMultipleTargetsThenParseCorrectly) {
     }
     )DELIMETER";
     std::vector<CmagTarget> targets{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseTargetsFile(json, targets));
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseTargetsFile(json, targets).status);
     ASSERT_EQ(2u, targets.size());
 
     {
@@ -681,7 +681,7 @@ TEST(CmagTargetsFileParseTest, givenTargetWithGenexablePropertesThenParseCorrect
     }
     )DELIMETER";
     std::vector<CmagTarget> targets{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseTargetsFile(json, targets));
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseTargetsFile(json, targets).status);
     ASSERT_EQ(1u, targets.size());
 
     const CmagTarget &target = targets[0];
@@ -722,7 +722,7 @@ TEST(CmagTargetsFileParseTest, givenTargetWithLinkOnlyGenexPropertesThenParseAnd
     }
     )DELIMETER";
     std::vector<CmagTarget> targets{};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseTargetsFile(json, targets));
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseTargetsFile(json, targets).status);
     ASSERT_EQ(1u, targets.size());
 
     const CmagTarget &target = targets[0];

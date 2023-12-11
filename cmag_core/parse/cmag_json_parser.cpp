@@ -4,56 +4,65 @@
 #include "cmag_core/parse/enum_serialization.h"
 #include "cmag_core/utils/error.h"
 
-#define RETURN_ERROR(expr)                 \
-    do {                                   \
-        const ParseResult r = (expr);      \
-        if ((r) != ParseResult::Success) { \
-            return (r);                    \
-        }                                  \
+#define RETURN_ERROR(expr)                              \
+    do {                                                \
+        const ParseResult r = (expr);                   \
+        if ((r.status) != ParseResultStatus::Success) { \
+            return (r);                                 \
+        }                                               \
     } while (false)
+
+ParseResult::ParseResult(ParseResultStatus status, const std::string &errorMessage)
+    : status(status),
+      errorMessage(errorMessage) {
+    const bool isSuccess = status == ParseResultStatus::Success;
+    FATAL_ERROR_IF(isSuccess != errorMessage.empty(), "Invalid parse result");
+}
+
+const ParseResult ParseResult::success(ParseResultStatus::Success, "");
 
 ParseResult CmagJsonParser::parseTargetsFilesListFile(std::string_view json, std::vector<fs::path> &outFiles) {
     const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);
     if (node.is_discarded()) {
-        return ParseResult::Malformed;
+        return {ParseResultStatus::Malformed, "File is malformed"};
     }
 
     if (!node.is_array()) {
-        return ParseResult::InvalidNodeType;
+        return {ParseResultStatus::InvalidNodeType, "Root node should be an array"};
     }
 
     for (const nlohmann::json &configNode : node) {
         if (!configNode.is_string()) {
-            return ParseResult::InvalidNodeType;
+            return {ParseResultStatus::InvalidNodeType, "Target should be a string value"};
         }
         outFiles.push_back(configNode.get<fs::path>());
     }
 
-    return ParseResult::Success;
+    return ParseResult::success;
 }
 
 ParseResult CmagJsonParser::parseGlobalsFile(std::string_view json, CmagGlobals &outGlobals) {
     const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);
     if (node.is_discarded()) {
-        return ParseResult::Malformed;
+        return {ParseResultStatus::Malformed, "File is malformed"};
     }
 
     if (!node.is_object()) {
-        return ParseResult::InvalidNodeType;
+        return {ParseResultStatus::InvalidNodeType, "Root node should be an object"};
     }
 
     RETURN_ERROR(parseGlobalValues(node, outGlobals));
 
-    return ParseResult::Success;
+    return ParseResult::success;
 }
 
 ParseResult CmagJsonParser::parseTargetsFile(std::string_view json, std::vector<CmagTarget> &outTargets) {
     const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);
     if (node.is_discarded()) {
-        return ParseResult::Malformed;
+        return {ParseResultStatus::Malformed, "File is malformed"};
     }
     if (!node.is_object()) {
-        return ParseResult::InvalidNodeType;
+        return {ParseResultStatus::InvalidNodeType, "Root node should be an object"};
     }
 
     return parseTargets(node, outTargets, false);
@@ -62,50 +71,46 @@ ParseResult CmagJsonParser::parseTargetsFile(std::string_view json, std::vector<
 ParseResult CmagJsonParser::parseProject(std::string_view json, CmagProject &outProject) {
     const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);
     if (node.is_discarded()) {
-        return ParseResult::Malformed;
+        return {ParseResultStatus::Malformed, "File is malformed"};
     }
 
     if (!node.is_object()) {
-        return ParseResult::InvalidNodeType;
+        return {ParseResultStatus::InvalidNodeType, "Root node should be an object"};
     }
 
     if (auto globalsNodeIt = node.find("globals"); globalsNodeIt != node.end()) {
         RETURN_ERROR(parseGlobalValues(*globalsNodeIt, outProject.getGlobals()));
     } else {
-        return ParseResult::MissingField;
+        return {ParseResultStatus::MissingField, "Missing globals node"};
     }
 
     if (auto targetsNodeIt = node.find("targets"); targetsNodeIt != node.end()) {
         std::vector<CmagTarget> targets{};
-        ParseResult result = parseTargets(*targetsNodeIt, targets, true);
-        if (result != ParseResult::Success) {
-            return result;
-        }
+        RETURN_ERROR(parseTargets(*targetsNodeIt, targets, true));
         for (CmagTarget &target : targets) {
+            const std::string targetName = target.name;
             bool addResult = outProject.addTarget(std::move(target));
             if (!addResult) {
-                return ParseResult::InvalidValue;
+                return {ParseResultStatus::MissingField, LOG_TO_STRING("Failed to add target ", targetName, " to the project")};
             }
         }
     } else {
-        return ParseResult::MissingField;
+        return {ParseResultStatus::MissingField, "Missing targets node"};
     }
 
     if (!outProject.deriveData()) {
-        return ParseResult::DataDerivationFailed;
+        // TODO return some meaningful string from data derivation
+        return {ParseResultStatus::DataDerivationFailed, "Data derivation failed"};
     }
-    return ParseResult::Success;
+    return ParseResult::success;
 }
 
 ParseResult CmagJsonParser::parseGlobalValues(const nlohmann::json &node, CmagGlobals &outGlobals) {
-    FATAL_ERROR_IF(!node.is_object(), "node should be an object"); // This should already be checked, hence assertion.
+    if (!node.is_object()) {
+        return {ParseResultStatus::InvalidNodeType, "Globals node should be an object"};
+    }
 
-#define PARSE_GLOBAL_FIELD(name)                                                                                   \
-    do {                                                                                                           \
-        if (ParseResult result = parseObjectField(node, #name, outGlobals.name); result != ParseResult::Success) { \
-            return result;                                                                                         \
-        }                                                                                                          \
-    } while (false)
+#define PARSE_GLOBAL_FIELD(name) RETURN_ERROR(parseObjectField(node, #name, outGlobals.name))
     PARSE_GLOBAL_FIELD(darkMode);
     PARSE_GLOBAL_FIELD(selectedConfig);
     PARSE_GLOBAL_FIELD(cmagVersion);
@@ -121,20 +126,17 @@ ParseResult CmagJsonParser::parseGlobalValues(const nlohmann::json &node, CmagGl
 #undef PARSE_GLOBAL_FIELD
 
     if (auto listDirsNodeIt = node.find("listDirs"); listDirsNodeIt != node.end()) {
-        ParseResult result = parseGlobalValueListDirs(*listDirsNodeIt, outGlobals);
-        if (result != ParseResult::Success) {
-            return result;
-        }
+        RETURN_ERROR(parseGlobalValueListDirs(*listDirsNodeIt, outGlobals));
     } else {
-        return ParseResult::MissingField;
+        return {ParseResultStatus::MissingField, "Missing listDirs node"};
     }
 
-    return ParseResult::Success;
+    return ParseResult::success;
 }
 
 ParseResult CmagJsonParser::parseGlobalValueListDirs(const nlohmann::json &node, CmagGlobals &outGlobals) {
     if (!node.is_object()) {
-        return ParseResult::InvalidNodeType;
+        return {ParseResultStatus::InvalidNodeType, "List dirs node should be an object"};
     }
 
     // First pass - gather all files
@@ -152,12 +154,12 @@ ParseResult CmagJsonParser::parseGlobalValueListDirs(const nlohmann::json &node,
 
         nlohmann::json childrenNode = listDirNodeIt.value();
         if (!childrenNode.is_array()) {
-            return ParseResult::InvalidNodeType;
+            return {ParseResultStatus::InvalidNodeType, "List dir's subdirs node should be an array"};
         }
 
         for (auto &childNodeIt : childrenNode) {
             if (!childNodeIt.is_string()) {
-                return ParseResult::InvalidNodeType;
+                return {ParseResultStatus::InvalidNodeType, "List dir's subdir should be a string"};
             }
 
             const std::string childName = childNodeIt.get<std::string>();
@@ -171,120 +173,98 @@ ParseResult CmagJsonParser::parseGlobalValueListDirs(const nlohmann::json &node,
             }
 
             if (!foundIndex) {
-                return ParseResult::MissingField;
+                return {ParseResultStatus::MissingField, LOG_TO_STRING("Invalid list dir's subdir mentioned: ", childName)};
             }
         }
     }
 
-    return ParseResult::Success;
+    return ParseResult::success;
 }
 
 ParseResult CmagJsonParser::parseTargets(const nlohmann::json &node, std::vector<CmagTarget> &outTargets, bool isProjectFile) {
     if (!node.is_object()) {
-        return ParseResult::InvalidNodeType;
+        return {ParseResultStatus::InvalidNodeType, "Targets node should be an object"};
     }
 
     for (auto targetNodeIt = node.begin(); targetNodeIt != node.end(); targetNodeIt++) {
         CmagTarget target{};
         target.name = targetNodeIt.key();
         if (target.name.empty()) {
-            return ParseResult::InvalidValue;
+            return {ParseResultStatus::InvalidValue, "Target name is empty"};
         }
 
-        ParseResult result = parseTarget(*targetNodeIt, target, isProjectFile);
-        if (result != ParseResult::Success) {
-            return result;
-        }
-
+        RETURN_ERROR(parseTarget(*targetNodeIt, target, isProjectFile));
         outTargets.push_back(std::move(target));
     }
 
-    return ParseResult::Success;
+    return ParseResult::success;
 }
 
 ParseResult CmagJsonParser::parseTarget(const nlohmann::json &node, CmagTarget &outTarget, bool isProjectFile) {
     FATAL_ERROR_IF(outTarget.name.empty(), "Parsing target with empty name");
 
     if (!node.is_object()) {
-        return ParseResult::InvalidNodeType;
+        return {ParseResultStatus::InvalidNodeType, "Target node should be an object"};
     }
 
-    ParseResult result = ParseResult::Success;
-
-    result = parseObjectField(node, "type", outTarget.type);
-    if (result != ParseResult::Success) {
-        return result;
-    }
+    RETURN_ERROR(parseObjectField(node, "type", outTarget.type));
     if (outTarget.type == CmagTargetType::Invalid) {
-        return ParseResult::InvalidValue;
+        return {ParseResultStatus::InvalidValue, LOG_TO_STRING("Invalid type specified for target ", outTarget.name)};
     }
 
     if (auto configsNodeIt = node.find("configs"); configsNodeIt != node.end()) {
-        result = parseConfigs(*configsNodeIt, outTarget, isProjectFile);
-        if (result != ParseResult::Success) {
-            return result;
-        }
+        RETURN_ERROR(parseConfigs(*configsNodeIt, outTarget, isProjectFile));
     } else {
-        return ParseResult::MissingField;
+        return {ParseResultStatus::MissingField, LOG_TO_STRING("Missing configs node for target ", outTarget.name)};
     }
 
     if (auto configsNodeIt = node.find("graphical"); configsNodeIt != node.end()) {
-        result = parseTargetGraphical(*configsNodeIt, outTarget.graphical);
-        if (result != ParseResult::Success) {
-            return result;
-        }
+        RETURN_ERROR(parseTargetGraphical(*configsNodeIt, outTarget.graphical));
     } else if (isProjectFile) {
-        return ParseResult::MissingField;
+        return {ParseResultStatus::MissingField, LOG_TO_STRING("Missing target graphical node for target ", outTarget.name)};
     }
 
-    result = parseObjectField(node, "listDir", outTarget.listDirName);
-    if (result != ParseResult::Success) {
-        return result;
-    }
+    RETURN_ERROR(parseObjectField(node, "listDir", outTarget.listDirName));
 
-    return ParseResult::Success;
+    return ParseResult::success;
 }
 
 ParseResult CmagJsonParser::parseConfigs(const nlohmann::json &node, CmagTarget &outTarget, bool isProjectFile) {
     if (!node.is_object()) {
-        return ParseResult::InvalidNodeType;
+        return {ParseResultStatus::InvalidNodeType, "Configs node should be an object"};
     }
 
     if (node.empty()) {
-        return ParseResult::MissingField;
+        return {ParseResultStatus::MissingField, LOG_TO_STRING("No configs specified for target ", outTarget.name)};
     }
 
     for (auto configIt = node.begin(); configIt != node.end(); configIt++) {
         CmagTargetConfig &config = outTarget.getOrCreateConfig(configIt.key());
-        ParseResult result = ParseResult::Success;
         if (isProjectFile) {
-            result = parseConfigInProjectFile(*configIt, config);
+            RETURN_ERROR(parseConfigInProjectFile(*configIt, config));
         } else {
-            result = parseConfigInTargetsFile(*configIt, config);
-        }
-
-        if (result != ParseResult::Success) {
-            return result;
+            RETURN_ERROR(parseConfigInTargetsFile(*configIt, config, outTarget.name.c_str()));
         }
     }
 
-    return ParseResult::Success;
+    return ParseResult::success;
 }
 
 ParseResult CmagJsonParser::parseConfigInProjectFile(const nlohmann::json &node, CmagTargetConfig &outConfig) {
     if (!node.is_object()) {
-        return ParseResult::InvalidNodeType;
+        return {ParseResultStatus::InvalidNodeType, "Config node should be an object"};
     }
 
     for (auto it = node.begin(); it != node.end(); it++) {
         CmagTargetProperty property = {it.key(), it.value()};
         outConfig.properties.push_back(std::move(property));
     }
-    return ParseResult::Success;
+    return ParseResult::success;
 }
-ParseResult CmagJsonParser::parseConfigInTargetsFile(const nlohmann::json &node, CmagTargetConfig &outConfig) {
+
+ParseResult CmagJsonParser::parseConfigInTargetsFile(const nlohmann::json &node, CmagTargetConfig &outConfig, const char *targetName) {
     if (!node.is_object()) {
-        return ParseResult::InvalidNodeType;
+        return {ParseResultStatus::InvalidNodeType, "Config node should be an object"};
     }
 
     if (auto propertiesNodeIt = node.find("non_genexable"); propertiesNodeIt != node.end()) {
@@ -293,7 +273,7 @@ ParseResult CmagJsonParser::parseConfigInTargetsFile(const nlohmann::json &node,
             outConfig.properties.push_back(std::move(property));
         }
     } else {
-        return ParseResult::MissingField;
+        return {ParseResultStatus::MissingField, LOG_TO_STRING("Missing non_genexable field for ", targetName)};
     }
 
     if (auto propertiesNodeIt = node.find("genexable_evaled"); propertiesNodeIt != node.end()) {
@@ -302,7 +282,7 @@ ParseResult CmagJsonParser::parseConfigInTargetsFile(const nlohmann::json &node,
             outConfig.properties.push_back(std::move(property));
         }
     } else {
-        return ParseResult::MissingField;
+        return {ParseResultStatus::MissingField, LOG_TO_STRING("Missing genexable_evaled field for ", targetName)};
     }
 
     if (auto propertiesNodeIt = node.find("genexable"); propertiesNodeIt != node.end()) {
@@ -311,33 +291,29 @@ ParseResult CmagJsonParser::parseConfigInTargetsFile(const nlohmann::json &node,
             outConfig.fixupWithNonEvaled(it.key(), propertyValue);
         }
     } else {
-        return ParseResult::MissingField;
+        return {ParseResultStatus::MissingField, LOG_TO_STRING("Missing genexable field for ", targetName)};
     }
 
-    return ParseResult::Success;
+    return ParseResult::success;
 }
 
 ParseResult CmagJsonParser::parseTargetGraphical(const nlohmann::json &node, CmagTargetGraphicalData &outGraphical) {
     if (!node.is_object()) {
-        return ParseResult::InvalidNodeType;
+        return {ParseResultStatus::InvalidNodeType, "Target graphical node should be an object"};
     }
 
-    if (ParseResult result = parseObjectField(node, "x", outGraphical.x); result != ParseResult::Success) {
-        return result;
-    }
-    if (ParseResult result = parseObjectField(node, "y", outGraphical.y); result != ParseResult::Success) {
-        return result;
-    }
+    RETURN_ERROR(parseObjectField(node, "x", outGraphical.x));
+    RETURN_ERROR(parseObjectField(node, "y", outGraphical.y));
 
-    return ParseResult::Success;
+    return ParseResult::success;
 }
 
 template <typename DstT>
 ParseResult CmagJsonParser::parseObjectField(const nlohmann::json &node, const char *name, DstT &dst) {
     if (auto it = node.find(name); it != node.end()) {
         dst = it->get<DstT>();
-        return ParseResult::Success;
+        return ParseResult::success;
     } else {
-        return ParseResult::MissingField;
+        return { ParseResultStatus::MissingField, LOG_TO_STRING("Missing ", name, " field") };
     }
 }

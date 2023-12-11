@@ -11,9 +11,9 @@ struct CmagWriterParserTest : ::testing::Test {
 
         CmagProject derivedProject{};
         const auto parseResult = CmagJsonParser::parseProject(json.c_str(), derivedProject);
-        if (parseResult != ParseResult::Success && parseResult != ParseResult::DataDerivationFailed) {
+        if (parseResult.status != ParseResultStatus::Success && parseResult.status != ParseResultStatus::DataDerivationFailed) {
             // We can allow data derivation failure, since it's not important here
-            ASSERT_EQ(ParseResult::Success, parseResult);
+            ASSERT_EQ(ParseResultStatus::Success, parseResult.status);
         }
 
         compareProjects(initialProject, derivedProject);

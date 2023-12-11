@@ -112,7 +112,8 @@ TEST_P(CmagTest, givenProjectWrittenToFileThenItCanBeParsedBack) {
     ASSERT_TRUE(projectJson.has_value());
 
     CmagProject parsedProject = {};
-    ASSERT_EQ(ParseResult::Success, CmagJsonParser::parseProject(projectJson.value(), parsedProject));
+    const ParseResult parseResult = CmagJsonParser::parseProject(projectJson.value(), parsedProject);
+    ASSERT_EQ(ParseResultStatus::Success, parseResult.status);
 
     ASSERT_EQ(1u, parsedProject.getTargets().size());
     const CmagTarget &target = parsedProject.getTargets()[0];

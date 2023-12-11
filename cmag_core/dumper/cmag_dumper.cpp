@@ -89,9 +89,9 @@ CmagResult CmagDumper::readCmagProjectFromGeneration(const fs::path &buildPath) 
             return CmagResult::FileAccessError;
         }
         temporaryFiles.push_back(file);
-        ParseResult parseResult = CmagJsonParser::parseTargetsFilesListFile(fileContent.value(), targetsFiles);
-        if (parseResult != ParseResult::Success) {
-            LOG_ERROR("failed to parse ", fileName);
+        const ParseResult parseResult = CmagJsonParser::parseTargetsFilesListFile(fileContent.value(), targetsFiles);
+        if (parseResult.status != ParseResultStatus::Success) {
+            LOG_ERROR("failed to parse ", fileName, ". ", parseResult.errorMessage);
             return CmagResult::JsonParseError;
         }
     }
@@ -107,9 +107,9 @@ CmagResult CmagDumper::readCmagProjectFromGeneration(const fs::path &buildPath) 
             return CmagResult::FileAccessError;
         }
         temporaryFiles.push_back(file);
-        ParseResult parseResult = CmagJsonParser::parseGlobalsFile(fileContent.value(), globals);
-        if (parseResult != ParseResult::Success) {
-            LOG_ERROR("failed to parse ", fileName);
+        const ParseResult parseResult = CmagJsonParser::parseGlobalsFile(fileContent.value(), globals);
+        if (parseResult.status != ParseResultStatus::Success) {
+            LOG_ERROR("failed to parse ", fileName, ". ", parseResult.errorMessage);
             return CmagResult::JsonParseError;
         }
     }
@@ -125,9 +125,9 @@ CmagResult CmagDumper::readCmagProjectFromGeneration(const fs::path &buildPath) 
                 return CmagResult::FileAccessError;
             }
             temporaryFiles.push_back(file);
-            ParseResult parseResult = CmagJsonParser::parseTargetsFile(fileContent.value(), targets);
-            if (parseResult != ParseResult::Success) {
-                LOG_ERROR("failed to parse ", fileName);
+            const ParseResult parseResult = CmagJsonParser::parseTargetsFile(fileContent.value(), targets);
+            if (parseResult.status != ParseResultStatus::Success) {
+                LOG_ERROR("failed to parse ", fileName, ". ", parseResult.errorMessage);
                 return CmagResult::JsonParseError;
             }
         }

@@ -80,8 +80,9 @@ int main(int argc, const char **argv) {
         return 1;
     }
     CmagProject cmagProject = {};
-    if (CmagJsonParser::parseProject(cmagProjectJson.value(), cmagProject) != ParseResult::Success) {
-        LOG_ERROR("could not parse project file ", argParser.getProjectFilePath());
+    const ParseResult projectParseResult = CmagJsonParser::parseProject(cmagProjectJson.value(), cmagProject);
+    if (projectParseResult.status != ParseResultStatus::Success) {
+        LOG_ERROR("could not parse project file ", argParser.getProjectFilePath(), ". ", projectParseResult.errorMessage);
         return 1;
     }
 

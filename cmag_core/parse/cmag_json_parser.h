@@ -11,13 +11,23 @@ struct CmagGlobals;
 struct CmagTargetConfig;
 struct CmagTargetGraphicalData;
 
-enum class ParseResult {
+enum class ParseResultStatus {
     Success,
     Malformed,
     InvalidNodeType,
     InvalidValue,
     MissingField,
     DataDerivationFailed,
+};
+
+
+struct ParseResult {
+    ParseResult(ParseResultStatus status, const std::string &errorMessage);
+
+    ParseResultStatus status = ParseResultStatus::Success;
+    std::string errorMessage = {};
+
+    const static ParseResult success;
 };
 
 class CmagJsonParser {
@@ -37,7 +47,7 @@ private:
 
     static ParseResult parseConfigs(const nlohmann::json &node, CmagTarget &outTarget, bool isProjectFile);
     static ParseResult parseConfigInProjectFile(const nlohmann::json &node, CmagTargetConfig &outConfig);
-    static ParseResult parseConfigInTargetsFile(const nlohmann::json &node, CmagTargetConfig &outConfig);
+    static ParseResult parseConfigInTargetsFile(const nlohmann::json &node, CmagTargetConfig &outConfig, const char *targetName);
 
     static ParseResult parseTargetGraphical(const nlohmann::json &node, CmagTargetGraphicalData &outGraphical);
 
