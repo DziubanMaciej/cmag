@@ -20,7 +20,6 @@ enum class ParseResultStatus {
     DataDerivationFailed,
 };
 
-
 struct ParseResult {
     ParseResult(ParseResultStatus status, const std::string &errorMessage);
 
