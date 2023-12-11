@@ -314,6 +314,6 @@ ParseResult CmagJsonParser::parseObjectField(const nlohmann::json &node, const c
         dst = it->get<DstT>();
         return ParseResult::success;
     } else {
-        return { ParseResultStatus::MissingField, LOG_TO_STRING("Missing ", name, " field") };
+        return {ParseResultStatus::MissingField, LOG_TO_STRING("Missing ", name, " field")};
     }
 }
