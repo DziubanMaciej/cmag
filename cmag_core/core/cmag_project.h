@@ -84,7 +84,7 @@ struct CmagTargetConfig {
         std::vector<const CmagTarget *> buildDependencies = {}; // based on LINK_LIBRARIES + MANUALLY_ADDED_DEPENDENCIES
     } derived = {};
 
-    void deriveData(const std::vector<CmagTarget> &targets);
+    void deriveData(std::vector<CmagTarget> &targets);
     void fixupWithNonEvaled(std::string_view propertyName, std::string_view nonEvaledValue);
     CmagTargetProperty *findProperty(std::string_view propertyName);
     const CmagTargetProperty *findProperty(std::string_view propertyName) const;
@@ -108,6 +108,9 @@ struct CmagTarget {
     void *userData = {};
     std::string listDirName = {};
     bool isImported = false;
+    struct {
+        bool isReferenced = false; // whether this target is a dependency of some other target
+    } derived = {};
 
     const CmagTargetConfig *tryGetConfig(std::string_view configName) const;
     CmagTargetConfig &getOrCreateConfig(std::string_view configName);
@@ -115,7 +118,7 @@ struct CmagTarget {
 
 private:
     friend CmagProject;
-    void deriveData(const std::vector<CmagTarget> &targets);
+    void deriveData(std::vector<CmagTarget> &targets);
     void deriveDataPropertyConsistency();
 };
 
