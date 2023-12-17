@@ -62,6 +62,7 @@ nlohmann::json CmagJsonWriter::createTargetNode(const CmagTarget &target) {
     node["configs"] = createConfigsNode(target.configs);
     node["graphical"] = createTargetGraphicalNode(target.graphical);
     node["listDir"] = target.listDirName;
+    node["isImported"] = target.isImported;
     return node;
 }
 

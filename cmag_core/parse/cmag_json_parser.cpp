@@ -212,6 +212,8 @@ ParseResult CmagJsonParser::parseTarget(const nlohmann::json &node, CmagTarget &
         return {ParseResultStatus::InvalidValue, LOG_TO_STRING("Invalid type specified for target ", outTarget.name)};
     }
 
+    RETURN_ERROR(parseObjectField(node, "isImported", outTarget.isImported));
+
     if (auto configsNodeIt = node.find("configs"); configsNodeIt != node.end()) {
         RETURN_ERROR(parseConfigs(*configsNodeIt, outTarget, isProjectFile));
     } else {

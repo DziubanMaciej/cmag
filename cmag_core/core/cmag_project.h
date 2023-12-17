@@ -107,6 +107,7 @@ struct CmagTarget {
     CmagTargetGraphicalData graphical = {};
     void *userData = {};
     std::string listDirName = {};
+    bool isImported = false;
 
     const CmagTargetConfig *tryGetConfig(std::string_view configName) const;
     CmagTargetConfig &getOrCreateConfig(std::string_view configName);
