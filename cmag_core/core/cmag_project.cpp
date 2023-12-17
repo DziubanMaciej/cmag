@@ -18,6 +18,10 @@ const char *cmagTargetTypeToString(CmagTargetType type) {
         return "object library";
     case CmagTargetType::InterfaceLibrary:
         return "interface library";
+    case CmagTargetType::UnknownLibrary:
+        return "unknown library";
+    case CmagTargetType::UnknownTarget:
+        return "unknown target";
     case CmagTargetType::Executable:
         return "executable";
     case CmagTargetType::Utility:

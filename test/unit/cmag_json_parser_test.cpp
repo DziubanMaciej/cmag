@@ -332,9 +332,12 @@ TEST_F(CmagProjectParseTest, givenVariousTargetTypesTheParseThemCorrectly) {
         {CmagTargetType::SharedLibrary, "SHARED_LIBRARY"},
         {CmagTargetType::ObjectLibrary, "OBJECT_LIBRARY"},
         {CmagTargetType::InterfaceLibrary, "INTERFACE_LIBRARY"},
+        {CmagTargetType::UnknownLibrary, "UNKNOWN_LIBRARY"},
+        {CmagTargetType::UnknownTarget, "UNKNOWN"},
         {CmagTargetType::Utility, "UTILITY"},
         {CmagTargetType::Executable, "EXECUTABLE"},
     };
+    static_assert(sizeof(cases) / sizeof(cases[0]) == static_cast<int>(CmagTargetType::COUNT) - 1); // do not parse INVALID, hence the minus one
 
     for (auto [type, typeString] : cases) {
         const char *json = insertGlobals(R"DELIMETER(
