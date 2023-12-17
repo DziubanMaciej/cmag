@@ -45,6 +45,7 @@ extern PFNGLUNIFORM2FPROC glUniform2f;
 extern PFNGLUNIFORM3FPROC glUniform3f;
 extern PFNGLUNIFORM3FVPROC glUniform3fv;
 extern PFNGLUNIFORMMATRIX4FVPROC glUniformMatrix4fv;
+extern PFNGLUNIFORM2IPROC glUniform2i;
 
 extern PFNGLGENFRAMEBUFFERSPROC glGenFramebuffers;
 extern PFNGLBINDFRAMEBUFFEREXTPROC glBindFramebuffer;

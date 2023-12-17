@@ -53,6 +53,7 @@ void TargetGraphTab::renderSidePane(float width) {
         renderSidePaneSlider("text size", width, 3, 12, targetGraph.getTextScalePtr());
         renderSidePaneSlider("arrow length", width, 1, 15, targetGraph.getArrowLengthScalePtr());
         renderSidePaneSlider("arrow width", width, 1, 15, targetGraph.getArrowWidthScalePtr());
+        renderSidePaneSlider("stipple", width, 0.005, 0.1, targetGraph.getLineStippleScalePtr());
     }
 
     configSelector.render(width);

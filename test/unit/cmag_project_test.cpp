@@ -176,20 +176,24 @@ TEST(CmagProjectTest, givenTargetsWithDependenciesWhenDerivingDataThenDependenci
         "target",
         {
             {"LINK_LIBRARIES", "dep1;dep2"},
+            {"INTERFACE_LINK_LIBRARIES", "dep4"},
             {"MANUALLY_ADDED_DEPENDENCIES", "depExternal;dep3"},
         })));
     EXPECT_TRUE(project.addTarget(createTarget("dep1", {})));
     EXPECT_TRUE(project.addTarget(createTarget("dep2", {})));
     EXPECT_TRUE(project.addTarget(createTarget("dep3", {})));
+    EXPECT_TRUE(project.addTarget(createTarget("dep4", {})));
 
     ASSERT_TRUE(project.deriveData());
 
     const std::vector<CmagTarget> &targets = project.getTargets();
-    ASSERT_EQ(4u, targets.size());
+    ASSERT_EQ(5u, targets.size());
     const CmagTargetConfig &targetConfig = targets[0].configs[0];
     const std::vector<const CmagTarget *> expectedLinkDependencies = {&targets[1], &targets[2]};
+    const std::vector<const CmagTarget *> expectedLinkInterfaceDependencies = {&targets[4]};
     const std::vector<const CmagTarget *> expectedBuildDependencies = {&targets[1], &targets[2], &targets[3]};
     EXPECT_EQ(expectedLinkDependencies, targetConfig.derived.linkDependencies);
+    EXPECT_EQ(expectedLinkInterfaceDependencies, targetConfig.derived.linkInterfaceDependencies);
     EXPECT_EQ(expectedBuildDependencies, targetConfig.derived.buildDependencies);
 }
 

@@ -266,6 +266,11 @@ void CmagTargetConfig::deriveData(std::vector<CmagTarget> &targets) {
         derived.buildDependencies = derived.linkDependencies;
     }
 
+    if (auto property = findProperty("INTERFACE_LINK_LIBRARIES"); property != nullptr) {
+        std::vector<std::string_view> dependencies = splitCmakeListString(property->value, false);
+        addTargetsToVector(dependencies, derived.linkInterfaceDependencies);
+    }
+
     if (auto property = findProperty("MANUALLY_ADDED_DEPENDENCIES"); property != nullptr) {
         std::vector<std::string_view> dependencies = splitCmakeListString(property->value, false);
         addTargetsToVector(dependencies, derived.buildDependencies);
