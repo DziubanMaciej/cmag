@@ -46,6 +46,7 @@ public:
     auto getTextScalePtr() { return &textScale; }
     auto getArrowLengthScalePtr() { return &arrowLengthScale; }
     auto getArrowWidthScalePtr() { return &arrowWidthScale; }
+    auto getLineStippleScalePtr() { return &lineStippleScale; }
 
     void refreshModelMatrices();
     void refreshConnections();
@@ -71,6 +72,7 @@ private:
     float textScale = 3.f;
     float arrowLengthScale = 9.3f;
     float arrowWidthScale = 3.15f;
+    float lineStippleScale = 0.02f;
 
     // Every target has a void* userData field to track custom, gui-specific data. We allocate a vector of our data structs
     // and bind them to each target.
@@ -125,9 +127,18 @@ private:
     // There are connections between the targets, which graphically represent dependencies. We keep a vertex buffer and
     // rebuild it when necessary (e.g. when nodes are moved).
     struct Connections {
-        size_t lineDataOffset = {};
-        size_t triangleDataOffset = {};
-        size_t count = {};
+        struct {
+            size_t offset = {};
+            size_t count = {};
+        } lines = {};
+        struct {
+            size_t offset = {};
+            size_t count = {};
+        } stippledLines = {};
+        struct {
+            size_t offset = {};
+            size_t count = {};
+        } triangles = {};
         struct {
             GLuint vbo = {};
             GLuint vao = {};
@@ -159,6 +170,7 @@ private:
         struct {
             GLint depthValue = {};
             GLint transform = {};
+            GLint stippleData = {};
             GLint color = {};
         } uniformLocation = {};
 

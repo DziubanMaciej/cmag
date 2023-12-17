@@ -136,6 +136,7 @@ void TargetGraph::render() {
         const auto modelMatrix = TargetData::get(*target).modelMatrix;
         const auto transform = projectionMatrix * modelMatrix;
         SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(transform)));
+        SAFE_GL(glUniform2i(program.uniformLocation.stippleData, 1, 1));
 
         // Render solid portion of the node
         if (target == selectedTarget) {
@@ -165,8 +166,11 @@ void TargetGraph::render() {
     SAFE_GL(glEnableVertexAttribArray(0));
     SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(projectionMatrix)));
     SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, colorConnection));
-    SAFE_GL(glDrawArrays(GL_LINES, connections.lineDataOffset, connections.count * 2));
-    SAFE_GL(glDrawArrays(GL_TRIANGLES, connections.triangleDataOffset, connections.count * 3));
+    SAFE_GL(glDrawArrays(GL_TRIANGLES, connections.triangles.offset, connections.triangles.count));
+    SAFE_GL(glDrawArrays(GL_LINES, connections.lines.offset, connections.lines.count));
+    const auto stippleSize = static_cast<GLint>(static_cast<float>(bounds.width) * lineStippleScale);
+    SAFE_GL(glUniform2i(program.uniformLocation.stippleData, stippleSize, stippleSize / 2));
+    SAFE_GL(glDrawArrays(GL_LINES, connections.stippledLines.offset, connections.stippledLines.count));
     SAFE_GL(glUseProgram(0));
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
@@ -418,12 +422,14 @@ void TargetGraph::Connections::allocate(const std::vector<CmagTarget *> &targets
     // First calculate the greatest amount of connections we can have
     size_t maxConnectionsCount = 0;
     for (const CmagTarget *target : targets) {
-        size_t currentMaxCount = 0;
+        size_t maxCountForTarget = 0;
         for (const CmagTargetConfig &config : target->configs) {
-            currentMaxCount = std::max(currentMaxCount, config.derived.linkDependencies.size());
-            currentMaxCount = std::max(currentMaxCount, config.derived.buildDependencies.size());
+            size_t maxCountForConfig = std::max(config.derived.linkDependencies.size(), config.derived.buildDependencies.size());
+            maxCountForConfig += config.derived.linkInterfaceDependencies.size();
+
+            maxCountForTarget = std::max(maxCountForTarget, maxCountForConfig);
         }
-        maxConnectionsCount += currentMaxCount;
+        maxConnectionsCount += maxCountForTarget;
     }
 
     // Each connection is represented by two vertices
@@ -439,58 +445,78 @@ void TargetGraph::Connections::deallocate() {
 }
 
 void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale) {
-    count = 0;
+    auto addSegment = [&](const CmagTarget &srcTarget, const CmagTarget &dstTarget, std::vector<float> &outLineData, std::vector<float> &outTriangleData) {
+        const Vec srcCenter{srcTarget.graphical.x, srcTarget.graphical.y};
+        const Vec dstCenter{dstTarget.graphical.x, dstTarget.graphical.y};
+        Segment connection{srcCenter, dstCenter};
+
+        // Trim the connection, so it doesn't get inside the shape
+        const float parameterStart = calculateSegmentTrimParameter(srcTarget, connection, shapes, true);
+        const float parameterEnd = calculateSegmentTrimParameter(dstTarget, connection, shapes, false);
+        if (parameterStart >= parameterEnd) {
+            return false;
+        }
+        trimSegment(connection, parameterStart, parameterEnd);
+
+        // Add segment to our data
+        outLineData.push_back(connection.start.x);
+        outLineData.push_back(connection.start.y);
+        outLineData.push_back(connection.end.x);
+        outLineData.push_back(connection.end.y);
+
+        // Add arrow
+        Vec arrowA{}, arrowB{}, arrowC{};
+        calculateArrowCoordinates(connection, arrowLengthScale, arrowWidthScale, arrowA, arrowB, arrowC);
+        outTriangleData.push_back(arrowA.x);
+        outTriangleData.push_back(arrowA.y);
+        outTriangleData.push_back(arrowB.x);
+        outTriangleData.push_back(arrowB.y);
+        outTriangleData.push_back(arrowC.x);
+        outTriangleData.push_back(arrowC.y);
+
+        return true;
+    };
+
+    lines = {};
+    stippledLines = {};
+    triangles = {};
 
     std::vector<float> lineData = {};
+    std::vector<float> stippledLineData = {};
     std::vector<float> triangleData = {};
+
     for (const CmagTarget *srcTarget : targets) {
         const CmagTargetConfig *config = srcTarget->tryGetConfig(cmakeConfig);
         if (config == nullptr) {
             continue;
         }
 
-        const Vec srcCenter{srcTarget->graphical.x, srcTarget->graphical.y};
         const auto &dependencies = dependencyType == CmakeDependencyType::Build ? config->derived.buildDependencies : config->derived.linkDependencies;
         for (const CmagTarget *dstTarget : dependencies) {
-            const Vec dstCenter{dstTarget->graphical.x, dstTarget->graphical.y};
-            Segment connection{srcCenter, dstCenter};
-
-            // Trim the connection, so it doesn't get inside the shape
-            const float parameterStart = calculateSegmentTrimParameter(*srcTarget, connection, shapes, true);
-            const float parameterEnd = calculateSegmentTrimParameter(*dstTarget, connection, shapes, false);
-            if (parameterStart >= parameterEnd) {
-                continue;
+            if (addSegment(*srcTarget, *dstTarget, lineData, triangleData)) {
+                lines.count += 2;
+                triangles.count += 3;
             }
-            trimSegment(connection, parameterStart, parameterEnd);
+        }
 
-            // Add segment to our data
-            lineData.push_back(connection.start.x);
-            lineData.push_back(connection.start.y);
-            lineData.push_back(connection.end.x);
-            lineData.push_back(connection.end.y);
-
-            // Add arrow
-            Vec arrowA{}, arrowB{}, arrowC{};
-            calculateArrowCoordinates(connection, arrowLengthScale, arrowWidthScale, arrowA, arrowB, arrowC);
-            triangleData.push_back(arrowA.x);
-            triangleData.push_back(arrowA.y);
-            triangleData.push_back(arrowB.x);
-            triangleData.push_back(arrowB.y);
-            triangleData.push_back(arrowC.x);
-            triangleData.push_back(arrowC.y);
-
-            count++;
+        for (const CmagTarget *dstTarget : config->derived.linkInterfaceDependencies) {
+            if (addSegment(*srcTarget, *dstTarget, stippledLineData, triangleData)) {
+                stippledLines.count += 2;
+                triangles.count += 3;
+            }
         }
     }
 
-    const size_t lineDataSize = lineData.size() * sizeof(float);
-    const size_t triangleDataSize = triangleData.size() * sizeof(float);
-    lineDataOffset = 0;
-    triangleDataOffset = lineDataSize / 8;
+    lines.offset = 0;
+    stippledLines.offset = lines.offset + lines.count;
+    triangles.offset = stippledLines.offset + stippledLines.count;
+
+    const float bytesPerVertex = 2 * sizeof(float);
 
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, gl.vbo));
-    SAFE_GL(glBufferSubData(GL_ARRAY_BUFFER, 0, lineDataSize, lineData.data()));
-    SAFE_GL(glBufferSubData(GL_ARRAY_BUFFER, lineDataSize, triangleDataSize, triangleData.data()));
+    SAFE_GL(glBufferSubData(GL_ARRAY_BUFFER, lines.offset * bytesPerVertex, lines.count * bytesPerVertex, lineData.data()));
+    SAFE_GL(glBufferSubData(GL_ARRAY_BUFFER, stippledLines.offset * bytesPerVertex, stippledLines.count * bytesPerVertex, stippledLineData.data()));
+    SAFE_GL(glBufferSubData(GL_ARRAY_BUFFER, triangles.offset * bytesPerVertex, triangles.count * bytesPerVertex, triangleData.data()));
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
@@ -624,13 +650,20 @@ void TargetGraph::Program::allocate() {
     #version 330 core
     out vec4 FragColor;
     uniform vec3 color;
+    uniform ivec2 stippleData;
     void main() {
+        int summedCoords = int(gl_FragCoord.x) + int(gl_FragCoord.y);
+        if (summedCoords % stippleData[0] > stippleData[1]) {
+            discard;
+        }
+
         FragColor = vec4(color, 1.0);
     }
 )";
     gl.program = createProgram(vertexShaderSource, fragmentShaderSource);
     uniformLocation.depthValue = getUniformLocation(gl.program, "depthValue");
     uniformLocation.color = getUniformLocation(gl.program, "color");
+    uniformLocation.stippleData = getUniformLocation(gl.program, "stippleData");
     uniformLocation.transform = getUniformLocation(gl.program, "transform");
 }
 
