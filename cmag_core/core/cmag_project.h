@@ -14,9 +14,10 @@ enum class CmagTargetType {
     SharedLibrary,
     ObjectLibrary,
     InterfaceLibrary,
+    UnknownLibrary, // usually used by CMake modules.
+    UnknownTarget,  // This is not an actual CMake target type. We use it, when the target is not visible for the postamble.
     Executable,
     Utility,
-    // TODO ExternalLibrary?
 
     COUNT,
 };

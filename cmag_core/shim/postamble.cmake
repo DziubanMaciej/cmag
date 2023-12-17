@@ -132,22 +132,45 @@ function (json_append_target_properties OUT_VARIABLE TGT INDENT INDENT_INCREMENT
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
 endfunction()
 
+function (json_append_null_target_properties OUT_VARIABLE INDENT INDENT_INCREMENT)
+    json_append_line(${OUT_VARIABLE} "\"non_genexable\": {}," ${INDENT})
+    json_append_line(${OUT_VARIABLE} "\"genexable\": {}," ${INDENT})
+    json_append_line(${OUT_VARIABLE} "\"genexable_evaled\": {}" ${INDENT})
+    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
+endfunction()
+
 function(json_append_target OUT_VARIABLE TGT CONFIG INDENT INDENT_INCREMENT)
     set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
     set(INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
     set(INNER_INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
     set(INNER_INNER_INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
 
+    get_property(listDir GLOBAL PROPERTY CMAG_LIST_DIR_${TGT})
+
     json_append_object_begin(${OUT_VARIABLE} "${TGT}" ${INDENT})
-    json_append_target_property(${OUT_VARIABLE} ${TGT} type TYPE ${INNER_INDENT} FALSE FALSE)
-    json_append_target_property(${OUT_VARIABLE} ${TGT} listDir CMAG_CMAKE_LIST_DIR ${INNER_INDENT} FALSE FALSE)
-    json_append_object_begin(${OUT_VARIABLE} "configs" ${INNER_INDENT})
-    json_append_object_begin(${OUT_VARIABLE} "${CONFIG}" ${INNER_INNER_INDENT})
+    if (TARGET ${TGT})
+        json_append_target_property(${OUT_VARIABLE} ${TGT} type TYPE ${INNER_INDENT} FALSE FALSE)
+        json_append_key_value(${OUT_VARIABLE} listDir "${listDir}" ${INNER_INDENT})
+        json_append_target_property(${OUT_VARIABLE} ${TGT} isImported IMPORTED ${INNER_INDENT} FALSE FALSE)
 
-    json_append_target_properties(${OUT_VARIABLE} ${TGT} ${INNER_INNER_INNER_INNER_INDENT} ${INDENT_INCREMENT})
+        json_append_object_begin(${OUT_VARIABLE} "configs" ${INNER_INDENT})
+        json_append_object_begin(${OUT_VARIABLE} "${CONFIG}" ${INNER_INNER_INDENT})
+        json_append_target_properties(${OUT_VARIABLE} ${TGT} ${INNER_INNER_INNER_INNER_INDENT} ${INDENT_INCREMENT})
+        json_append_object_end(${OUT_VARIABLE} ${INNER_INNER_INDENT})
+        json_append_object_end(${OUT_VARIABLE} ${INNER_INDENT})
+    else()
+        # Some imported targets may be not visible. This happens when find_package is not used with GLOBAL option. In
+        # that case trying to get their properties results in an error. So we hardcode some values to simplify the parser.
+        json_append_key_value(${OUT_VARIABLE} type "UNKNOWN" ${INNER_INDENT})
+        json_append_key_value(${OUT_VARIABLE} listDir "${listDir}" ${INNER_INDENT})
+        json_append_key_value(${OUT_VARIABLE} isImported "True" ${INNER_INDENT})
 
-    json_append_object_end(${OUT_VARIABLE} ${INNER_INNER_INDENT})
-    json_append_object_end(${OUT_VARIABLE} ${INNER_INDENT})
+        json_append_object_begin(${OUT_VARIABLE} "configs" ${INNER_INDENT})
+        json_append_object_begin(${OUT_VARIABLE} "${CONFIG}" ${INNER_INNER_INDENT})
+        json_append_null_target_properties(${OUT_VARIABLE} ${INNER_INNER_INNER_INNER_INDENT} ${INDENT_INCREMENT})
+        json_append_object_end(${OUT_VARIABLE} ${INNER_INNER_INDENT})
+        json_append_object_end(${OUT_VARIABLE} ${INNER_INDENT})
+    endif()
     json_append_object_end(${OUT_VARIABLE} ${INDENT})
 
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
@@ -155,11 +178,15 @@ endfunction()
 
 function (get_all_targets OUT_VARIABLE DIR)
     # Call for this directory
-    get_property(TARGETS_IN_CURRENT_DIR DIRECTORY ${DIR} PROPERTY BUILDSYSTEM_TARGETS)
-    list(APPEND ${OUT_VARIABLE} ${TARGETS_IN_CURRENT_DIR})
+    get_property(BUILDSYSTEM_TARGETS DIRECTORY ${DIR} PROPERTY BUILDSYSTEM_TARGETS)
+    get_property(IMPORTED_TARGETS DIRECTORY ${DIR} PROPERTY IMPORTED_TARGETS)
+    set(TARGETS ${BUILDSYSTEM_TARGETS} ${IMPORTED_TARGETS})
 
-    # Set a custom property, so we know where this target was defined
-    set_target_properties(${TARGETS_IN_CURRENT_DIR} PROPERTIES CMAG_CMAKE_LIST_DIR ${DIR})
+    # Store list dir for this target in a global property. We cannot use target property, because some targets may not
+    # be visible in this postamble.
+    foreach(TARGET ${TARGETS})
+        set_property(GLOBAL PROPERTY CMAG_LIST_DIR_${TARGET} ${DIR})
+    endforeach ()
 
     # Call for subdirectories recursively
     get_property(SUBDIRS DIRECTORY ${DIR} PROPERTY SUBDIRECTORIES)
@@ -168,7 +195,7 @@ function (get_all_targets OUT_VARIABLE DIR)
     endforeach ()
 
     # Propagate to outer scope
-    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
+    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} ${TARGETS} PARENT_SCOPE)
 endfunction()
 
 function(json_append_targets OUT_VARIABLE CONFIG INDENT INDENT_INCREMENT)

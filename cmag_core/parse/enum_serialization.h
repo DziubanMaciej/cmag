@@ -10,6 +10,8 @@ NLOHMANN_JSON_SERIALIZE_ENUM(CmagTargetType,
                                  {CmagTargetType::SharedLibrary, "SHARED_LIBRARY"},
                                  {CmagTargetType::ObjectLibrary, "OBJECT_LIBRARY"},
                                  {CmagTargetType::InterfaceLibrary, "INTERFACE_LIBRARY"},
+                                 {CmagTargetType::UnknownLibrary, "UNKNOWN_LIBRARY"},
+                                 {CmagTargetType::UnknownTarget, "UNKNOWN"},
                                  {CmagTargetType::Executable, "EXECUTABLE"},
                                  {CmagTargetType::Utility, "UTILITY"},
                              })

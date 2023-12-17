@@ -53,6 +53,7 @@ This is a current list of items left to do in this project. It may shrink and gr
   - [ ] Break the dependency from graphviz. Graph layout should be handled in a more robust way.
   - [ ] Add textual errors to parsers. We often get "failed parsing X" without any more helpful information.
   - [ ] Implement `--merge` argument. For single config generators, such as `Unix Makefiles` we should be able to merge outputs of two `cmag` analyses into a one project to be able to compare different configs.
+  - [ ] Enable CMAKE_FIND_PACKAGE_TARGETS_GLOBAL, to get all information for all imported targets. This options could be dangerous to some projects... Add an option to enable/disable it?
 - cmag_browser
   - [ ] Use a custom font.
   - [ ] Make ListFileTab look nicer with some icons. To achieve this, some [ImGui font magic](https://github.com/ocornut/imgui/blob/master/docs/FONTS.md) must be used.

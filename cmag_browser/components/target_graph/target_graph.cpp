@@ -367,6 +367,8 @@ void TargetGraph::Shapes::allocate() {
     shapeInfos[static_cast<int>(CmagTargetType::SharedLibrary)] = &ShapeInfo::sharedLib;
     shapeInfos[static_cast<int>(CmagTargetType::ObjectLibrary)] = &ShapeInfo::objectLib;
     shapeInfos[static_cast<int>(CmagTargetType::InterfaceLibrary)] = &ShapeInfo::interfaceLib;
+    shapeInfos[static_cast<int>(CmagTargetType::UnknownLibrary)] = &ShapeInfo::unknownLib;
+    shapeInfos[static_cast<int>(CmagTargetType::UnknownTarget)] = &ShapeInfo::unknownLib;
     shapeInfos[static_cast<int>(CmagTargetType::Executable)] = &ShapeInfo::executable;
     shapeInfos[static_cast<int>(CmagTargetType::Utility)] = &ShapeInfo::customTarget;
 
