@@ -45,7 +45,7 @@ function(json_append_array_end OUT_VARIABLE INDENT)
 endfunction()
 
 # -------------------------------------------------------------------- Assembling JSON for .cmag-targets file
-macro(json_append_target_property OUT_VARIABLE TGT NAME PROPERTY INDENT GENEX_EVAL)
+macro(json_append_target_property OUT_VARIABLE TGT NAME PROPERTY INDENT GENEX_EVAL IS_BOOL)
     set(VALUE "$<TARGET_PROPERTY:${TGT},${PROPERTY}>")
     if(${GENEX_EVAL})
         set(VALUE "$<TARGET_GENEX_EVAL:${TGT},${VALUE}>")
@@ -54,7 +54,13 @@ macro(json_append_target_property OUT_VARIABLE TGT NAME PROPERTY INDENT GENEX_EV
     # Escape quotes in property values
     set(VALUE "$<LIST:TRANSFORM,${VALUE},REPLACE,\",\\\\\\\\\">")
 
-    json_append_key_value(${OUT_VARIABLE} "${NAME}" "${VALUE}" ${INDENT})
+    if (${IS_BOOL})
+        set(VALUE "$<IF:$<BOOL:${VALUE}>,true,false>")
+        json_append_key_value_unquoted(${OUT_VARIABLE} "${NAME}" "${VALUE}" ${INDENT})
+    else()
+        json_append_key_value(${OUT_VARIABLE} "${NAME}" "${VALUE}" ${INDENT})
+    endif()
+
 endmacro()
 
 function (json_append_target_properties OUT_VARIABLE TGT INDENT INDENT_INCREMENT)
@@ -151,7 +157,7 @@ function(json_append_target OUT_VARIABLE TGT CONFIG INDENT INDENT_INCREMENT)
     if (TARGET ${TGT})
         json_append_target_property(${OUT_VARIABLE} ${TGT} type TYPE ${INNER_INDENT} FALSE FALSE)
         json_append_key_value(${OUT_VARIABLE} listDir "${listDir}" ${INNER_INDENT})
-        json_append_target_property(${OUT_VARIABLE} ${TGT} isImported IMPORTED ${INNER_INDENT} FALSE FALSE)
+        json_append_target_property(${OUT_VARIABLE} ${TGT} isImported IMPORTED ${INNER_INDENT} FALSE TRUE)
 
         json_append_object_begin(${OUT_VARIABLE} "configs" ${INNER_INDENT})
         json_append_object_begin(${OUT_VARIABLE} "${CONFIG}" ${INNER_INNER_INDENT})
@@ -163,7 +169,7 @@ function(json_append_target OUT_VARIABLE TGT CONFIG INDENT INDENT_INCREMENT)
         # that case trying to get their properties results in an error. So we hardcode some values to simplify the parser.
         json_append_key_value(${OUT_VARIABLE} type "UNKNOWN" ${INNER_INDENT})
         json_append_key_value(${OUT_VARIABLE} listDir "${listDir}" ${INNER_INDENT})
-        json_append_key_value(${OUT_VARIABLE} isImported "True" ${INNER_INDENT})
+        json_append_key_value_unquoted(${OUT_VARIABLE} isImported true ${INNER_INDENT})
 
         json_append_object_begin(${OUT_VARIABLE} "configs" ${INNER_INDENT})
         json_append_object_begin(${OUT_VARIABLE} "${CONFIG}" ${INNER_INNER_INDENT})

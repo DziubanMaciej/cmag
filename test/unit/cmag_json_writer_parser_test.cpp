@@ -65,6 +65,7 @@ struct CmagWriterParserTest : ::testing::Test {
             EXPECT_EQ(expTarget.name, actTarget.name);
             EXPECT_EQ(expTarget.type, actTarget.type);
             EXPECT_EQ(expTarget.listDirName, actTarget.listDirName);
+            EXPECT_EQ(expTarget.isImported, actTarget.isImported);
 
             ASSERT_EQ(expTarget.configs.size(), actTarget.configs.size());
             for (size_t j = 0; j < expTarget.configs.size(); j++) {
@@ -192,6 +193,26 @@ TEST_F(CmagWriterParserTest, givenProjectWithTargetWithMultipleConfigsAndDifferi
         },
         {},
     });
+    verify(project);
+}
+
+TEST_F(CmagWriterParserTest, givenProjectWithImportedTargetWithoutPropertiesThenWriteAndReadCorrectly) {
+    CmagProject project;
+
+    auto addTarget = [&](const char *targetName, bool isImported) {
+        CmagTarget target{
+            targetName,
+            CmagTargetType::Executable,
+            {
+                {"Debug", {}},
+            },
+        };
+        target.isImported = isImported;
+        project.addTarget(std::move(target));
+    };
+
+    addTarget("target1", false);
+    addTarget("target2", true);
     verify(project);
 }
 
