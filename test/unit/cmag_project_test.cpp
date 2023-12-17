@@ -484,6 +484,63 @@ TEST(CmagProjectTest, givenTargetsWithFoldersWhenDerivingDataThenAssignThemAccor
     }
 }
 
+TEST(CmagProjectTest, givenTargetsWithDependenciesWhenDerivingDataThenCorrectlyDeriveIsReferencedField) {
+    CmagProject project = {};
+
+    project.getGlobals().listDirs = {CmagListDir{"a", {}}};
+
+    auto createTarget = [](const char *name, const char *linkLibs, const char *interfaceLinkLibs, const char *deps) {
+        CmagTarget target = {};
+        target.name = name;
+        target.type = CmagTargetType::Executable;
+        target.configs = {{
+            "Debug",
+            {
+                {"LINK_LIBRARIES", linkLibs},
+                {"INTERFACE_LINK_LIBRARIES", interfaceLinkLibs},
+                {"MANUALLY_ADDED_DEPENDENCIES", deps},
+            },
+        }};
+        target.listDirName = "a";
+        return target;
+    };
+
+    EXPECT_TRUE(project.addTarget(createTarget("A", "", "", "")));
+    EXPECT_TRUE(project.addTarget(createTarget("B", "", "", "")));
+    EXPECT_TRUE(project.addTarget(createTarget("C", "", "", "")));
+
+    // Reference A,B,C one time
+    EXPECT_TRUE(project.addTarget(createTarget("X", "A", "", "")));
+    EXPECT_TRUE(project.addTarget(createTarget("Y", "", "B", "")));
+    EXPECT_TRUE(project.addTarget(createTarget("Z", "", "", "C")));
+
+    // Reference X,Y,Z two times each
+    EXPECT_TRUE(project.addTarget(createTarget("U", "X", "Y", "")));
+    EXPECT_TRUE(project.addTarget(createTarget("V", "", "Y", "Z")));
+    EXPECT_TRUE(project.addTarget(createTarget("T", "X", "", "Z")));
+
+    // Reference U,V,T three times each
+    EXPECT_TRUE(project.addTarget(createTarget("J", "U", "V", "T")));
+    EXPECT_TRUE(project.addTarget(createTarget("K", "U", "V", "T")));
+    EXPECT_TRUE(project.addTarget(createTarget("L", "U", "V", "T")));
+
+    ASSERT_TRUE(project.deriveData());
+    const std::vector<CmagTarget> &targets = project.getTargets();
+    ASSERT_EQ(12u, targets.size());
+    ASSERT_TRUE(targets[0].derived.isReferenced);
+    ASSERT_TRUE(targets[1].derived.isReferenced);
+    ASSERT_TRUE(targets[2].derived.isReferenced);
+    ASSERT_TRUE(targets[3].derived.isReferenced);
+    ASSERT_TRUE(targets[4].derived.isReferenced);
+    ASSERT_TRUE(targets[5].derived.isReferenced);
+    ASSERT_TRUE(targets[6].derived.isReferenced);
+    ASSERT_TRUE(targets[7].derived.isReferenced);
+    ASSERT_TRUE(targets[8].derived.isReferenced);
+    ASSERT_FALSE(targets[9].derived.isReferenced);
+    ASSERT_FALSE(targets[10].derived.isReferenced);
+    ASSERT_FALSE(targets[11].derived.isReferenced);
+}
+
 TEST(CmagTargetTest, givenConfigExistsWhenGetOrCreateConfigIsCalledThenReturnExistingConfig) {
     CmagTarget target = {
         "target",
