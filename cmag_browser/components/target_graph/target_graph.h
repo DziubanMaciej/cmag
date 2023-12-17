@@ -24,7 +24,7 @@ enum class CmakeDependencyType {
 
 class TargetGraph {
 public:
-    TargetGraph(const CmagBrowserTheme &theme, std::vector<CmagTarget> &targets);
+    TargetGraph(const CmagBrowserTheme &theme, std::vector<CmagTarget> &allTargets);
     ~TargetGraph();
 
     void setScreenSpaceAvailableSpace(float spaceX, float spaceY);
@@ -52,6 +52,7 @@ public:
 
 private:
     struct Shapes;
+    void fillTargetsVector(std::vector<CmagTarget> &allTargets);
     void scaleTargetPositionsToWorldSpace();
     void clampTargetPositionToVisibleWorldSpace(CmagTarget &target) const;
     float calculateDepthValueForTarget(const CmagTarget &target, bool forText) const;
@@ -59,7 +60,7 @@ private:
 
     // General data and subobjects
     const CmagBrowserTheme &theme;
-    std::vector<CmagTarget> &targets;
+    std::vector<CmagTarget *> targets = {};
     CmagTarget *selectedTarget = nullptr;
     CmagTarget *focusedTarget = nullptr;
     TextRenderer textRenderer = {};
@@ -80,8 +81,8 @@ private:
         };
         std::vector<UserData> storage = {};
 
-        void allocate(std::vector<CmagTarget> &targets, float nodeScale, float textScale);
-        void deallocate(std::vector<CmagTarget> &targets);
+        void allocate(std::vector<CmagTarget *> &targets, float nodeScale, float textScale);
+        void deallocate(std::vector<CmagTarget *> &targets);
         static void initializeModelMatrix(const CmagTarget &target, float nodeScale, float textScale);
         static UserData &get(const CmagTarget &target);
     } targetData = {};
@@ -132,9 +133,9 @@ private:
             GLuint vao = {};
         } gl = {};
 
-        void allocate(const std::vector<CmagTarget> &targets);
+        void allocate(const std::vector<CmagTarget *> &targets);
         void deallocate();
-        void update(const std::vector<CmagTarget> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale);
+        void update(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale);
         static float calculateSegmentTrimParameter(const CmagTarget &target, const Segment &connectionSegment, const Shapes &shapes, bool isSrcTarget);
         static void calculateArrowCoordinates(const Segment &connectionSegment, float arrowLength, float arrowWidth, Vec &outA, Vec &outB, Vec &outC);
     } connections = {};

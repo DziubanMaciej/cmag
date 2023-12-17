@@ -11,9 +11,9 @@
 #include <imgui/imgui.h>
 #include <memory>
 
-TargetGraph::TargetGraph(const CmagBrowserTheme &theme, std::vector<CmagTarget> &targets)
-    : theme(theme),
-      targets(targets) {
+TargetGraph::TargetGraph(const CmagBrowserTheme &theme, std::vector<CmagTarget> &allTargets)
+    : theme(theme) {
+    fillTargetsVector(allTargets);
     scaleTargetPositionsToWorldSpace();
 
     shapes.allocate();
@@ -76,15 +76,15 @@ void TargetGraph::update(ImGuiIO &io) {
 
     focusedTarget = nullptr;
     if (mouseInside && !targetDrag.active) {
-        for (CmagTarget &target : targets) {
+        for (CmagTarget *target : targets) {
             // Vertices are in their local space. Transform mouse coordinates to this local space, so they are comparable.
-            glm::mat4 screenToLocalMatrix = glm::inverse(projectionMatrix * TargetData::get(target).modelMatrix);
+            glm::mat4 screenToLocalMatrix = glm::inverse(projectionMatrix * TargetData::get(*target).modelMatrix);
             glm::vec4 mouseLocal = screenToLocalMatrix * glm::vec4{mouseX, mouseY, 0, 1};
 
             // Check if mouse cursor is within the shape.
-            const ShapeInfo *shapeInfo = shapes.shapeInfos[static_cast<int>(target.type)];
+            const ShapeInfo *shapeInfo = shapes.shapeInfos[static_cast<int>(target->type)];
             if (isPointInsidePolygon(mouseLocal.x, mouseLocal.y, shapeInfo->floats, shapeInfo->floatsCount)) {
-                focusedTarget = &target;
+                focusedTarget = target;
             }
         }
     }
@@ -129,27 +129,27 @@ void TargetGraph::render() {
     SAFE_GL(glUseProgram(program.gl.program));
     SAFE_GL(glBindVertexArray(shapes.gl.vao));
     SAFE_GL(glEnableVertexAttribArray(0));
-    for (const CmagTarget &target : targets) {
-        const size_t vbBaseOffset = shapes.offsets[static_cast<int>(target.type)] / 2;
-        const ShapeInfo &shape = *shapes.shapeInfos[static_cast<int>(target.type)];
+    for (const CmagTarget *target : targets) {
+        const size_t vbBaseOffset = shapes.offsets[static_cast<int>(target->type)] / 2;
+        const ShapeInfo &shape = *shapes.shapeInfos[static_cast<int>(target->type)];
 
-        const auto modelMatrix = TargetData::get(target).modelMatrix;
+        const auto modelMatrix = TargetData::get(*target).modelMatrix;
         const auto transform = projectionMatrix * modelMatrix;
         SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(transform)));
 
         // Render solid portion of the node
-        if (&target == selectedTarget) {
+        if (target == selectedTarget) {
             SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, colorNodeSelected));
-        } else if (&target == focusedTarget) {
+        } else if (target == focusedTarget) {
             SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, colorNodeFocused));
         } else {
             SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, colorNode));
         }
-        SAFE_GL(glUniform1f(program.uniformLocation.depthValue, calculateDepthValueForTarget(target, false)));
+        SAFE_GL(glUniform1f(program.uniformLocation.depthValue, calculateDepthValueForTarget(*target, false)));
         SAFE_GL(glDrawArrays(GL_TRIANGLE_FAN, vbBaseOffset, shape.subShapes[0].vertexCount));
 
         // Render outlines
-        SAFE_GL(glUniform1f(program.uniformLocation.depthValue, calculateDepthValueForTarget(target, true)));
+        SAFE_GL(glUniform1f(program.uniformLocation.depthValue, calculateDepthValueForTarget(*target, true)));
         SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, colorNodeOutline));
         for (size_t subShapeIndex = 0; subShapeIndex < shape.subShapesCount; subShapeIndex++) {
             const ShapeInfo::SubShape &subShape = shape.subShapes[subShapeIndex];
@@ -171,12 +171,12 @@ void TargetGraph::render() {
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     // Render text
-    for (const CmagTarget &target : targets) {
-        auto modelMatrix = TargetData::get(target).textModelMatrix;
+    for (const CmagTarget *target : targets) {
+        auto modelMatrix = TargetData::get(*target).textModelMatrix;
         const auto transform = projectionMatrix * modelMatrix;
-        const auto depthValue = calculateDepthValueForTarget(target, true);
+        const auto depthValue = calculateDepthValueForTarget(*target, true);
         const auto font = ImGui::GetFont();
-        textRenderer.render(transform, depthValue, target.name, font);
+        textRenderer.render(transform, depthValue, target->name, font);
     }
 
     SAFE_GL(glDisable(GL_DEPTH_TEST));
@@ -184,8 +184,18 @@ void TargetGraph::render() {
 }
 
 void TargetGraph::refreshModelMatrices() {
-    for (const CmagTarget &target : targets) {
-        TargetData::initializeModelMatrix(target, nodeScale, textScale);
+    for (const CmagTarget *target : targets) {
+        TargetData::initializeModelMatrix(*target, nodeScale, textScale);
+    }
+}
+
+void TargetGraph::fillTargetsVector(std::vector<CmagTarget> &allTargets) {
+    for (CmagTarget &target : allTargets) {
+        if (target.isImported && !target.derived.isReferenced) {
+            continue;
+        }
+
+        targets.push_back(&target);
     }
 }
 
@@ -198,12 +208,12 @@ void TargetGraph::scaleTargetPositionsToWorldSpace() {
     float maxX = std::numeric_limits<float>::min();
     float minY = std::numeric_limits<float>::max();
     float maxY = std::numeric_limits<float>::min();
-    for (const CmagTarget &target : targets) {
-        minX = std::min(minX, target.graphical.x);
-        maxX = std::max(maxX, target.graphical.x);
+    for (const CmagTarget *target : targets) {
+        minX = std::min(minX, target->graphical.x);
+        maxX = std::max(maxX, target->graphical.x);
 
-        minY = std::min(minY, target.graphical.y);
-        maxY = std::max(maxY, target.graphical.y);
+        minY = std::min(minY, target->graphical.y);
+        maxY = std::max(maxY, target->graphical.y);
     }
 
     // Our nodes have their size. We have to add it to our bounds, so entire node is always visible.
@@ -222,9 +232,9 @@ void TargetGraph::scaleTargetPositionsToWorldSpace() {
     maxY += paddingY;
 
     // Linearly transform x and y of all targets to our world space.
-    for (CmagTarget &target : targets) {
-        target.graphical.x = interpolate(target.graphical.x, minX, maxX, -worldSpaceHalfWidth, worldSpaceHalfWidth);
-        target.graphical.y = interpolate(target.graphical.y, minY, maxY, -worldSpaceHalfHeight, worldSpaceHalfHeight);
+    for (CmagTarget *target : targets) {
+        target->graphical.x = interpolate(target->graphical.x, minX, maxX, -worldSpaceHalfWidth, worldSpaceHalfWidth);
+        target->graphical.y = interpolate(target->graphical.y, minY, maxY, -worldSpaceHalfHeight, worldSpaceHalfHeight);
     }
 }
 
@@ -304,16 +314,16 @@ void TargetGraph::setSelectedTarget(CmagTarget *target) {
     selectedTarget = target;
 }
 
-void TargetGraph::TargetData::allocate(std::vector<CmagTarget> &targets, float nodeScale, float textScale) {
+void TargetGraph::TargetData::allocate(std::vector<CmagTarget *> &targets, float nodeScale, float textScale) {
     storage.resize(targets.size());
     for (size_t i = 0; i < targets.size(); i++) {
-        targets[i].userData = &storage[i];
-        initializeModelMatrix(targets[i], nodeScale, textScale);
+        targets[i]->userData = &storage[i];
+        initializeModelMatrix(*targets[i], nodeScale, textScale);
     }
 }
-void TargetGraph::TargetData::deallocate(std::vector<CmagTarget> &targets) {
-    for (CmagTarget &target : targets) {
-        target.userData = nullptr;
+void TargetGraph::TargetData::deallocate(std::vector<CmagTarget *> &targets) {
+    for (CmagTarget *target : targets) {
+        target->userData = nullptr;
     }
     storage.clear();
 }
@@ -404,12 +414,12 @@ void TargetGraph::Shapes::deallocate() {
     GL_DELETE_OBJECT(gl.vao, VertexArrays);
 }
 
-void TargetGraph::Connections::allocate(const std::vector<CmagTarget> &targets) {
+void TargetGraph::Connections::allocate(const std::vector<CmagTarget *> &targets) {
     // First calculate the greatest amount of connections we can have
     size_t maxConnectionsCount = 0;
-    for (const CmagTarget &target : targets) {
+    for (const CmagTarget *target : targets) {
         size_t currentMaxCount = 0;
-        for (const CmagTargetConfig &config : target.configs) {
+        for (const CmagTargetConfig &config : target->configs) {
             currentMaxCount = std::max(currentMaxCount, config.derived.linkDependencies.size());
             currentMaxCount = std::max(currentMaxCount, config.derived.buildDependencies.size());
         }
@@ -428,25 +438,25 @@ void TargetGraph::Connections::deallocate() {
     GL_DELETE_OBJECT(gl.vao, VertexArrays);
 }
 
-void TargetGraph::Connections::update(const std::vector<CmagTarget> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale) {
+void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale) {
     count = 0;
 
     std::vector<float> lineData = {};
     std::vector<float> triangleData = {};
-    for (const CmagTarget &srcTarget : targets) {
-        const CmagTargetConfig *config = srcTarget.tryGetConfig(cmakeConfig);
+    for (const CmagTarget *srcTarget : targets) {
+        const CmagTargetConfig *config = srcTarget->tryGetConfig(cmakeConfig);
         if (config == nullptr) {
             continue;
         }
 
-        const Vec srcCenter{srcTarget.graphical.x, srcTarget.graphical.y};
+        const Vec srcCenter{srcTarget->graphical.x, srcTarget->graphical.y};
         const auto &dependencies = dependencyType == CmakeDependencyType::Build ? config->derived.buildDependencies : config->derived.linkDependencies;
         for (const CmagTarget *dstTarget : dependencies) {
             const Vec dstCenter{dstTarget->graphical.x, dstTarget->graphical.y};
             Segment connection{srcCenter, dstCenter};
 
             // Trim the connection, so it doesn't get inside the shape
-            const float parameterStart = calculateSegmentTrimParameter(srcTarget, connection, shapes, true);
+            const float parameterStart = calculateSegmentTrimParameter(*srcTarget, connection, shapes, true);
             const float parameterEnd = calculateSegmentTrimParameter(*dstTarget, connection, shapes, false);
             if (parameterStart >= parameterEnd) {
                 continue;
