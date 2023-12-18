@@ -70,6 +70,7 @@ nlohmann::json CmagJsonWriter::createTargetGraphicalNode(const CmagTargetGraphic
     nlohmann::json node = nlohmann::json::object();
     node["x"] = graphicalData.x;
     node["y"] = graphicalData.y;
+    node["hideConnections"] = graphicalData.hideConnections;
     return node;
 }
 

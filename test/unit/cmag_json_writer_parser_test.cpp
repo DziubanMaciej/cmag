@@ -4,13 +4,13 @@
 #include <gtest/gtest.h>
 
 struct CmagWriterParserTest : ::testing::Test {
-    void verify(const CmagProject &initialProject) {
+    static void verify(const CmagProject &initialProject) {
         std::ostringstream jsonStream;
         CmagJsonWriter::writeProject(initialProject, jsonStream);
         std::string json = jsonStream.str();
 
         CmagProject derivedProject{};
-        const auto parseResult = CmagJsonParser::parseProject(json.c_str(), derivedProject);
+        const auto parseResult = CmagJsonParser::parseProject(json, derivedProject);
         if (parseResult.status != ParseResultStatus::Success && parseResult.status != ParseResultStatus::DataDerivationFailed) {
             // We can allow data derivation failure, since it's not important here
             ASSERT_EQ(ParseResultStatus::Success, parseResult.status);
@@ -19,7 +19,7 @@ struct CmagWriterParserTest : ::testing::Test {
         compareProjects(initialProject, derivedProject);
     }
 
-    void compareProjects(const CmagProject &exp, const CmagProject &act) {
+    static void compareProjects(const CmagProject &exp, const CmagProject &act) {
         // This function naively assumes that the order of configs and/or properties will not change.
         // While this is completely uninmportant for json parsing, maintaining stable order greatly
         // eases testing. To achieve this, we have to put everything alphabetically, e.g. "Debug" config
@@ -86,6 +86,7 @@ struct CmagWriterParserTest : ::testing::Test {
             const auto &actGraphical = actTarget.graphical;
             EXPECT_EQ(expGraphical.x, actGraphical.x);
             EXPECT_EQ(expGraphical.y, actGraphical.y);
+            EXPECT_EQ(expGraphical.hideConnections, actGraphical.hideConnections);
         }
     }
 };
@@ -119,6 +120,7 @@ TEST_F(CmagWriterParserTest, givenProjectWithTargetWithGraphicalDataThenWriteAnd
         {
             12.f,
             25.3f,
+            true,
         },
     });
     verify(project);

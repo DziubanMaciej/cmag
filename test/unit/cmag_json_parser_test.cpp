@@ -139,7 +139,8 @@ TEST_F(CmagProjectParseTest, givenTargetWithNoPropertiesThenParseCorrectly) {
                 },
                 "graphical": {
                     "x": 10,
-                    "y": 20
+                    "y": 20,
+                    "hideConnections": false
                 },
                 "listDir": "a",
                 "isImported": false
@@ -182,7 +183,8 @@ TEST_F(CmagProjectParseTest, givenTargetWithPropertiesThenParseCorrectly) {
                 },
                 "graphical": {
                     "x": 10,
-                    "y": 10
+                    "y": 10,
+                    "hideConnections": false
                 },
                 "listDir": "a",
                 "isImported": false
@@ -227,7 +229,8 @@ TEST_F(CmagProjectParseTest, givenTargetWithMultipleConfigsThenParseCorrectly) {
                 },
                 "graphical": {
                     "x": 10,
-                    "y": 10
+                    "y": 10,
+                    "hideConnections": false
                 },
                 "listDir": "a",
                 "isImported": false
@@ -280,7 +283,8 @@ TEST_F(CmagProjectParseTest, givenMultipleTargetsThenParseCorrectly) {
                 },
                 "graphical": {
                     "x": 10,
-                    "y": 10
+                    "y": 10,
+                    "hideConnections": false
                 },
                 "listDir": "a",
                 "isImported": false
@@ -294,7 +298,8 @@ TEST_F(CmagProjectParseTest, givenMultipleTargetsThenParseCorrectly) {
                 },
                 "graphical": {
                     "x": 10,
-                    "y": 10
+                    "y": 10,
+                    "hideConnections": false
                 },
                 "listDir": "a",
                 "isImported": false
@@ -356,7 +361,8 @@ TEST_F(CmagProjectParseTest, givenVariousTargetTypesTheParseThemCorrectly) {
                     },
                     "graphical": {
                         "x": 10,
-                        "y": 10
+                        "y": 10,
+                        "hideConnections": false
                     },
                     "listDir": "a",
                     "isImported": false
