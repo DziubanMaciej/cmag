@@ -58,6 +58,7 @@ void TargetGraphTab::renderSidePane(float width) {
 
     configSelector.render(width);
     renderSidePaneDependencyTypeSelection(width);
+    renderSidePaneHideConnectionsButton(width);
     renderPropertyPopup();
     renderPropertyTable(width);
 }
@@ -117,6 +118,17 @@ void TargetGraphTab::renderSidePaneDependencyTypeSelection(float width) {
         ImGui::EndCombo();
     } else {
         ImGui::SetItemTooltip("%s", tooltips[dependencyTypeComboSelection]);
+    }
+}
+
+void TargetGraphTab::renderSidePaneHideConnectionsButton(float) {
+    CmagTarget *target = targetGraph.getSelectedTarget();
+    if (target == nullptr) {
+        return;
+    }
+
+    if (ImGui::Checkbox("Hide dependencies", &target->graphical.hideConnections)) {
+        targetGraph.refreshConnections();
     }
 }
 

@@ -446,6 +446,10 @@ void TargetGraph::Connections::deallocate() {
 
 void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale) {
     auto addSegment = [&](const CmagTarget &srcTarget, const CmagTarget &dstTarget, std::vector<float> &outLineData, std::vector<float> &outTriangleData) {
+        if (srcTarget.graphical.hideConnections || dstTarget.graphical.hideConnections) {
+            return false;
+        }
+
         const Vec srcCenter{srcTarget.graphical.x, srcTarget.graphical.y};
         const Vec dstCenter{dstTarget.graphical.x, dstTarget.graphical.y};
         Segment connection{srcCenter, dstCenter};

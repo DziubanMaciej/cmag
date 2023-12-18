@@ -306,6 +306,7 @@ ParseResult CmagJsonParser::parseTargetGraphical(const nlohmann::json &node, Cma
 
     RETURN_ERROR(parseObjectField(node, "x", outGraphical.x));
     RETURN_ERROR(parseObjectField(node, "y", outGraphical.y));
+    RETURN_ERROR(parseObjectField(node, "hideConnections", outGraphical.hideConnections));
 
     return ParseResult::success;
 }

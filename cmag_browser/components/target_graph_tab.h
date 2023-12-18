@@ -20,6 +20,7 @@ private:
     void renderSidePane(float width);
     void renderSidePaneSlider(const char *label, float width, float min, float max, float *value);
     void renderSidePaneDependencyTypeSelection(float width);
+    void renderSidePaneHideConnectionsButton(float width);
     void renderPropertyPopup();
     void renderPropertyTable(float width);
     void renderPropertyTablePopup(const CmagTargetProperty &property, bool showValue) const;

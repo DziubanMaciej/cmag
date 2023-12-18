@@ -99,6 +99,7 @@ private:
 struct CmagTargetGraphicalData {
     float x = {};
     float y = {};
+    bool hideConnections = false;
 };
 
 struct CmagTarget {
