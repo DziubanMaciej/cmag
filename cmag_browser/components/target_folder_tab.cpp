@@ -10,7 +10,12 @@ TargetFolderTab::TargetFolderTab(const CmagBrowserTheme &theme, CmagProject &pro
       targetGraphTab(targetGraphTab) {}
 
 void TargetFolderTab::render() {
+    renderOptions();
     renderFolder(false, project.getGlobals().derived.folders[0]);
+}
+
+void TargetFolderTab::renderOptions() {
+    ImGui::Checkbox("Show ignored targets", &showIgnoredTargets);
 }
 
 void TargetFolderTab::renderFolder(bool renderSelf, const CmagFolder &folder) {
@@ -32,7 +37,9 @@ void TargetFolderTab::renderFolder(bool renderSelf, const CmagFolder &folder) {
 
         for (const size_t targetIndex : folder.targetIndices) {
             CmagTarget &target = project.getTargets()[targetIndex];
-            renderTarget(target);
+            if (showIgnoredTargets || !target.isIgnoredImportedTarget()) {
+                renderTarget(target);
+            }
         }
 
         if (renderSelf) {

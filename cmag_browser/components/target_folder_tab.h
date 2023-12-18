@@ -16,10 +16,12 @@ public:
     void render();
 
 private:
+    void renderOptions();
     void renderFolder(bool renderSelf, const CmagFolder &folder);
     void renderTarget(CmagTarget &target);
 
     const CmagBrowserTheme &theme;
     CmagProject &project;
     TargetGraphTab &targetGraphTab;
+    bool showIgnoredTargets = false;
 };
