@@ -30,13 +30,12 @@ cmag_browser project.cmag-project
 Currently, *cmag* is not distributed in any open repositories.
 
 # From source
-Compilation requirements: `git`, `graphviz`, `cmake` and a C++ compiler. Run the following commands:
+Compilation requirements: `git`, `graphviz`, `cmake` and a C++ compiler. Run the commands below. Note that the `install` command must be run with administrative privileges. To install to a custom location without administrative privileges, pass `-DCMAKE_INSTALL_PREFIX=<path>` to the first `cmake` command.
 ```
-git submodule init
-git submodule update --recursive
+git submodule update --init --recursive
 mkdir build
 cd build
-cmake -B .
+cmake ..
 cmake --build .
 cmake --install .
 ```
