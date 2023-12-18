@@ -117,6 +117,7 @@ struct CmagTarget {
     const CmagTargetConfig *tryGetConfig(std::string_view configName) const;
     CmagTargetConfig &getOrCreateConfig(std::string_view configName);
     const CmagTargetProperty *getPropertyValue(std::string_view propertyName) const;
+    bool isIgnoredImportedTarget() const;
 
 private:
     friend CmagProject;

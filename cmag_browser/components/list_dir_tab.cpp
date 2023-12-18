@@ -10,7 +10,12 @@ ListDirTab::ListDirTab(const CmagBrowserTheme &theme, CmagProject &project, Targ
       targetGraphTab(targetGraphTab) {}
 
 void ListDirTab::render() {
+    renderOptions();
     renderListDir(nullptr, project.getGlobals().listDirs[0]);
+}
+
+void ListDirTab::renderOptions() {
+    ImGui::Checkbox("Show ignored targets", &showIgnoredTargets);
 }
 
 void ListDirTab::renderListDir(const char *parentName, const CmagListDir &listDir) {
@@ -31,7 +36,9 @@ void ListDirTab::renderListDir(const char *parentName, const CmagListDir &listDi
 
         for (const size_t targetIndex : listDir.derived.targetIndices) {
             CmagTarget &target = project.getTargets()[targetIndex];
-            renderTarget(target);
+            if (showIgnoredTargets || !target.isIgnoredImportedTarget()) {
+                renderTarget(target);
+            }
         }
 
         ImGui::TreePop();

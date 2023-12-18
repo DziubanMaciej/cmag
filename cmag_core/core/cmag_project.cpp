@@ -464,3 +464,7 @@ const CmagTargetProperty *CmagTarget::getPropertyValue(std::string_view property
     // is consistent.
     return configs[0].findProperty(propertyName);
 }
+
+bool CmagTarget::isIgnoredImportedTarget() const {
+    return isImported && !derived.isReferenced;
+}

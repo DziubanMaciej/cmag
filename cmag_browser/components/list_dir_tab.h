@@ -16,6 +16,7 @@ public:
     void render();
 
 private:
+    void renderOptions();
     void renderListDir(const char *parentName, const CmagListDir &listDir);
     void renderTarget(CmagTarget &target);
     void renderTooltip(const std::string &currentName);
@@ -24,4 +25,5 @@ private:
     const CmagBrowserTheme &theme;
     CmagProject &project;
     TargetGraphTab &targetGraphTab;
+    bool showIgnoredTargets = false;
 };

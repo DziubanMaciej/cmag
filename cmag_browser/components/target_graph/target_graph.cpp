@@ -205,7 +205,7 @@ void TargetGraph::refreshModelMatrices() {
 
 void TargetGraph::fillTargetsVector(std::vector<CmagTarget> &allTargets) {
     for (CmagTarget &target : allTargets) {
-        if (target.isImported && !target.derived.isReferenced) {
+        if (target.isIgnoredImportedTarget()) {
             continue;
         }
 
