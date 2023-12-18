@@ -31,6 +31,7 @@ public:
     void setScreenSpacePosition(size_t x, size_t y);
     void setCurrentCmakeConfig(std::string_view newConfig);
     void setDisplayedDependencyType(CmakeDependencyType newType);
+    void setFocusedTarget(CmagTarget *target);
     void setSelectedTarget(CmagTarget *target);
     void update(ImGuiIO &io);
 
@@ -132,10 +133,12 @@ private:
             size_t offset = {};
             size_t count = {};
             bool isStippled = {};
+            bool isFocused = {};
+            bool isSelected = {};
         };
-        constexpr static inline size_t maxDrawCallsCount = 3;
+        constexpr static inline size_t maxDrawCallsCount = 9;
         size_t drawCallsCount = {};
-        DrawCall drawCalls [maxDrawCallsCount] = {};
+        DrawCall drawCalls[maxDrawCallsCount] = {};
         struct {
             GLuint vbo = {};
             GLuint vao = {};
@@ -143,7 +146,7 @@ private:
 
         void allocate(const std::vector<CmagTarget *> &targets);
         void deallocate();
-        void update(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale);
+        void update(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale, CmagTarget *focusedTarget, CmagTarget *selectedTarget);
         static float calculateSegmentTrimParameter(const CmagTarget &target, const Segment &connectionSegment, const Shapes &shapes, bool isSrcTarget);
         static void calculateArrowCoordinates(const Segment &connectionSegment, float arrowLength, float arrowWidth, Vec &outA, Vec &outB, Vec &outC);
     } connections = {};

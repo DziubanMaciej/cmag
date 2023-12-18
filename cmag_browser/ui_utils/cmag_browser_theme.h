@@ -35,5 +35,7 @@ public:
     ImColor colorTargetGraphNodeSelected = {};
     ImColor colorTargetGraphNodeOutline = {};
     ImColor colorTargetGraphConnection = {};
+    ImColor colorTargetGraphConnectionFocused = {};
+    ImColor colorTargetGraphConnectionSelected = {};
     float maxWidthPopup = {};
 };

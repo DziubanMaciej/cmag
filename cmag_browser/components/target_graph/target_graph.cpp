@@ -74,8 +74,8 @@ void TargetGraph::update(ImGuiIO &io) {
     const bool mouseInside = -1 <= mouseX && mouseX <= 1 && -1 <= mouseY && mouseY <= 1;
     const bool mouseMoved = io.MousePos.x != io.MousePosPrev.x || io.MousePos.y != io.MousePosPrev.y;
 
-    focusedTarget = nullptr;
     if (mouseInside && !targetDrag.active) {
+        CmagTarget *currentFocusedTarget = nullptr;
         for (CmagTarget *target : targets) {
             // Vertices are in their local space. Transform mouse coordinates to this local space, so they are comparable.
             glm::mat4 screenToLocalMatrix = glm::inverse(projectionMatrix * TargetData::get(*target).modelMatrix);
@@ -84,9 +84,10 @@ void TargetGraph::update(ImGuiIO &io) {
             // Check if mouse cursor is within the shape.
             const ShapeInfo *shapeInfo = shapes.shapeInfos[static_cast<int>(target->type)];
             if (isPointInsidePolygon(mouseLocal.x, mouseLocal.y, shapeInfo->floats, shapeInfo->floatsCount)) {
-                focusedTarget = target;
+                currentFocusedTarget = target;
             }
         }
+        setFocusedTarget(currentFocusedTarget);
     }
 
     if (mouseMoved) {
@@ -102,7 +103,7 @@ void TargetGraph::update(ImGuiIO &io) {
         if (focusedTarget) {
             targetDrag.begin(mouseX, mouseY, projectionMatrix, focusedTarget);
         }
-        selectedTarget = focusedTarget;
+        setSelectedTarget(focusedTarget);
     }
 
     if (io.MouseReleased[ImGuiMouseButton_Left] && targetDrag.active) {
@@ -111,17 +112,13 @@ void TargetGraph::update(ImGuiIO &io) {
 }
 
 void TargetGraph::render() {
+#define THEME_COLOR(name) (&theme.name.Value.x)
+
     SAFE_GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer.fbo));
     SAFE_GL(glEnable(GL_DEPTH_TEST));
 
-    const auto colorBackground = theme.colorTargetGraphBackground.Value;
-    const float *colorNode = &theme.colorTargetGraphNode.Value.x;
-    const float *colorNodeFocused = &theme.colorTargetGraphNodeFocused.Value.x;
-    const float *colorNodeSelected = &theme.colorTargetGraphNodeSelected.Value.x;
-    const float *colorNodeOutline = &theme.colorTargetGraphNodeOutline.Value.x;
-    const float *colorConnection = &theme.colorTargetGraphConnection.Value.x;
-
     SAFE_GL(glViewport(0, 0, static_cast<GLsizei>(bounds.width), static_cast<GLsizei>(bounds.height)));
+    const auto colorBackground = theme.colorTargetGraphBackground.Value;
     SAFE_GL(glClearColor(colorBackground.x, colorBackground.y, colorBackground.z, colorBackground.w));
     SAFE_GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
@@ -140,18 +137,18 @@ void TargetGraph::render() {
 
         // Render solid portion of the node
         if (target == selectedTarget) {
-            SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, colorNodeSelected));
+            SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, THEME_COLOR(colorTargetGraphNodeSelected)));
         } else if (target == focusedTarget) {
-            SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, colorNodeFocused));
+            SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, THEME_COLOR(colorTargetGraphNodeFocused)));
         } else {
-            SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, colorNode));
+            SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, THEME_COLOR(colorTargetGraphNode)));
         }
         SAFE_GL(glUniform1f(program.uniformLocation.depthValue, calculateDepthValueForTarget(*target, false)));
         SAFE_GL(glDrawArrays(GL_TRIANGLE_FAN, vbBaseOffset, shape.subShapes[0].vertexCount));
 
         // Render outlines
         SAFE_GL(glUniform1f(program.uniformLocation.depthValue, calculateDepthValueForTarget(*target, true)));
-        SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, colorNodeOutline));
+        SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, THEME_COLOR(colorTargetGraphNodeOutline)));
         for (size_t subShapeIndex = 0; subShapeIndex < shape.subShapesCount; subShapeIndex++) {
             const ShapeInfo::SubShape &subShape = shape.subShapes[subShapeIndex];
             SAFE_GL(glDrawArrays(GL_LINE_LOOP, vbBaseOffset + subShape.vertexOffset, subShape.vertexCount));
@@ -165,7 +162,6 @@ void TargetGraph::render() {
     SAFE_GL(glBindVertexArray(connections.gl.vao));
     SAFE_GL(glEnableVertexAttribArray(0));
     SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(projectionMatrix)));
-    SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, colorConnection));
     for (size_t drawCallIndex = 0; drawCallIndex < connections.drawCallsCount; drawCallIndex++) {
         const Connections::DrawCall &drawCall = connections.drawCalls[drawCallIndex];
         if (drawCall.isStippled) {
@@ -173,6 +169,13 @@ void TargetGraph::render() {
             SAFE_GL(glUniform2i(program.uniformLocation.stippleData, stippleSize, stippleSize / 2));
         } else {
             SAFE_GL(glUniform2i(program.uniformLocation.stippleData, 1, 1));
+        }
+        if (drawCall.isSelected) {
+            SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, THEME_COLOR(colorTargetGraphConnectionSelected)));
+        } else if (drawCall.isFocused) {
+            SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, THEME_COLOR(colorTargetGraphConnectionFocused)));
+        } else {
+            SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, THEME_COLOR(colorTargetGraphConnection)));
         }
         SAFE_GL(glDrawArrays(drawCall.mode, drawCall.offset, drawCall.count));
     }
@@ -190,6 +193,8 @@ void TargetGraph::render() {
 
     SAFE_GL(glDisable(GL_DEPTH_TEST));
     SAFE_GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
+
+#undef THEME_COLOR
 }
 
 void TargetGraph::refreshModelMatrices() {
@@ -296,7 +301,7 @@ void TargetGraph::calculateWorldSpaceVerticesForTarget(const CmagTarget &target,
 }
 
 void TargetGraph::refreshConnections() {
-    connections.update(targets, cmakeConfig, displayedDependencyType, shapes, arrowLengthScale, arrowWidthScale);
+    connections.update(targets, cmakeConfig, displayedDependencyType, shapes, arrowLengthScale, arrowWidthScale, focusedTarget, selectedTarget);
 }
 
 void TargetGraph::setCurrentCmakeConfig(std::string_view newConfig) {
@@ -316,11 +321,20 @@ void TargetGraph::setDisplayedDependencyType(CmakeDependencyType newType) {
     refreshConnections();
 }
 
+void TargetGraph::setFocusedTarget(CmagTarget *target) {
+    if (target == focusedTarget) {
+        return;
+    }
+    focusedTarget = target;
+    refreshConnections();
+}
+
 void TargetGraph::setSelectedTarget(CmagTarget *target) {
     if (target == selectedTarget) {
         return;
     }
     selectedTarget = target;
+    refreshConnections();
 }
 
 void TargetGraph::TargetData::allocate(std::vector<CmagTarget *> &targets, float nodeScale, float textScale) {
@@ -449,7 +463,7 @@ void TargetGraph::Connections::deallocate() {
     GL_DELETE_OBJECT(gl.vao, VertexArrays);
 }
 
-void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale) {
+void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale, CmagTarget *focusedTarget, CmagTarget *selectedTarget) {
     auto addSegment = [&](const CmagTarget &srcTarget, const CmagTarget &dstTarget, std::vector<float> &outLineData, std::vector<float> &outTriangleData) {
         if (srcTarget.graphical.hideConnections || dstTarget.graphical.hideConnections) {
             return;
@@ -485,21 +499,44 @@ void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, 
     };
 
     struct DrawCallCandiate {
-        DrawCallCandiate(GLenum mode, bool isStippled) {
+        DrawCallCandiate(GLenum mode, bool isStippled, bool isFocused, bool isSelected) {
             drawCall.mode = mode;
             drawCall.isStippled = isStippled;
+            drawCall.isFocused = isFocused;
+            drawCall.isSelected = isSelected;
         }
 
         DrawCall drawCall = {};
         std::vector<float> data = {};
     };
-    DrawCallCandiate lines{GL_LINES, false};
-    DrawCallCandiate stippledLines{GL_LINES, true};
-    DrawCallCandiate triangles{GL_TRIANGLES, false};
+    DrawCallCandiate lines{GL_LINES, false, false, false};
+    DrawCallCandiate stippledLines{GL_LINES, true, false, false};
+    DrawCallCandiate triangles{GL_TRIANGLES, false, false, false};
+    DrawCallCandiate linesFocused{GL_LINES, false, true, false};
+    DrawCallCandiate stippledLinesFocused{GL_LINES, true, true, false};
+    DrawCallCandiate trianglesFocused{GL_TRIANGLES, false, true, false};
+    DrawCallCandiate linesSelected{GL_LINES, false, false, true};
+    DrawCallCandiate stippledLinesSelected{GL_LINES, true, false, true};
+    DrawCallCandiate trianglesSelected{GL_TRIANGLES, false, false, true};
     DrawCallCandiate *drawCallCandidates[maxDrawCallsCount] = {
         &lines,
         &stippledLines,
         &triangles,
+        &linesFocused,
+        &stippledLinesFocused,
+        &trianglesFocused,
+        &linesSelected,
+        &stippledLinesSelected,
+        &trianglesSelected,
+    };
+    auto selectDrawCallCandidate = [](bool isFocused, bool isSelected, DrawCallCandiate &normal, DrawCallCandiate &focused, DrawCallCandiate &selected) -> DrawCallCandiate & {
+        if (isSelected) {
+            return selected;
+        }
+        if (isFocused) {
+            return focused;
+        }
+        return normal;
     };
 
     // Analyze dependencies of all targets and gather what connections they have.
@@ -511,11 +548,19 @@ void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, 
 
         const auto &dependencies = dependencyType == CmakeDependencyType::Build ? config->derived.buildDependencies : config->derived.linkDependencies;
         for (const CmagTarget *dstTarget : dependencies) {
-            addSegment(*srcTarget, *dstTarget, lines.data, triangles.data);
+            const bool isFocused = srcTarget == focusedTarget || dstTarget == focusedTarget;
+            const bool isSelected = srcTarget == selectedTarget || dstTarget == selectedTarget;
+            DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, lines, linesFocused, linesSelected);
+            DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
+            addSegment(*srcTarget, *dstTarget, candidateLines.data, candidateTriangles.data);
         }
 
         for (const CmagTarget *dstTarget : config->derived.linkInterfaceDependencies) {
-            addSegment(*srcTarget, *dstTarget, stippledLines.data, triangles.data);
+            const bool isFocused = srcTarget == focusedTarget || dstTarget == focusedTarget;
+            const bool isSelected = srcTarget == selectedTarget || dstTarget == selectedTarget;
+            DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, stippledLines, stippledLinesFocused, stippledLinesSelected);
+            DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
+            addSegment(*srcTarget, *dstTarget, candidateLines.data, candidateTriangles.data);
         }
     }
 

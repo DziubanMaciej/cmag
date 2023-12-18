@@ -20,7 +20,7 @@ CmagBrowserTheme CmagBrowserTheme::createDarkTheme() {
     ImColor raisinBlack{0x26, 0x1F, 0x1E};
     ImColor vistaBlue{0x8E, 0xA4, 0xD2};
     ImColor vistaBlueLighter{0x7C, 0x95, 0xCB};
-    ImColor prussianBlue{0x02, 0x2F, 0x40};
+    ImColor indigoDye{0x03, 0x49, 0x63};
 
     ImColor grayBackground = ImColorGrey(0.1f);
     ImColor grayBackgroundLighter = ImColorGrey(0.11f);
@@ -43,9 +43,11 @@ CmagBrowserTheme CmagBrowserTheme::createDarkTheme() {
         ImColor(grayBackgroundLighterLighter), // colorTargetGraphBackground
         vistaBlue,                             // colorTargetGraphNode
         vistaBlueLighter,                      // colorTargetGraphNodeFocused
-        prussianBlue,                          // colorTargetGraphNodeSelected
+        indigoDye,                             // colorTargetGraphNodeSelected
         ImColorGrey(0),                        // colorTargetGraphNodeOutline
         vistaBlue,                             // colorTargetGraphConnection
+        vistaBlueLighter,                      // colorTargetGraphConnectionFocused
+        indigoDye,                             // colorTargetGraphConnectionSelected
         300.f,                                 // maxWidthPopup;
     };
     ImGui::StyleColorsDark(&theme.style);
@@ -78,8 +80,8 @@ CmagBrowserTheme CmagBrowserTheme::createDarkTheme() {
 
     // Tab bars
     style.Colors[ImGuiCol_Tab] = vistaBlue;
-    style.Colors[ImGuiCol_TabHovered] = prussianBlue; // when tab is both hovered and active, this one is used...
-    style.Colors[ImGuiCol_TabActive] = prussianBlue;
+    style.Colors[ImGuiCol_TabHovered] = indigoDye; // when tab is both hovered and active, this one is used...
+    style.Colors[ImGuiCol_TabActive] = indigoDye;
 
     return theme;
 }
