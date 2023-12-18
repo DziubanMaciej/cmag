@@ -127,18 +127,15 @@ private:
     // There are connections between the targets, which graphically represent dependencies. We keep a vertex buffer and
     // rebuild it when necessary (e.g. when nodes are moved).
     struct Connections {
-        struct {
+        struct DrawCall {
+            GLenum mode = {};
             size_t offset = {};
             size_t count = {};
-        } lines = {};
-        struct {
-            size_t offset = {};
-            size_t count = {};
-        } stippledLines = {};
-        struct {
-            size_t offset = {};
-            size_t count = {};
-        } triangles = {};
+            bool isStippled = {};
+        };
+        constexpr static inline size_t maxDrawCallsCount = 3;
+        size_t drawCallsCount = {};
+        DrawCall drawCalls [maxDrawCallsCount] = {};
         struct {
             GLuint vbo = {};
             GLuint vao = {};

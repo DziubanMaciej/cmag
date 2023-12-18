@@ -166,11 +166,16 @@ void TargetGraph::render() {
     SAFE_GL(glEnableVertexAttribArray(0));
     SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(projectionMatrix)));
     SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, colorConnection));
-    SAFE_GL(glDrawArrays(GL_TRIANGLES, connections.triangles.offset, connections.triangles.count));
-    SAFE_GL(glDrawArrays(GL_LINES, connections.lines.offset, connections.lines.count));
-    const auto stippleSize = static_cast<GLint>(static_cast<float>(bounds.width) * lineStippleScale);
-    SAFE_GL(glUniform2i(program.uniformLocation.stippleData, stippleSize, stippleSize / 2));
-    SAFE_GL(glDrawArrays(GL_LINES, connections.stippledLines.offset, connections.stippledLines.count));
+    for (size_t drawCallIndex = 0; drawCallIndex < connections.drawCallsCount; drawCallIndex++) {
+        const Connections::DrawCall &drawCall = connections.drawCalls[drawCallIndex];
+        if (drawCall.isStippled) {
+            const auto stippleSize = static_cast<GLint>(static_cast<float>(bounds.width) * lineStippleScale);
+            SAFE_GL(glUniform2i(program.uniformLocation.stippleData, stippleSize, stippleSize / 2));
+        } else {
+            SAFE_GL(glUniform2i(program.uniformLocation.stippleData, 1, 1));
+        }
+        SAFE_GL(glDrawArrays(drawCall.mode, drawCall.offset, drawCall.count));
+    }
     SAFE_GL(glUseProgram(0));
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
@@ -447,7 +452,7 @@ void TargetGraph::Connections::deallocate() {
 void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale) {
     auto addSegment = [&](const CmagTarget &srcTarget, const CmagTarget &dstTarget, std::vector<float> &outLineData, std::vector<float> &outTriangleData) {
         if (srcTarget.graphical.hideConnections || dstTarget.graphical.hideConnections) {
-            return false;
+            return;
         }
 
         const Vec srcCenter{srcTarget.graphical.x, srcTarget.graphical.y};
@@ -458,7 +463,7 @@ void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, 
         const float parameterStart = calculateSegmentTrimParameter(srcTarget, connection, shapes, true);
         const float parameterEnd = calculateSegmentTrimParameter(dstTarget, connection, shapes, false);
         if (parameterStart >= parameterEnd) {
-            return false;
+            return;
         }
         trimSegment(connection, parameterStart, parameterEnd);
 
@@ -477,18 +482,27 @@ void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, 
         outTriangleData.push_back(arrowB.y);
         outTriangleData.push_back(arrowC.x);
         outTriangleData.push_back(arrowC.y);
-
-        return true;
     };
 
-    lines = {};
-    stippledLines = {};
-    triangles = {};
+    struct DrawCallCandiate {
+        DrawCallCandiate(GLenum mode, bool isStippled) {
+            drawCall.mode = mode;
+            drawCall.isStippled = isStippled;
+        }
 
-    std::vector<float> lineData = {};
-    std::vector<float> stippledLineData = {};
-    std::vector<float> triangleData = {};
+        DrawCall drawCall = {};
+        std::vector<float> data = {};
+    };
+    DrawCallCandiate lines{GL_LINES, false};
+    DrawCallCandiate stippledLines{GL_LINES, true};
+    DrawCallCandiate triangles{GL_TRIANGLES, false};
+    DrawCallCandiate *drawCallCandidates[maxDrawCallsCount] = {
+        &lines,
+        &stippledLines,
+        &triangles,
+    };
 
+    // Analyze dependencies of all targets and gather what connections they have.
     for (const CmagTarget *srcTarget : targets) {
         const CmagTargetConfig *config = srcTarget->tryGetConfig(cmakeConfig);
         if (config == nullptr) {
@@ -497,30 +511,35 @@ void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, 
 
         const auto &dependencies = dependencyType == CmakeDependencyType::Build ? config->derived.buildDependencies : config->derived.linkDependencies;
         for (const CmagTarget *dstTarget : dependencies) {
-            if (addSegment(*srcTarget, *dstTarget, lineData, triangleData)) {
-                lines.count += 2;
-                triangles.count += 3;
-            }
+            addSegment(*srcTarget, *dstTarget, lines.data, triangles.data);
         }
 
         for (const CmagTarget *dstTarget : config->derived.linkInterfaceDependencies) {
-            if (addSegment(*srcTarget, *dstTarget, stippledLineData, triangleData)) {
-                stippledLines.count += 2;
-                triangles.count += 3;
-            }
+            addSegment(*srcTarget, *dstTarget, stippledLines.data, triangles.data);
         }
     }
 
-    lines.offset = 0;
-    stippledLines.offset = lines.offset + lines.count;
-    triangles.offset = stippledLines.offset + stippledLines.count;
+    // Calculate offsets and counts for all draw candidates
+    const size_t componentsPerVertex = 2;
+    for (size_t drawCallCandidateIndex = 0; drawCallCandidateIndex < maxDrawCallsCount; drawCallCandidateIndex++) {
+        DrawCallCandiate &candidate = *drawCallCandidates[drawCallCandidateIndex];
+        if (drawCallCandidateIndex > 0) {
+            DrawCallCandiate &previousCandidate = *drawCallCandidates[drawCallCandidateIndex - 1];
+            candidate.drawCall.offset = previousCandidate.drawCall.offset + previousCandidate.drawCall.count;
+        }
+        candidate.drawCall.count = candidate.data.size() / componentsPerVertex;
+    }
 
-    const float bytesPerVertex = 2 * sizeof(float);
-
+    // Upload data to the vertex buffer and register draw calls which have non-zero count.
+    const size_t bytesPerVertex = componentsPerVertex * sizeof(float);
+    drawCallsCount = 0;
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, gl.vbo));
-    SAFE_GL(glBufferSubData(GL_ARRAY_BUFFER, lines.offset * bytesPerVertex, lines.count * bytesPerVertex, lineData.data()));
-    SAFE_GL(glBufferSubData(GL_ARRAY_BUFFER, stippledLines.offset * bytesPerVertex, stippledLines.count * bytesPerVertex, stippledLineData.data()));
-    SAFE_GL(glBufferSubData(GL_ARRAY_BUFFER, triangles.offset * bytesPerVertex, triangles.count * bytesPerVertex, triangleData.data()));
+    for (DrawCallCandiate *candidate : drawCallCandidates) {
+        if (candidate->drawCall.count > 0) {
+            SAFE_GL(glBufferSubData(GL_ARRAY_BUFFER, candidate->drawCall.offset * bytesPerVertex, candidate->drawCall.count * bytesPerVertex, candidate->data.data()));
+            drawCalls[drawCallsCount++] = candidate->drawCall;
+        }
+    }
     SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
