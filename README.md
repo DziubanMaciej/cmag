@@ -33,7 +33,7 @@ Currently, *cmag* is not distributed in any open repositories.
 Compilation requirements: `git`, `graphviz`, `cmake` and a C++ compiler. Run the following commands:
 ```
 git submodule init
-git submodule upate
+git submodule update --recursive
 mkdir build
 cd build
 cmake -B .
