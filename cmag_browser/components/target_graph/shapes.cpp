@@ -1,14 +1,14 @@
 #include "shapes.h"
 
-inline ShapeInfo::ShapeInfo(const float *floats, size_t floatsCount, std::array<size_t, ShapeInfo::maxSubShapesCount> subShapesOffsets)
+inline ShapeInfo::ShapeInfo(const float *floats, uint32_t floatsCount, std::array<uint32_t, ShapeInfo::maxSubShapesCount> subShapesOffsets)
     : floats(floats),
       floatsCount(floatsCount) {
 
     FATAL_ERROR_IF(floatsCount == 0, "Shape has no vertices");
     FATAL_ERROR_IF(floatsCount % floatsPerVertex != 0, "Shape has incorrect number of vertices. Must be a multiple of ", floatsPerVertex, ".");
 
-    for (size_t subShapeIndex = 0; subShapeIndex < maxSubShapesCount; subShapeIndex++) {
-        const size_t currentVertexOffset = subShapesOffsets[subShapeIndex];
+    for (uint32_t subShapeIndex = 0; subShapeIndex < maxSubShapesCount; subShapeIndex++) {
+        const uint32_t currentVertexOffset = subShapesOffsets[subShapeIndex];
 
         if (subShapeIndex == 0) {
             FATAL_ERROR_IF(currentVertexOffset != 0, "First subshape offset should be 0");
@@ -28,7 +28,7 @@ inline ShapeInfo::ShapeInfo(const float *floats, size_t floatsCount, std::array<
     }
 
     SubShape &lastSubShape = subShapes[subShapesCount - 1];
-    const size_t verticesCount = floatsCount / floatsPerVertex;
+    const uint32_t verticesCount = floatsCount / floatsPerVertex;
     lastSubShape.vertexCount = verticesCount - lastSubShape.vertexOffset;
 
     for (size_t i = 0; i < verticesCount; i += 2) {

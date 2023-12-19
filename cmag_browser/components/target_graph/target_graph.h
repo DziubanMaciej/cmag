@@ -115,7 +115,7 @@ private:
     // offsets at which they start.
     struct Shapes {
         std::array<const ShapeInfo *, static_cast<int>(CmagTargetType::COUNT)> shapeInfos = {};
-        std::array<size_t, static_cast<int>(CmagTargetType::COUNT)> offsets = {};
+        std::array<GLint, static_cast<int>(CmagTargetType::COUNT)> offsets = {};
         struct {
             GLuint vbo = {};
             GLuint vao = {};
@@ -130,8 +130,8 @@ private:
     struct Connections {
         struct DrawCall {
             GLenum mode = {};
-            size_t offset = {};
-            size_t count = {};
+            GLint offset = {};
+            GLsizei count = {};
             bool isStippled = {};
             bool isFocused = {};
             bool isSelected = {};
