@@ -3,7 +3,7 @@
 	url = https://github.com/google/googletest
 [submodule "third_party/json"]
 	path = third_party/json
-	url = https://github.com/nlohmann/json
+	url = https://github.com/ForksMD/nlohmann_json.git
 [submodule "third_party/imgui/imgui"]
 	path = third_party/imgui/imgui
 	url = https://github.com/ocornut/imgui

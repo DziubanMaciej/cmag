@@ -16,6 +16,28 @@ function(json_append_key_value OUT_VARIABLE KEY VALUE INDENT)
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
 endfunction()
 
+function(json_append_key_value_raw_string OUT_VARIABLE KEY VALUE INDENT)
+    # This is wrong on so many levels... Not reading this comment is advised.
+    #
+    # We dump target properties with CMake generator expressions and embed them in json. These expressions,
+    # however, can contain many different characters, including quotes, which are enclosing characters for
+    # strings in json. This means we would have to backslash-escape them. We cannot do this in configuration
+    # phase. It can be done in generation phase with LIST:TRANSFORM genex, but it introduces a dependency on
+    # CMake 3.27.
+    #
+    # The solution is to enhance nlohmann json library with a custom functionality called "raw-strings". They
+    # start and end with a triple apostrophe, like so:
+    #    {
+    #        "normal_string" : '''our quite "fancy" new string'''
+    #    }
+    #
+    # This allows us to generate json and not escape the quotes. Of course, this will break when some project
+    # uses triple apostrophe in one of its property values. Json will probably be misformed.
+    json_append_key_value_unquoted(${OUT_VARIABLE} ${KEY} "'''${VALUE}'''" ${INDENT})
+
+    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
+endfunction()
+
 function(json_append_key_value_unquoted OUT_VARIABLE KEY VALUE INDENT)
     set(LINE "\"${KEY}\": ${VALUE},")
     json_append_line(${OUT_VARIABLE} ${LINE} ${INDENT})
@@ -51,14 +73,11 @@ macro(json_append_target_property OUT_VARIABLE TGT NAME PROPERTY INDENT GENEX_EV
         set(VALUE "$<TARGET_GENEX_EVAL:${TGT},${VALUE}>")
     endif()
 
-    # Escape quotes in property values
-    set(VALUE "$<LIST:TRANSFORM,${VALUE},REPLACE,\",\\\\\\\\\">")
-
     if (${IS_BOOL})
         set(VALUE "$<IF:$<BOOL:${VALUE}>,true,false>")
         json_append_key_value_unquoted(${OUT_VARIABLE} "${NAME}" "${VALUE}" ${INDENT})
     else()
-        json_append_key_value(${OUT_VARIABLE} "${NAME}" "${VALUE}" ${INDENT})
+        json_append_key_value_raw_string(${OUT_VARIABLE} "${NAME}" "${VALUE}" ${INDENT})
     endif()
 
 endmacro()
