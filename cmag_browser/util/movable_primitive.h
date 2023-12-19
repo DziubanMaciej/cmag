@@ -7,7 +7,7 @@ struct MovablePrimitive {
     MovablePrimitive(T const &init) : value(init) {}
 
     MovablePrimitive(MovablePrimitive const &) = default;
-    MovablePrimitive(MovablePrimitive &&other) : value(other.value) {
+    MovablePrimitive(MovablePrimitive &&other) noexcept : value(other.value) {
         other.value = empty_value;
     }
 

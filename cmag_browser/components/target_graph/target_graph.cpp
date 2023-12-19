@@ -127,7 +127,7 @@ void TargetGraph::render() {
     SAFE_GL(glBindVertexArray(shapes.gl.vao));
     SAFE_GL(glEnableVertexAttribArray(0));
     for (const CmagTarget *target : targets) {
-        const size_t vbBaseOffset = shapes.offsets[static_cast<int>(target->type)] / 2;
+        const GLint vbBaseOffset = shapes.offsets[static_cast<int>(target->type)] / 2;
         const ShapeInfo &shape = *shapes.shapeInfos[static_cast<int>(target->type)];
 
         const auto modelMatrix = TargetData::get(*target).modelMatrix;
@@ -416,7 +416,7 @@ void TargetGraph::Shapes::allocate() {
 
     // Allocate one big array that will contain all the shapes and copy the vertices.
     auto data = std::make_unique<float[]>(verticesCount);
-    size_t dataSize = 0;
+    GLsizei dataSize = 0;
     for (size_t i = 0; i < static_cast<int>(CmagTargetType::COUNT); i++) {
         const ShapeInfo *shapeInfo = shapeInfos[i];
         if (shapeInfo == nullptr) {
@@ -572,7 +572,7 @@ void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, 
             DrawCallCandiate &previousCandidate = *drawCallCandidates[drawCallCandidateIndex - 1];
             candidate.drawCall.offset = previousCandidate.drawCall.offset + previousCandidate.drawCall.count;
         }
-        candidate.drawCall.count = candidate.data.size() / componentsPerVertex;
+        candidate.drawCall.count = static_cast<GLsizei>(candidate.data.size() / componentsPerVertex);
     }
 
     // Upload data to the vertex buffer and register draw calls which have non-zero count.

@@ -91,10 +91,10 @@ void CmagBrowserTheme::setup() const {
 }
 
 RaiiImguiStyle CmagBrowserTheme::setupPropertyTable() const {
-    RaiiImguiStyle style{};
-    style.color(ImGuiCol_TableRowBg, colorPropertyTableBackground0);
-    style.color(ImGuiCol_TableRowBgAlt, colorPropertyTableBackground1);
-    return style;
+    RaiiImguiStyle raiiStyle{};
+    raiiStyle.color(ImGuiCol_TableRowBg, colorPropertyTableBackground0);
+    raiiStyle.color(ImGuiCol_TableRowBgAlt, colorPropertyTableBackground1);
+    return raiiStyle;
 }
 
 RaiiImguiStyle CmagBrowserTheme::setupPropertyName(bool isEmpty, bool isConsistent) const {
@@ -106,15 +106,15 @@ RaiiImguiStyle CmagBrowserTheme::setupPropertyName(bool isEmpty, bool isConsiste
         color = colorPropertyNameInconsistent;
     }
 
-    RaiiImguiStyle style{};
-    style.color(ImGuiCol_Text, color);
-    return style;
+    RaiiImguiStyle raiiStyle{};
+    raiiStyle.color(ImGuiCol_Text, color);
+    return raiiStyle;
 }
 
 RaiiImguiStyle CmagBrowserTheme::setupPropertyValue() const {
-    RaiiImguiStyle style{};
-    style.color(ImGuiCol_Text, colorPropertyValue);
-    return style;
+    RaiiImguiStyle raiiStyle{};
+    raiiStyle.color(ImGuiCol_Text, colorPropertyValue);
+    return raiiStyle;
 }
 
 RaiiImguiStyle CmagBrowserTheme::setupPopup() const {
@@ -122,16 +122,16 @@ RaiiImguiStyle CmagBrowserTheme::setupPopup() const {
 }
 
 RaiiImguiStyle CmagBrowserTheme::setupPopup(float textWrapWidth) const {
-    RaiiImguiStyle style{};
-    style.color(ImGuiCol_Text, colorPopup);
+    RaiiImguiStyle raiiStyle{};
+    raiiStyle.color(ImGuiCol_Text, colorPopup);
     if (textWrapWidth > 0) {
-        style.textWrapWidth(textWrapWidth);
+        raiiStyle.textWrapWidth(textWrapWidth);
     }
-    return style;
+    return raiiStyle;
 }
 
 RaiiImguiStyle CmagBrowserTheme::setupHyperlink() const {
-    RaiiImguiStyle style{};
-    style.color(ImGuiCol_Text, colorHyperlink);
-    return style;
+    RaiiImguiStyle raiiStyle{};
+    raiiStyle.color(ImGuiCol_Text, colorHyperlink);
+    return raiiStyle;
 }

@@ -8,20 +8,20 @@
 #include <limits>
 
 struct ShapeInfo {
-    constexpr static inline size_t maxSubShapesCount = 3;
-    constexpr static inline size_t maxVerticesCount = 240;
-    constexpr static inline size_t floatsPerVertex = 2;
+    constexpr static inline uint32_t maxSubShapesCount = 3;
+    constexpr static inline uint32_t maxVerticesCount = 240;
+    constexpr static inline uint32_t floatsPerVertex = 2;
 
     struct SubShape {
-        size_t vertexOffset = {};
-        size_t vertexCount = {};
+        uint32_t vertexOffset = {};
+        uint32_t vertexCount = {};
     };
 
-    ShapeInfo(const float *floats, size_t floatsCount, std::array<size_t, maxSubShapesCount> subShapesOffsets = {});
+    ShapeInfo(const float *floats, uint32_t floatsCount, std::array<uint32_t, maxSubShapesCount> subShapesOffsets = {});
 
     const float *floats;
-    size_t floatsCount;
-    size_t subShapesCount = 0;
+    uint32_t floatsCount;
+    uint32_t subShapesCount = 0;
     SubShape subShapes[maxSubShapesCount] = {};
 
     struct {
