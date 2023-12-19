@@ -1,5 +1,9 @@
 # -----------------------------CMAG POSTAMBLE BEGIN-------------------------------------------
-cmake_minimum_required(VERSION 3.9.0)
+set(CMAG_MINIMUM_VERSION 3.9.0)
+cmake_minimum_required(VERSION ${CMAG_MINIMUM_VERSION})
+if (CMAKE_VERSION VERSION_LESS CMAG_MINIMUM_VERSION)
+    message(FATAL_ERROR "cmag requires minimum CMake version ${CMAG_MINIMUM_VERSION}. Current version is ${CMAKE_VERSION}")
+endif()
 
 
 
