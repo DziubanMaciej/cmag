@@ -4,7 +4,7 @@
 #include "cmag_core/utils/error.h"
 
 #include <array>
-#include <cstddef>
+#include <cstdint>
 #include <limits>
 
 struct ShapeInfo {
