@@ -26,7 +26,7 @@ void TargetFolderTab::renderFolder(bool renderSelf, const CmagFolder &folder) {
 
     bool renderChildren = true;
     if (renderSelf) {
-        renderChildren = ImGui::TreeNodeEx(folder.fullName.c_str(), treeNodeFlags, "%s", folder.fullName.c_str());
+        renderChildren = ImGui::TreeNodeEx(folder.fullName.c_str(), treeNodeFlags, u8"\u01A4 %s", folder.fullName.c_str());
     }
 
     if (renderChildren) {
@@ -52,7 +52,7 @@ void TargetFolderTab::renderTarget(CmagTarget &target) {
     const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_Leaf;
     const char *targetName = target.name.c_str();
     const char *targetType = cmagTargetTypeToString(target.type);
-    const bool treeNodeOpen = ImGui::TreeNodeEx(targetName, treeNodeFlags, "%s (%s)", targetName, targetType);
+    const bool treeNodeOpen = ImGui::TreeNodeEx(targetName, treeNodeFlags, u8"\u01A5 %s (%s)", targetName, targetType);
 
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
         targetGraphTab.selectTargetAndFocus(&target);

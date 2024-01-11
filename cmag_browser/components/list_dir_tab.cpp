@@ -26,7 +26,7 @@ void ListDirTab::renderListDir(const char *parentName, const CmagListDir &listDi
         treeNodeFlags |= ImGuiTreeNodeFlags_Leaf;
     }
 
-    const bool treeNodeOpen = ImGui::TreeNodeEx(listDir.name.c_str(), treeNodeFlags, "%s", relativeName);
+    const bool treeNodeOpen = ImGui::TreeNodeEx(listDir.name.c_str(), treeNodeFlags, u8"\u01A4 %s", relativeName);
     renderTooltip(listDir.name);
     if (treeNodeOpen) {
         for (const size_t listDirIndex : listDir.childIndices) {
@@ -49,7 +49,7 @@ void ListDirTab::renderTarget(CmagTarget &target) {
     const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_Leaf;
     const char *targetName = target.name.c_str();
     const char *targetType = cmagTargetTypeToString(target.type);
-    const bool treeNodeOpen = ImGui::TreeNodeEx(targetName, treeNodeFlags, "%s (%s)", targetName, targetType);
+    const bool treeNodeOpen = ImGui::TreeNodeEx(targetName, treeNodeFlags, u8"\u01A5 %s (%s)", targetName, targetType);
 
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
         targetGraphTab.selectTargetAndFocus(&target);
