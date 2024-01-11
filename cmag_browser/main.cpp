@@ -5,6 +5,7 @@
 #include "cmag_browser/components/target_folder_tab.h"
 #include "cmag_browser/components/target_graph_tab.h"
 #include "cmag_browser/ui_utils/cmag_browser_theme.h"
+#include "cmag_browser/ui_utils/imgui_font_glyph_inserter.h"
 #include "cmag_core/browser/browser_argument_parser.h"
 #include "cmag_core/core/version.h"
 #include "cmag_core/parse/cmag_json_parser.h"
@@ -13,6 +14,9 @@
 
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 #include <cstdio>
+#include <generated/cmake_icon.h>
+#include <generated/folder_icon.h>
+#include <generated/font.h>
 #include <imgui/backends/imgui_impl_glfw.h>
 #include <imgui/backends/imgui_impl_opengl3.h>
 #include <imgui/imgui.h>
@@ -105,6 +109,19 @@ int main(int argc, const char **argv) {
     io.IniFilename = nullptr;
     io.LogFilename = nullptr;
 
+    // Init ImGui font
+    {
+        ImFontConfig fontConfig{};
+        fontConfig.FontDataOwnedByAtlas = false;
+        auto mainFont = io.Fonts->AddFontFromMemoryTTF(const_cast<unsigned char *>(cmagBrowserFont), sizeof(cmagBrowserFont), 64.0f, &fontConfig);
+        {
+            ImguiFontGlyphInserter inserter{io.Fonts, mainFont, 64};
+            inserter.insertGlyph(0x1A4, folderIconPngBytes, sizeof(folderIconPngBytes));
+            inserter.insertGlyph(0x1A5, cmakeIconPngBytes, sizeof(cmakeIconPngBytes));
+        }
+        mainFont->Scale = 18.f / mainFont->FontSize;
+    }
+
     // Init browser components
     CmagBrowserTheme theme = CmagBrowserTheme::createDarkTheme();
     ConfigSelector configSelector{theme, cmagProject};
@@ -116,7 +133,6 @@ int main(int argc, const char **argv) {
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
-
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();

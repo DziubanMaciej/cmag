@@ -53,7 +53,5 @@ This is a current list of items left to do in this project. It may shrink and gr
   - [ ] Implement `--merge` argument. For single config generators, such as `Unix Makefiles` we should be able to merge outputs of two `cmag` analyses into a one project to be able to compare different configs.
   - [ ] Enable CMAKE_FIND_PACKAGE_TARGETS_GLOBAL, to get all information for all imported targets. This options could be dangerous to some projects... Add an option to enable/disable it?
 - cmag_browser
-  - [ ] Use a custom font.
-  - [ ] Make ListFileTab look nicer with some icons. To achieve this, some [ImGui font magic](https://github.com/ocornut/imgui/blob/master/docs/FONTS.md) must be used.
   - [ ] Add warning in target folders tab when [USE_FOLDERS](https://cmake.org/cmake/help/latest/prop_gbl/USE_FOLDERS.html) is OFF. See also [CMP0143](https://cmake.org/cmake/help/latest/policy/CMP0143.html).
   - [ ] Fix tooltip rendering in tables. Currently, we calculate area to check for hover based on size of the text. But this text could be shorter or longer than the table cell, so it will be wrong. Looks like it isn't that simple. Maybe we could use sizes from previous frame?

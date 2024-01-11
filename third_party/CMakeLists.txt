@@ -19,6 +19,8 @@ if (CMAG_BUILD_BROWSER)
     set_target_properties(glfw update_mappings PROPERTIES FOLDER ThirdParty/GLFW)
 
     add_subdirectory(imgui)
+
+    add_subdirectory(stb)
 endif()
 
 add_subdirectory(json)
