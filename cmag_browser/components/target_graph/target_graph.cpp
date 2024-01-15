@@ -88,6 +88,8 @@ void TargetGraph::update(ImGuiIO &io) {
             }
         }
         setFocusedTarget(currentFocusedTarget);
+    } else {
+        setFocusedTarget(nullptr);
     }
 
     if (mouseMoved) {
