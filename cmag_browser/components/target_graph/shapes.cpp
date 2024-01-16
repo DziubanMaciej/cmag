@@ -31,7 +31,7 @@ inline ShapeInfo::ShapeInfo(const float *floats, uint32_t floatsCount, std::arra
     const uint32_t verticesCount = floatsCount / floatsPerVertex;
     lastSubShape.vertexCount = verticesCount - lastSubShape.vertexOffset;
 
-    for (size_t i = 0; i < verticesCount; i += 2) {
+    for (size_t i = 0; i < floatsCount; i += 2) {
         bounds.minX = std::min(bounds.minX, floats[i]);
         bounds.maxX = std::max(bounds.maxX, floats[i]);
         bounds.minY = std::min(bounds.minY, floats[i + 1]);
