@@ -96,7 +96,7 @@ void TargetGraph::update(ImGuiIO &io) {
     }
 
     if (mouseMoved) {
-        const bool updated = targetDrag.update(mouseX, mouseY, projectionMatrix);
+        const bool updated = targetDrag.update(mouseX, mouseY, vpMatrix);
         if (updated) {
             TargetData::initializeModelMatrix(*targetDrag.draggedTarget, nodeScale, textScale);
             refreshConnections();
@@ -107,7 +107,7 @@ void TargetGraph::update(ImGuiIO &io) {
 
     if (mouseInside && io.MouseClicked[ImGuiMouseButton_Left]) {
         if (focusedTarget) {
-            targetDrag.begin(mouseX, mouseY, projectionMatrix, focusedTarget);
+            targetDrag.begin(mouseX, mouseY, vpMatrix, focusedTarget);
         }
         setSelectedTarget(focusedTarget);
     }
@@ -120,6 +120,10 @@ void TargetGraph::update(ImGuiIO &io) {
     }
     if (io.MouseReleased[ImGuiMouseButton_Middle] && camera.dragActive) {
         camera.endDrag();
+    }
+
+    if (mouseInside && io.MouseWheel != 0) {
+        camera.zoom(io.MouseWheel > 0);
     }
 }
 
@@ -370,6 +374,7 @@ void TargetGraph::Camera::updateMatrix() {
     viewMatrix = glm::identity<glm::mat4>();
     viewMatrix = glm::translate(viewMatrix, glm::vec3(position.x, position.y, 0));
     viewMatrix = glm::translate(viewMatrix, glm::vec3(dragOffset.x, dragOffset.y, 0));
+    viewMatrix = glm::scale(viewMatrix, glm::vec3{scale, scale, 1});
 }
 
 void TargetGraph::Camera::beginDrag(float mouseX, float mouseY) {
@@ -397,12 +402,25 @@ void TargetGraph::Camera::endDrag() {
     dragOffset = {};
 }
 
+void TargetGraph::Camera::zoom(bool closer) {
+    const float interval = 0.1f;
+    const float minScale = 0.1f;
+    const float maxScale = 2.0f;
+
+    if (closer) {
+        scale += interval;
+    } else {
+        scale -= interval;
+    }
+    scale = clamp(scale, minScale, maxScale);
+    updateMatrix();
+}
+
 void TargetGraph::TargetDrag::begin(float mouseX, float mouseY, const glm::mat4 &projectionMatrix, CmagTarget *focusedTarget) {
     active = true;
     draggedTarget = focusedTarget;
 
-    offsetFromCenter.x = mouseX;
-    offsetFromCenter.y = mouseY;
+    offsetFromCenter = {mouseX, mouseY, 0, 1};
     offsetFromCenter = glm::inverse(projectionMatrix) * offsetFromCenter;
     offsetFromCenter.x -= focusedTarget->graphical.x;
     offsetFromCenter.y -= focusedTarget->graphical.y;

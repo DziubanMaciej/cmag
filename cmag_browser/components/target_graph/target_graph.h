@@ -102,6 +102,7 @@ private:
     struct Camera {
         glm::vec2 position = {0, 0};
         glm::mat4 viewMatrix = {};
+        float scale = 1.f;
 
         bool dragActive = false;
         glm::vec4 dragOffset = {};
@@ -111,6 +112,7 @@ private:
         void beginDrag(float mouseX, float mouseY);
         void updateDrag(float mouseX, float mouseY, const glm::mat4 &projectionMatrix);
         void endDrag();
+        void zoom(bool closer);
     } camera = {};
 
     // User can drag targets on the screen with a mouse. For this to work we need to keep track of some state. This is
