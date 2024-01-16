@@ -22,6 +22,7 @@ TargetGraph::TargetGraph(const CmagBrowserTheme &theme, std::vector<CmagTarget> 
     targetData.allocate(targets, nodeScale, textScale);
 
     projectionMatrix = glm::ortho(-worldSpaceHalfWidth, worldSpaceHalfWidth, -worldSpaceHalfHeight, worldSpaceHalfHeight);
+    camera.updateMatrix();
 }
 
 TargetGraph ::~TargetGraph() {
@@ -68,18 +69,20 @@ void TargetGraph::setScreenSpacePosition(size_t x, size_t y) {
 
 void TargetGraph::update(ImGuiIO &io) {
     // ImGuiIO gives us mouse position global to the whole window. We have to transform it so it's relative
-    // to our graph that we're rendering.
+    // to our graph. We're actually transforming it to clip space, since it will be from -1 to 1.
     const float mouseX = 2 * (io.MousePos.x - static_cast<float>(bounds.x)) / static_cast<float>(bounds.width) - 1;
     const float mouseY = 2 * (io.MousePos.y - static_cast<float>(bounds.y)) / static_cast<float>(bounds.height) - 1;
     const bool mouseInside = -1 <= mouseX && mouseX <= 1 && -1 <= mouseY && mouseY <= 1;
     const bool mouseMoved = io.MousePos.x != io.MousePosPrev.x || io.MousePos.y != io.MousePosPrev.y;
 
+    const glm::mat4 vpMatrix = projectionMatrix * camera.viewMatrix;
+
     if (mouseInside && !targetDrag.active) {
         CmagTarget *currentFocusedTarget = nullptr;
         for (CmagTarget *target : targets) {
             // Vertices are in their local space. Transform mouse coordinates to this local space, so they are comparable.
-            glm::mat4 screenToLocalMatrix = glm::inverse(projectionMatrix * TargetData::get(*target).modelMatrix);
-            glm::vec4 mouseLocal = screenToLocalMatrix * glm::vec4{mouseX, mouseY, 0, 1};
+            glm::mat4 clipToLocalMatrix = glm::inverse(vpMatrix * TargetData::get(*target).modelMatrix);
+            glm::vec4 mouseLocal = clipToLocalMatrix * glm::vec4{mouseX, mouseY, 0, 1};
 
             // Check if mouse cursor is within the shape.
             const ShapeInfo *shapeInfo = shapes.shapeInfos[static_cast<int>(target->type)];
@@ -99,6 +102,8 @@ void TargetGraph::update(ImGuiIO &io) {
             TargetData::initializeModelMatrix(*targetDrag.draggedTarget, nodeScale, textScale);
             refreshConnections();
         }
+
+        camera.updateDrag(mouseX, mouseY, projectionMatrix);
     }
 
     if (mouseInside && io.MouseClicked[ImGuiMouseButton_Left]) {
@@ -107,9 +112,15 @@ void TargetGraph::update(ImGuiIO &io) {
         }
         setSelectedTarget(focusedTarget);
     }
-
     if (io.MouseReleased[ImGuiMouseButton_Left] && targetDrag.active) {
         targetDrag.end();
+    }
+
+    if (mouseInside && io.MouseClicked[ImGuiMouseButton_Middle]) {
+        camera.beginDrag(mouseX, mouseY);
+    }
+    if (io.MouseReleased[ImGuiMouseButton_Middle] && camera.dragActive) {
+        camera.endDrag();
     }
 }
 
@@ -124,6 +135,8 @@ void TargetGraph::render() {
     SAFE_GL(glClearColor(colorBackground.x, colorBackground.y, colorBackground.z, colorBackground.w));
     SAFE_GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
+    const glm::mat4 vpMatrix = projectionMatrix * camera.viewMatrix;
+
     // Render targets
     SAFE_GL(glUseProgram(program.gl.program));
     SAFE_GL(glBindVertexArray(shapes.gl.vao));
@@ -133,7 +146,7 @@ void TargetGraph::render() {
         const ShapeInfo &shape = *shapes.shapeInfos[static_cast<int>(target->type)];
 
         const auto modelMatrix = TargetData::get(*target).modelMatrix;
-        const auto transform = projectionMatrix * modelMatrix;
+        const auto transform = vpMatrix * modelMatrix;
         SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(transform)));
         SAFE_GL(glUniform2i(program.uniformLocation.stippleData, 1, 1));
 
@@ -163,7 +176,7 @@ void TargetGraph::render() {
     SAFE_GL(glUseProgram(program.gl.program));
     SAFE_GL(glBindVertexArray(connections.gl.vao));
     SAFE_GL(glEnableVertexAttribArray(0));
-    SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(projectionMatrix)));
+    SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(vpMatrix)));
     for (size_t drawCallIndex = 0; drawCallIndex < connections.drawCallsCount; drawCallIndex++) {
         const Connections::DrawCall &drawCall = connections.drawCalls[drawCallIndex];
         if (drawCall.isStippled) {
@@ -187,7 +200,7 @@ void TargetGraph::render() {
     // Render text
     for (const CmagTarget *target : targets) {
         auto modelMatrix = TargetData::get(*target).textModelMatrix;
-        const auto transform = projectionMatrix * modelMatrix;
+        const auto transform = vpMatrix * modelMatrix;
         const auto depthValue = calculateDepthValueForTarget(*target, true);
         const auto font = ImGui::GetFont();
         textRenderer.render(transform, depthValue, target->name, font);
@@ -364,6 +377,37 @@ void TargetGraph::TargetData::initializeModelMatrix(const CmagTarget &target, fl
 
 TargetGraph::TargetData::UserData &TargetGraph::TargetData::get(const CmagTarget &target) {
     return *static_cast<TargetData::UserData *>(target.userData);
+}
+
+void TargetGraph::Camera::updateMatrix() {
+    viewMatrix = glm::identity<glm::mat4>();
+    viewMatrix = glm::translate(viewMatrix, glm::vec3(position.x, position.y, 0));
+    viewMatrix = glm::translate(viewMatrix, glm::vec3(dragOffset.x, dragOffset.y, 0));
+}
+
+void TargetGraph::Camera::beginDrag(float mouseX, float mouseY) {
+    dragActive = true;
+    dragStartPos = {mouseX, mouseY, 0, 0};
+    dragOffset = {};
+}
+
+void TargetGraph::Camera::updateDrag(float mouseX, float mouseY, const glm::mat4 &projectionMatrix) {
+    if (!dragActive) {
+        return;
+    }
+
+    dragOffset = glm::vec4(mouseX, mouseY, 0, 0) - dragStartPos;
+    dragOffset = glm::inverse(projectionMatrix) * dragOffset;
+    updateMatrix();
+}
+
+void TargetGraph::Camera::endDrag() {
+    position.x += dragOffset.x;
+    position.y += dragOffset.y;
+
+    dragActive = false;
+    dragStartPos = {};
+    dragOffset = {};
 }
 
 void TargetGraph::TargetDrag::begin(float mouseX, float mouseY, const glm::mat4 &projectionMatrix, CmagTarget *focusedTarget) {

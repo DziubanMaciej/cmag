@@ -99,6 +99,21 @@ private:
         size_t height = {};
     } bounds = {};
 
+    // The camera defines visible part of the world space and can be altered with mouse movement.
+    struct Camera {
+        glm::vec2 position = {0, 0};
+        glm::mat4 viewMatrix = {};
+
+        bool dragActive = false;
+        glm::vec4 dragOffset = {};
+        glm::vec4 dragStartPos = {};
+
+        void updateMatrix();
+        void beginDrag(float mouseX, float mouseY);
+        void updateDrag(float mouseX, float mouseY, const glm::mat4 &projectionMatrix);
+        void endDrag();
+    } camera = {};
+
     // User can drag targets on the screen with a mouse. For this to work we need to keep track of some state. This is
     // enclosed in this struct.
     struct TargetDrag {
