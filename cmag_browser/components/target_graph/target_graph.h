@@ -52,6 +52,7 @@ public:
     void refreshModelMatrices();
     void refreshConnections();
     void showEntireGraph();
+    void resetGraphLayout();
 
 private:
     struct Shapes;
@@ -137,6 +138,8 @@ private:
             GLuint vbo = {};
             GLuint vao = {};
         } gl = {};
+        float maxWidth = {};
+        float maxHeight = {};
 
         void allocate();
         void deallocate();

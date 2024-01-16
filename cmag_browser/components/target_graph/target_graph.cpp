@@ -67,6 +67,8 @@ void TargetGraph::setScreenSpacePosition(size_t x, size_t y) {
     bounds.y = y;
 }
 
+#include "cmag_browser/util/graph_layout.h"
+
 void TargetGraph::update(ImGuiIO &io) {
     // ImGuiIO gives us mouse position global to the whole window. We have to transform it so it's relative
     // to our graph. We're actually transforming it to clip space, since it will be from -1 to 1.
@@ -341,6 +343,16 @@ void TargetGraph::showEntireGraph() {
     camera.updateMatrix();
 }
 
+void TargetGraph::resetGraphLayout() {
+    const float worldSpaceNodeWidth = shapes.maxWidth * nodeScale;
+    const float worldSpaceNodeHeight = shapes.maxHeight * nodeScale;
+
+    calculateLayout(targets, cmakeConfig, worldSpaceNodeWidth, worldSpaceNodeHeight);
+
+    refreshModelMatrices();
+    refreshConnections();
+}
+
 void TargetGraph::setCurrentCmakeConfig(std::string_view newConfig) {
     if (cmakeConfig == newConfig) {
         return;
@@ -512,6 +524,15 @@ void TargetGraph::Shapes::allocate() {
 
     const GLint attribSize = 2;
     createVertexBuffer(&gl.vao, &gl.vbo, data.get(), dataSize, &attribSize, 1);
+
+    // Calculate max bounds
+    for (const ShapeInfo *shape : shapeInfos) {
+        if (shape == nullptr) {
+            continue;
+        }
+        this->maxWidth = std::max(this->maxWidth, shape->bounds.maxX - shape->bounds.minX);
+        this->maxHeight = std::max(this->maxHeight, shape->bounds.maxY - shape->bounds.minY);
+    }
 }
 
 void TargetGraph::Shapes::deallocate() {

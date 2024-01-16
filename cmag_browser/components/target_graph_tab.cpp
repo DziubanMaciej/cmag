@@ -61,6 +61,10 @@ void TargetGraphTab::renderSidePane(float width) {
     if (ImGui::Button("Fit camera")) {
         targetGraph.showEntireGraph();
     }
+    if (ImGui::Button("Reset layout")) {
+        targetGraph.resetGraphLayout();
+        targetGraph.showEntireGraph();
+    }
     renderSidePaneHideConnectionsButton(width);
     renderPropertyPopup();
     renderPropertyTable(width);
