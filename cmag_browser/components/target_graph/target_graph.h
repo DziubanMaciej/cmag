@@ -51,6 +51,7 @@ public:
 
     void refreshModelMatrices();
     void refreshConnections();
+    void showEntireGraph();
 
 private:
     struct Shapes;

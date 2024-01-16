@@ -310,6 +310,37 @@ void TargetGraph::refreshConnections() {
     connections.update(targets, cmakeConfig, displayedDependencyType, shapes, arrowLengthScale, arrowWidthScale, focusedTarget, selectedTarget);
 }
 
+void TargetGraph::showEntireGraph() {
+    float minX = std::numeric_limits<float>::max();
+    float maxX = std::numeric_limits<float>::min();
+    float minY = std::numeric_limits<float>::max();
+    float maxY = std::numeric_limits<float>::min();
+
+    for (CmagTarget *target : targets) {
+        const ShapeInfo *shape = shapes.shapeInfos[static_cast<int>(target->type)];
+        const float targetMinX = target->graphical.x + shape->bounds.minX * nodeScale;
+        const float targetMaxX = target->graphical.x + shape->bounds.maxX * nodeScale;
+        const float targetMinY = target->graphical.y + shape->bounds.minY * nodeScale;
+        const float targetMaxY = target->graphical.y + shape->bounds.maxY * nodeScale;
+
+        minX = std::min(minX, targetMinX);
+        maxX = std::max(maxX, targetMaxX);
+        minY = std::min(minY, targetMinY);
+        maxY = std::max(maxY, targetMaxY);
+    }
+
+    const float scaleX = (2 * worldSpaceHalfWidth) / (maxX - minX);
+    const float scaleY = (2 * worldSpaceHalfHeight) / (maxY - minY);
+    const float scale = std::min(scaleX, scaleY);
+    camera.scale = scale;
+
+    const float middleX = -scale * (maxX + minX) / 2;
+    const float middleY = -scale * (maxY + minY) / 2;
+    camera.position = {middleX, middleY};
+
+    camera.updateMatrix();
+}
+
 void TargetGraph::setCurrentCmakeConfig(std::string_view newConfig) {
     if (cmakeConfig == newConfig) {
         return;

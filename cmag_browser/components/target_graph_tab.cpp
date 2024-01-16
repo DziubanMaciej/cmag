@@ -58,6 +58,9 @@ void TargetGraphTab::renderSidePane(float width) {
 
     configSelector.render(width);
     renderSidePaneDependencyTypeSelection(width);
+    if (ImGui::Button("Fit camera")) {
+        targetGraph.showEntireGraph();
+    }
     renderSidePaneHideConnectionsButton(width);
     renderPropertyPopup();
     renderPropertyTable(width);
