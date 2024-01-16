@@ -56,7 +56,6 @@ private:
     struct Shapes;
     void fillTargetsVector(std::vector<CmagTarget> &allTargets);
     void scaleTargetPositionsToWorldSpace();
-    void clampTargetPositionToVisibleWorldSpace(CmagTarget &target) const;
     float calculateDepthValueForTarget(const CmagTarget &target, bool forText) const;
     static void calculateWorldSpaceVerticesForTarget(const CmagTarget &target, const Shapes &shapes, float *outVertices, size_t *outVerticesCount);
 

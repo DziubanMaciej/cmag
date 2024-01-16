@@ -98,7 +98,6 @@ void TargetGraph::update(ImGuiIO &io) {
     if (mouseMoved) {
         const bool updated = targetDrag.update(mouseX, mouseY, projectionMatrix);
         if (updated) {
-            clampTargetPositionToVisibleWorldSpace(*targetDrag.draggedTarget);
             TargetData::initializeModelMatrix(*targetDrag.draggedTarget, nodeScale, textScale);
             refreshConnections();
         }
@@ -265,18 +264,6 @@ void TargetGraph::scaleTargetPositionsToWorldSpace() {
         target->graphical.x = interpolate(target->graphical.x, minX, maxX, -worldSpaceHalfWidth, worldSpaceHalfWidth);
         target->graphical.y = interpolate(target->graphical.y, minY, maxY, -worldSpaceHalfHeight, worldSpaceHalfHeight);
     }
-}
-
-void TargetGraph::clampTargetPositionToVisibleWorldSpace(CmagTarget &target) const {
-    const ShapeInfo *shape = shapes.shapeInfos[static_cast<int>(target.type)];
-
-    const float minX = -shape->bounds.minX * nodeScale - worldSpaceHalfWidth;
-    const float maxX = -shape->bounds.maxX * nodeScale + worldSpaceHalfWidth;
-    const float minY = -shape->bounds.minY * nodeScale - worldSpaceHalfHeight;
-    const float maxY = -shape->bounds.maxY * nodeScale + worldSpaceHalfHeight;
-
-    target.graphical.x = clamp(target.graphical.x, minX, maxX);
-    target.graphical.y = clamp(target.graphical.y, minY, maxY);
 }
 
 float TargetGraph::calculateDepthValueForTarget(const CmagTarget &target, bool forText) const {
