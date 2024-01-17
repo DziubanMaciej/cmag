@@ -85,10 +85,6 @@ DumperArgumentParser::DumperArgumentParser(int argc, const char **argv) : argc(a
             buildPath = value;
             continue;
         }
-        if (const char *value = parseKeyValueArgument("--graphviz", argIndex, arg, nextArg); value) {
-            graphvizPath = value;
-            continue;
-        }
 
         // Skip key-value options spanning two arguments.
         if (skipIrrelevantKeyValueArgument(argIndex, arg)) {
@@ -117,11 +113,6 @@ DumperArgumentParser::DumperArgumentParser(int argc, const char **argv) : argc(a
     }
     if (buildPath.empty()) {
         buildPath = ".";
-    }
-    if (graphvizPath.empty()) {
-        graphvizPath = buildPath / "graph.dot";
-        extraArgs.emplace_back("--graphviz");
-        extraArgs.emplace_back(graphvizPath.string());
     }
 }
 
@@ -180,6 +171,7 @@ bool DumperArgumentParser::skipIrrelevantKeyValueArgument(int &argIndex, std::st
         "--preset",
         "-P",
         "--find-package",
+        "--graphviz",
         "--system-information",
         "--log-level",
         "--debug-find-pkg",
@@ -193,9 +185,25 @@ bool DumperArgumentParser::skipIrrelevantKeyValueArgument(int &argIndex, std::st
 
     // We need to list them manually, because they change the meaning of the next argument.
     for (const char *keyValueArg : keyValueArgs) {
+        // Check for two argument form
         if (currentArg == keyValueArg) {
-            argIndex++;
+            if (argIndex + 1 < argc) {
+                argIndex++;
+            } else {
+                valid = false;
+            }
             return true;
+        }
+
+        // Check for equals form
+        const size_t keyValueArgLen = strlen(keyValueArg);
+        if (currentArg.find(keyValueArg) == 0) {
+            if (currentArg.length() == keyValueArgLen + 1) {
+                if (currentArg[keyValueArgLen] == '=') {
+                    valid = false;
+                    return true;
+                }
+            }
         }
     }
     return false;
@@ -203,12 +211,9 @@ bool DumperArgumentParser::skipIrrelevantKeyValueArgument(int &argIndex, std::st
 
 std::vector<std::string> DumperArgumentParser::constructArgsForCmake() const {
     std::vector<std::string> result = {};
-    result.reserve(argc - 1 + extraArgs.size());
+    result.reserve(argc - 1);
     for (int i = cmakeArgsStartIndex; i < argc; i++) {
         result.emplace_back(argv[i]);
-    }
-    for (const auto &extraArg : extraArgs) {
-        result.emplace_back(extraArg.c_str());
     }
     return result;
 }

@@ -9,7 +9,6 @@ struct TestWorkspace {
     bool valid = false;
     fs::path sourcePath;
     fs::path buildPath;
-    fs::path graphvizPath;
 
     ~TestWorkspace() {
         removeFile(sourcePath);
@@ -41,7 +40,6 @@ struct TestWorkspace {
         workspace.valid = !::testing::Test::HasFailure();
         workspace.sourcePath = dstProjectDir;
         workspace.buildPath = dstProjectDir / "build";
-        workspace.graphvizPath = dstProjectDir / "build" / "a.dot";
         return workspace;
     }
 };

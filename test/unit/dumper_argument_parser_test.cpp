@@ -98,7 +98,7 @@ TEST(DumperArgumentParserTest, givenOptionsBeyondSourcePathThenIgnoreThem) {
     EXPECT_STREQ("..", parser.getSourcePath().string().c_str());
 }
 
-TEST(DumperArgumentParserTest, givenKeyValueOptionsBeyondSourcePathThenIgnoreThem) {
+TEST(DumperArgumentParserTest, givenKeyValueOptionsThenIgnoreThem) {
     const char *argv[] = {"cmag", "cmake", "-B", "build", "..", "-G", "Ninja", "-P", "script"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     DumperArgumentParser parser{argc, argv};
@@ -106,7 +106,7 @@ TEST(DumperArgumentParserTest, givenKeyValueOptionsBeyondSourcePathThenIgnoreThe
     EXPECT_STREQ("..", parser.getSourcePath().string().c_str());
 }
 
-TEST(DumperArgumentParserTest, givenKeyValueOptionsWithEqualsSignBeyondSourcePathThenIgnoreThem) {
+TEST(DumperArgumentParserTest, givenKeyValueOptionsWithEqualsSignThenIgnoreThem) {
     const char *argv[] = {"cmag", "cmake", "-B=build", "..", "-G=Ninja", "-P=script"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     DumperArgumentParser parser{argc, argv};
@@ -114,85 +114,34 @@ TEST(DumperArgumentParserTest, givenKeyValueOptionsWithEqualsSignBeyondSourcePat
     EXPECT_STREQ("..", parser.getSourcePath().string().c_str());
 }
 
-TEST(DumperArgumentParserTest, givenNoGraphvizOptionThenInsertOurOwn) {
-    const char *argv[] = {"cmag", "cmake", ".."};
-    const int argc = sizeof(argv) / sizeof(argv[0]);
-    DumperArgumentParser parser{argc, argv};
-    EXPECT_TRUE(parser.isValid());
-
-    fs::path expectedGraphvizPath = "./graph.dot";
-    EXPECT_EQ(expectedGraphvizPath, parser.getGraphvizPath());
-    ASSERT_EQ(2u, parser.getExtraArgs().size());
-    EXPECT_STREQ("--graphviz", parser.getExtraArgs()[0].c_str());
-    EXPECT_EQ(expectedGraphvizPath, parser.getExtraArgs()[1]);
+TEST(DumperArgumentParserTest, givenKeyValueOptionWithoutKeyThenArgumentsAreInvalid) {
+    // This is a list of key-value args picked arbitrarily.
+    const char *keyValueArgs[] = {
+        "--graphviz",
+        "-U",
+        "--install-prefix",
+    };
+    for (const char *keyValueArg : keyValueArgs) {
+        const char *argv[] = {"cmag", "cmake", "..", keyValueArg};
+        const int argc = sizeof(argv) / sizeof(argv[0]);
+        DumperArgumentParser parser{argc, argv};
+        EXPECT_FALSE(parser.isValid());
+    }
 }
 
-TEST(DumperArgumentParserTest, givenNoGraphvizOptionAndExplicitBuildPathThenInsertOurOwnGraphvizPathRelativeToBuildPath) {
-    const char *argv[] = {"cmag", "cmake", "..", "-B", "myBuild"};
-    const int argc = sizeof(argv) / sizeof(argv[0]);
-    DumperArgumentParser parser{argc, argv};
-    EXPECT_TRUE(parser.isValid());
-
-    fs::path expectedGraphvizPath = "myBuild/graph.dot";
-    EXPECT_EQ(expectedGraphvizPath, parser.getGraphvizPath());
-    ASSERT_EQ(2u, parser.getExtraArgs().size());
-    EXPECT_STREQ("--graphviz", parser.getExtraArgs()[0].c_str());
-    EXPECT_EQ(expectedGraphvizPath, parser.getExtraArgs()[1]);
-}
-
-TEST(DumperArgumentParserTest, givenGraphvizOptionThenParseIt) {
-    const char *argv[] = {"cmag", "cmake", "..", "--graphviz", "a.dot"};
-    const int argc = sizeof(argv) / sizeof(argv[0]);
-    DumperArgumentParser parser{argc, argv};
-    EXPECT_TRUE(parser.isValid());
-    EXPECT_STREQ("a.dot", parser.getGraphvizPath().string().c_str());
-    EXPECT_TRUE(parser.getExtraArgs().empty());
-}
-
-TEST(DumperArgumentParserTest, givenGraphvizOptionWithEqualsSignThenParseIt) {
-    const char *argv[] = {"cmag", "cmake", "..", "--graphviz=a.dot"};
-    const int argc = sizeof(argv) / sizeof(argv[0]);
-    DumperArgumentParser parser{argc, argv};
-    EXPECT_TRUE(parser.isValid());
-    EXPECT_STREQ("a.dot", parser.getGraphvizPath().string().c_str());
-    EXPECT_TRUE(parser.getExtraArgs().empty());
-}
-
-TEST(DumperArgumentParserTest, givenMultipleGraphvizOptionsThenParseUseLastOne) {
-    const char *argv[] = {"cmag", "cmake", "..", "--graphviz=a.dot", "--graphviz", "b.dot"};
-    const int argc = sizeof(argv) / sizeof(argv[0]);
-    DumperArgumentParser parser{argc, argv};
-    EXPECT_TRUE(parser.isValid());
-    EXPECT_STREQ("b.dot", parser.getGraphvizPath().string().c_str());
-    EXPECT_TRUE(parser.getExtraArgs().empty());
-}
-
-TEST(DumperArgumentParserTest, givenOptionStartingWithGraphvizThenIgnoreItAndParseNextArgs) {
-    const char *argv[] = {"cmag", "cmake", "--graphvizz", ".."};
-    const int argc = sizeof(argv) / sizeof(argv[0]);
-    DumperArgumentParser parser{argc, argv};
-    EXPECT_TRUE(parser.isValid());
-    EXPECT_STREQ("..", parser.getSourcePath().string().c_str());
-
-    fs::path expectedGraphvizPath = "./graph.dot";
-    EXPECT_EQ(expectedGraphvizPath, parser.getGraphvizPath());
-    ASSERT_EQ(2u, parser.getExtraArgs().size());
-    EXPECT_STREQ("--graphviz", parser.getExtraArgs()[0].c_str());
-    EXPECT_EQ(expectedGraphvizPath, parser.getExtraArgs()[1]);
-}
-
-TEST(DumperArgumentParserTest, givenUndefinedGraphvizOptionThenArgumentsAreInvalid) {
-    const char *argv[] = {"cmag", "cmake", "..", "--graphviz"};
-    const int argc = sizeof(argv) / sizeof(argv[0]);
-    DumperArgumentParser parser{argc, argv};
-    EXPECT_FALSE(parser.isValid());
-}
-
-TEST(DumperArgumentParserTest, givenUndefinedGraphvizOptionWithEqualsSignThenArgumentsAreInvalid) {
-    const char *argv[] = {"cmag", "cmake", "..", "--graphviz="};
-    const int argc = sizeof(argv) / sizeof(argv[0]);
-    DumperArgumentParser parser{argc, argv};
-    EXPECT_FALSE(parser.isValid());
+TEST(DumperArgumentParserTest, givenKeyValueOptionWithEqualsSignAndWithoutKeyThenArgumentsAreInvalid) {
+    // This is a list of key-value args picked arbitrarily.
+    const char *keyValueArgs[] = {
+        "--graphviz=",
+        "-U=",
+        "--install-prefix=",
+    };
+    for (const char *keyValueArg : keyValueArgs) {
+        const char *argv[] = {"cmag", "cmake", "..", keyValueArg};
+        const int argc = sizeof(argv) / sizeof(argv[0]);
+        DumperArgumentParser parser{argc, argv};
+        EXPECT_FALSE(parser.isValid());
+    }
 }
 
 TEST(DumperArgumentParserTest, givenDefinitionArgWhenParsingThenParseCorrectly) {
@@ -212,50 +161,33 @@ TEST(DumperArgumentParserTest, givenDefinitionArgWithSpaceWhenParsingThenParseCo
 }
 
 TEST(DumperArgumentParserTest, givenNoExtraArgsWhenConstructingArgsForCMakeThenReturnArgumentsVerbatim) {
-    const char *argv[] = {"cmag", "cmake", "..", "--graphviz=a.graph", "-B", "bbb"};
+    const char *argv[] = {"cmag", "cmake", "-U", "1", "..", "--graphviz=a.graph"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     DumperArgumentParser parser{argc, argv};
     EXPECT_TRUE(parser.isValid());
-    EXPECT_TRUE(parser.getExtraArgs().empty());
 
     auto cmakeArgs = parser.constructArgsForCmake();
     std::vector<std::string> expectedArgs = {
         "cmake",
+        "-U",
+        "1",
         "..",
         "--graphviz=a.graph",
-        "-B",
-        "bbb",
-    };
-    compareArgs(expectedArgs, cmakeArgs);
-}
-
-TEST(DumperArgumentParserTest, givenExtraArgsWhenConstructingArgsForCMakeThenAppendThemAtTheEnd) {
-    const char *argv[] = {"cmag", "cmake", "..", "-B", "bbb"};
-    const int argc = sizeof(argv) / sizeof(argv[0]);
-    DumperArgumentParser parser{argc, argv};
-    EXPECT_TRUE(parser.isValid());
-    EXPECT_EQ(2u, parser.getExtraArgs().size());
-
-    auto cmakeArgs = parser.constructArgsForCmake();
-    std::vector<std::string> expectedArgs = {
-        "cmake",
-        "..",
-        "-B",
-        "bbb",
-        "--graphviz",
-        (fs::path("bbb") / "graph.dot").string(),
     };
     compareArgs(expectedArgs, cmakeArgs);
 }
 
 TEST(DumperArgumentParserTest, givenCmagArgsArePassedThenConstructCmakeArgsProperly) {
-    const char *argv[] = {"cmag", "-p", "Aaa", "-e", "Bbb", "cmake", "..", "--graphviz=a.graph"};
+    const char *argv[] = {"cmag", "-p", "Aaa", "-e", "Bbb", "cmake", "-U", "1", "..", "--graphviz=a.graph"};
     const int argc = sizeof(argv) / sizeof(argv[0]);
     DumperArgumentParser parser{argc, argv};
     EXPECT_TRUE(parser.isValid());
+
     auto cmakeArgs = parser.constructArgsForCmake();
     std::vector<std::string> expectedArgs = {
         "cmake",
+        "-U",
+        "1",
         "..",
         "--graphviz=a.graph",
     };

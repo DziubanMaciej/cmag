@@ -18,7 +18,7 @@ public:
     CmagDumper(std::string_view projectName, bool generationDebug);
     ~CmagDumper();
 
-    CmagResult generateCmake(const fs::path &sourcePath, const fs::path &buildPath, std::vector<std::string> cmakeArgs, std::string_view extraTargetProperties);
+    CmagResult generateCmake(const fs::path &sourcePath, std::vector<std::string> cmakeArgs, std::string_view extraTargetProperties);
     CmagResult readCmagProjectFromGeneration(const fs::path &buildPath);
     CmagResult writeProjectToFile(const fs::path &buildPath);
     CmagResult cleanupTemporaryFiles();
