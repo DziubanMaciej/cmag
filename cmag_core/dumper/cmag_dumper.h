@@ -10,7 +10,6 @@ enum class CmagResult {
     FileAccessError,
     SubprocessError,
     JsonParseError,
-    XdotParseError,
     ProjectCreationError,
 };
 
@@ -21,7 +20,6 @@ public:
 
     CmagResult generateCmake(const fs::path &sourcePath, const fs::path &buildPath, std::vector<std::string> cmakeArgs, std::string_view extraTargetProperties);
     CmagResult readCmagProjectFromGeneration(const fs::path &buildPath);
-    CmagResult generateGraphPositionsForProject(const fs::path &buildPath, const fs::path &graphvizPath);
     CmagResult writeProjectToFile(const fs::path &buildPath);
     CmagResult cleanupTemporaryFiles();
     CmagResult launchProjectInGui(const fs::path &buildPath);

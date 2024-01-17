@@ -3,7 +3,6 @@
 #include "cmag_core/core/version.h"
 #include "cmag_core/parse/cmag_json_parser.h"
 #include "cmag_core/parse/cmag_json_writer.h"
-#include "cmag_core/parse/xdot_parser.h"
 #include "cmag_core/shim/cmake_lists_shimmer.h"
 #include "cmag_core/utils/error.h"
 #include "cmag_core/utils/file_utils.h"
@@ -140,50 +139,6 @@ CmagResult CmagDumper::readCmagProjectFromGeneration(const fs::path &buildPath) 
         if (!addResult) {
             LOG_ERROR("failed to create project");
             return CmagResult::ProjectCreationError;
-        }
-    }
-
-    return CmagResult::Success;
-}
-CmagResult CmagDumper::generateGraphPositionsForProject(const fs::path &buildPath, const fs::path &graphvizPath) {
-    // Perform .dot->.xdot conversion
-    const std::string xdotPath = (buildPath / (projectName + ".xdot")).string();
-    {
-        const std::string graphvizPathString = graphvizPath.string();
-        std::vector<std::string> dotArgs{
-            "dot",
-            "-Txdot",
-            graphvizPathString,
-            "-o",
-            xdotPath,
-        };
-        SubprocessResult result = runSubprocess(dotArgs);
-        if (result != SubprocessResult::Success) {
-            LOG_ERROR("failed to generate xdot");
-            return CmagResult::SubprocessError;
-        }
-    }
-
-    // Parse .xdot
-    XdotData xdotData = {};
-    {
-        const auto xdotContent = readFile(xdotPath);
-        if (!xdotContent.has_value()) {
-            LOG_ERROR("failed to read ", xdotPath);
-            return CmagResult::FileAccessError;
-        }
-        temporaryFiles.push_back(xdotPath);
-        XdotParseResult parseResult = XdotParser::parse(xdotContent.value(), xdotData);
-        if (parseResult != XdotParseResult::Success) {
-            LOG_ERROR("failed to parse ", xdotPath, " (errorCode=", static_cast<int>(parseResult), ")");
-            return CmagResult::XdotParseError;
-        }
-    }
-
-    // Assign values to project
-    {
-        for (const XdotData::Target &target : xdotData.targets) {
-            project.addTargetGraphical(target.name, target.x, target.y);
         }
     }
 

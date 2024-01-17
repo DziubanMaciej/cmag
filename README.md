@@ -48,7 +48,6 @@ This is a current list of items left to do in this project. It may shrink and gr
   - [ ] Add some presentation and screenshots of the browser in this README.
 - cmag
   - [ ] Explore if handling targets created in [included](https://cmake.org/cmake/help/latest/command/include.html) files is possible. Currently, we make it look as if they were created in CMakeLists.txt itself.
-  - [ ] Break the dependency from graphviz. Graph layout should be handled in a more robust way.
   - [ ] Add textual errors to parsers. We often get "failed parsing X" without any more helpful information.
   - [ ] Implement `--merge` argument. For single config generators, such as `Unix Makefiles` we should be able to merge outputs of two `cmag` analyses into a one project to be able to compare different configs.
   - [ ] Enable CMAKE_FIND_PACKAGE_TARGETS_GLOBAL, to get all information for all imported targets. This options could be dangerous to some projects... Add an option to enable/disable it?

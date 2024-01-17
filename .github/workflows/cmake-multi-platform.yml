@@ -37,10 +37,6 @@ jobs:
             c_compiler: cl
 
     steps:
-    - name: Install graphviz
-      uses: ts-graphviz/setup-graphviz@v1
-
-
     - name: Install ninja
       if: matrix.os == 'ubuntu-latest'
       run: sudo apt-get install -y ninja-build
