@@ -39,7 +39,7 @@ jobs:
     steps:
     - name: Install ninja and mesa
       if: matrix.os == 'ubuntu-latest'
-      run: sudo apt-get install -y ninja-build libgl1-mesa-dev libxrandr
+      run: sudo apt-get install -y ninja-build libgl1-mesa-dev libxrandr-dev
       
     - name: Install ninja
       if: matrix.os == 'windows-latest'
