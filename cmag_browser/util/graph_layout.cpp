@@ -173,14 +173,6 @@ void calculateLayout(const std::vector<CmagTarget *> &targets,
     Graph graph = createGraph(targets, configName);
     assignLayersTopological(graph);
 
-    for (Layer &layer : graph.layers) {
-        printf("Layer: ");
-        for (Node *node : layer.nodes) {
-            printf("%s, ", node->target->name.c_str());
-        }
-        printf("\n");
-    }
-
     // TODO reorder nodes
 
     assignCoordinates(graph, nodeWidth, nodeHeight);
