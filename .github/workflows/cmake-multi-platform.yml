@@ -37,9 +37,9 @@ jobs:
             c_compiler: cl
 
     steps:
-    - name: Install ninja
+    - name: Install ninja and mesa
       if: matrix.os == 'ubuntu-latest'
-      run: sudo apt-get install -y ninja-build
+      run: sudo apt-get install -y ninja-build libgl1-mesa-dev
       
     - name: Install ninja
       if: matrix.os == 'windows-latest'
@@ -65,8 +65,9 @@ jobs:
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-        -DCMAG_BUILD_BROWSER=0
+        -DCMAG_BUILD_BROWSER=1
         -DCMAG_BUILD_TESTS=1
+        -DGLFW_BUILD_X11=OFF
         -S ${{ github.workspace }}
 
     - name: Build
