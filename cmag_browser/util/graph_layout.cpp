@@ -156,11 +156,8 @@ static void assignCoordinates(Graph &graph, size_t nodeWidth, size_t nodeHeight)
         Node &node = *graph.orphansLayer.nodes[nodeIndex];
         CmagTargetGraphicalData &graphical = node.target->graphical;
 
-        // TODO make this smarter.
-        //  Offset horizontal in relation to nodeWidth
-        //  Arrange in 2D grid in case of very high number of orphan nodes. We don't want a giant vertical wall of nodes.
         graphical.x = -100;
-        graphical.y = nodeIndex * nodeHeight * 1.05;
+        graphical.y = nodeIndex * nodeHeight * 1.05f;
     }
 }
 
@@ -168,12 +165,7 @@ void calculateLayout(const std::vector<CmagTarget *> &targets,
                      std::string_view configName,
                      size_t nodeWidth,
                      size_t nodeHeight) {
-    // TODO remove cycles. Can we even have cycles? Isn't our graph a DAG?
-
     Graph graph = createGraph(targets, configName);
     assignLayersTopological(graph);
-
-    // TODO reorder nodes
-
     assignCoordinates(graph, nodeWidth, nodeHeight);
 }

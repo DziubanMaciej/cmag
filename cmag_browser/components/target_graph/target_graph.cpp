@@ -311,8 +311,8 @@ void TargetGraph::showEntireGraph() {
 }
 
 void TargetGraph::resetGraphLayout() {
-    const float worldSpaceNodeWidth = shapes.maxWidth * nodeScale;
-    const float worldSpaceNodeHeight = shapes.maxHeight * nodeScale;
+    const auto worldSpaceNodeWidth = static_cast<size_t>(shapes.maxWidth * nodeScale);
+    const auto worldSpaceNodeHeight = static_cast<size_t>(shapes.maxHeight * nodeScale);
 
     calculateLayout(targets, cmakeConfig, worldSpaceNodeWidth, worldSpaceNodeHeight);
 
