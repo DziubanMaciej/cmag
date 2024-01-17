@@ -112,6 +112,7 @@ ParseResult CmagJsonParser::parseGlobalValues(const nlohmann::json &node, CmagGl
 
 #define PARSE_GLOBAL_FIELD(name) RETURN_ERROR(parseObjectField(node, #name, outGlobals.name))
     PARSE_GLOBAL_FIELD(darkMode);
+    PARSE_GLOBAL_FIELD(needsLayout);
     PARSE_GLOBAL_FIELD(selectedConfig);
     PARSE_GLOBAL_FIELD(cmagVersion);
     PARSE_GLOBAL_FIELD(cmakeVersion);

@@ -44,6 +44,7 @@ struct CmagListDir {
 
 struct CmagGlobals {
     bool darkMode = false;
+    bool needsLayout = false;
     std::string selectedConfig = {};
     std::string cmagVersion = {};
     std::string cmakeVersion = {};

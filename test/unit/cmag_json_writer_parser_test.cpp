@@ -30,6 +30,7 @@ struct CmagWriterParserTest : ::testing::Test {
         const auto &expGlobals = exp.getGlobals();
         const auto &actGlobals = act.getGlobals();
         EXPECT_EQ(expGlobals.darkMode, actGlobals.darkMode);
+        EXPECT_EQ(expGlobals.needsLayout, actGlobals.needsLayout);
         EXPECT_EQ(expGlobals.selectedConfig, actGlobals.selectedConfig);
         EXPECT_EQ(expGlobals.cmagVersion, actGlobals.cmagVersion);
         EXPECT_EQ(expGlobals.cmakeVersion, actGlobals.cmakeVersion);
@@ -253,6 +254,7 @@ TEST_F(CmagWriterParserTest, givenProjectWithSetGlobalsThenWriteAndReadCorrectly
 
     CmagGlobals &globals = project.getGlobals();
     globals.darkMode = true;
+    globals.needsLayout = true;
     globals.selectedConfig = "Debug",
     globals.cmagVersion = "19.0.0";
     globals.cmakeVersion = "3.5.9";

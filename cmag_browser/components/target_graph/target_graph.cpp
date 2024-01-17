@@ -11,10 +11,9 @@
 #include <imgui/imgui.h>
 #include <memory>
 
-TargetGraph::TargetGraph(const CmagBrowserTheme &theme, std::vector<CmagTarget> &allTargets)
+TargetGraph::TargetGraph(const CmagBrowserTheme &theme, CmagProject &project, std::string_view defaultConfig)
     : theme(theme) {
-    fillTargetsVector(allTargets);
-    scaleTargetPositionsToWorldSpace();
+    fillTargetsVector(project.getTargets());
 
     shapes.allocate();
     connections.allocate(targets);
@@ -22,7 +21,14 @@ TargetGraph::TargetGraph(const CmagBrowserTheme &theme, std::vector<CmagTarget> 
     targetData.allocate(targets, nodeScale, textScale);
 
     projectionMatrix = glm::ortho(-worldSpaceHalfWidth, worldSpaceHalfWidth, -worldSpaceHalfHeight, worldSpaceHalfHeight);
-    camera.updateMatrix();
+
+    setCurrentCmakeConfig(defaultConfig);
+
+    if (project.getGlobals().needsLayout) {
+        resetGraphLayout();
+        project.getGlobals().needsLayout = true;
+    }
+    showEntireGraph();
 }
 
 TargetGraph ::~TargetGraph() {
@@ -230,45 +236,6 @@ void TargetGraph::fillTargetsVector(std::vector<CmagTarget> &allTargets) {
         }
 
         targets.push_back(&target);
-    }
-}
-
-void TargetGraph::scaleTargetPositionsToWorldSpace() {
-    // Target positions were calculated by core cmag and the may be in an arbitrary space. We scale them to our
-    // custom world space.
-
-    // Find out bounds of arbitrary space of the targets.
-    float minX = std::numeric_limits<float>::max();
-    float maxX = std::numeric_limits<float>::min();
-    float minY = std::numeric_limits<float>::max();
-    float maxY = std::numeric_limits<float>::min();
-    for (const CmagTarget *target : targets) {
-        minX = std::min(minX, target->graphical.x);
-        maxX = std::max(maxX, target->graphical.x);
-
-        minY = std::min(minY, target->graphical.y);
-        maxY = std::max(maxY, target->graphical.y);
-    }
-
-    // Our nodes have their size. We have to add it to our bounds, so entire node is always visible.
-    minX -= nodeScale;
-    maxX += nodeScale;
-    minY -= nodeScale;
-    maxY += nodeScale;
-
-    // We add some additional padding.
-    constexpr float paddingPercentage = 0.1f;
-    const float paddingX = (maxX - minX) * paddingPercentage / 2;
-    minX -= paddingX;
-    maxX += paddingX;
-    const float paddingY = (maxY - minY) * paddingPercentage / 2;
-    minY -= paddingY;
-    maxY += paddingY;
-
-    // Linearly transform x and y of all targets to our world space.
-    for (CmagTarget *target : targets) {
-        target->graphical.x = interpolate(target->graphical.x, minX, maxX, -worldSpaceHalfWidth, worldSpaceHalfWidth);
-        target->graphical.y = interpolate(target->graphical.y, minY, maxY, -worldSpaceHalfHeight, worldSpaceHalfHeight);
     }
 }
 

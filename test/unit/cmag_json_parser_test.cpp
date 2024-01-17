@@ -9,6 +9,7 @@ struct CmagParseTest : ::testing::Test {
         const char *globals = R"DELIMETER(
             {
                 "darkMode": false,
+                "needsLayout": false,
                 "selectedConfig": "",
                 "cmagVersion": "",
                 "cmakeVersion": "",
@@ -45,7 +46,7 @@ void compareTargetProperties(const CmagTargetConfig &expected, const CmagTargetC
 
 using CmagProjectParseTest = CmagParseTest;
 
-TEST_F(CmagProjectParseTest, givenProjectWithNoTargetsAndNoGlobalsThenParseCorrectly) {
+TEST_F(CmagProjectParseTest, givenProjectWithNoTargetsAndEmptyGlobalsThenParseCorrectly) {
     const char *json = insertGlobals(R"DELIMETER(
     {
         "globals": %s,
@@ -63,6 +64,7 @@ TEST_F(CmagProjectParseTest, givenProjectWithGlobalsSetThenParseCorrectly) {
         {
             "globals": {
                 "darkMode": true,
+                "needsLayout": true,
                 "selectedConfig": "Z",
                 "cmagVersion": "A",
                 "cmakeVersion": "B",
@@ -88,6 +90,7 @@ TEST_F(CmagProjectParseTest, givenProjectWithGlobalsSetThenParseCorrectly) {
     ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseProject(json, project).status);
     CmagGlobals &globals = project.getGlobals();
     EXPECT_TRUE(globals.darkMode);
+    EXPECT_TRUE(globals.needsLayout);
     EXPECT_STREQ(globals.selectedConfig.c_str(), "Z");
     EXPECT_STREQ(globals.cmagVersion.c_str(), "A");
     EXPECT_STREQ(globals.cmakeVersion.c_str(), "B");
@@ -472,6 +475,7 @@ TEST(CmagGlobalsFileParseTest, givenAllFieldsSpecifiedThenParseCorrectly) {
     const char *json = R"DELIMETER(
     {
         "darkMode": true,
+        "needsLayout": true,
         "selectedConfig": "Z",
         "cmagVersion": "A",
         "cmakeVersion": "B",
@@ -489,6 +493,7 @@ TEST(CmagGlobalsFileParseTest, givenAllFieldsSpecifiedThenParseCorrectly) {
     CmagGlobals globals{};
     ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseGlobalsFile(json, globals).status);
     EXPECT_TRUE(globals.darkMode);
+    EXPECT_TRUE(globals.needsLayout);
     EXPECT_STREQ(globals.selectedConfig.c_str(), "Z");
     EXPECT_STREQ(globals.cmagVersion.c_str(), "A");
     EXPECT_STREQ(globals.cmakeVersion.c_str(), "B");

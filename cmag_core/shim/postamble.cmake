@@ -278,6 +278,7 @@ function(json_append_globals OUT_VARIABLE SELECTED_CONFIG INDENT INDENT_INCREMEN
 
     json_append_line(${OUT_VARIABLE} "{" ${INDENT})
     json_append_key_value_unquoted(${OUT_VARIABLE} darkMode true ${INNER_INDENT})
+    json_append_key_value_unquoted(${OUT_VARIABLE} needsLayout true ${INNER_INDENT})
     json_append_key_value(${OUT_VARIABLE} selectedConfig "${SELECTED_CONFIG}" ${INNER_INDENT})
     json_append_key_value(${OUT_VARIABLE} cmagVersion "${CMAG_VERSION}" ${INNER_INDENT})
     json_append_key_value(${OUT_VARIABLE} cmakeVersion "${CMAKE_VERSION}" ${INNER_INDENT})

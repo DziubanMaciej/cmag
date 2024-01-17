@@ -24,7 +24,7 @@ enum class CmakeDependencyType {
 
 class TargetGraph {
 public:
-    TargetGraph(const CmagBrowserTheme &theme, std::vector<CmagTarget> &allTargets);
+    TargetGraph(const CmagBrowserTheme &theme, CmagProject &project, std::string_view defaultConfig);
     ~TargetGraph();
 
     void setScreenSpaceAvailableSpace(float spaceX, float spaceY);
@@ -57,7 +57,6 @@ public:
 private:
     struct Shapes;
     void fillTargetsVector(std::vector<CmagTarget> &allTargets);
-    void scaleTargetPositionsToWorldSpace();
     float calculateDepthValueForTarget(const CmagTarget &target, bool forText) const;
     static void calculateWorldSpaceVerticesForTarget(const CmagTarget &target, const Shapes &shapes, float *outVertices, size_t *outVerticesCount);
 

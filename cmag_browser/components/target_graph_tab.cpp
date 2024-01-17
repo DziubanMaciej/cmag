@@ -7,7 +7,7 @@
 
 TargetGraphTab::TargetGraphTab(CmagBrowserTheme &theme, CmagProject &project, ConfigSelector &configSelector, bool showDebugWidgets)
     : theme(theme),
-      targetGraph(theme, project.getTargets()),
+      targetGraph(theme, project, configSelector.getCurrentConfig()),
       configSelector(configSelector),
       showDebugWidgets(showDebugWidgets) {}
 
