@@ -20,8 +20,16 @@ endfunction()
 
 function(target_setup_vs_folders TARGET_NAME)
     get_target_property(SOURCES ${TARGET_NAME} SOURCES)
+    set(NON_GENERATED_SOURCES)
+    foreach(FILE ${SOURCES})
+        get_source_file_property(IS_GENERATED ${FILE} GENERATED)
+        if (NOT IS_GENERATED OR IS_GENERATED STREQUAL "NOTFOUND")
+            list(APPEND NON_GENERATED_SOURCES ${FILE})
+        endif()
+    endforeach()
+
     get_target_property(SOURCE_DIR ${TARGET_NAME} SOURCE_DIR)
-    source_group(TREE ${SOURCE_DIR} FILES ${SOURCES})
+    source_group(TREE ${SOURCE_DIR} FILES ${NON_GENERATED_SOURCES})
 endfunction()
 
 function(target_find_sources_and_add TARGET_NAME)
