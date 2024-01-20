@@ -6,6 +6,8 @@
 #include "cmag_browser/util/gl_helpers.h"
 #include "cmag_browser/util/math_utils.h"
 
+#include <generated/fragment_shader.glsl.h>
+#include <generated/vertex_shader.glsl.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui/imgui.h>
@@ -773,31 +775,8 @@ void TargetGraph::Framebuffer::deallocate() {
     GL_DELETE_OBJECT(colorTex, Textures);
     GL_DELETE_OBJECT(depthTex, Textures);
 }
-void TargetGraph::Program::allocate() {
-    const char *vertexShaderSource = R"(
-    #version 330 core
-    uniform float depthValue;
-    uniform mat4 transform;
-    layout(location = 0) in vec2 aPos;
-    void main() {
-        gl_Position = vec4(aPos, depthValue, 1.0);
-        gl_Position = transform * gl_Position;
-    }
-)";
-    const char *fragmentShaderSource = R"(
-    #version 330 core
-    out vec4 FragColor;
-    uniform vec3 color;
-    uniform ivec2 stippleData;
-    void main() {
-        int summedCoords = int(gl_FragCoord.x) + int(gl_FragCoord.y);
-        if (summedCoords % stippleData[0] > stippleData[1]) {
-            discard;
-        }
 
-        FragColor = vec4(color, 1.0);
-    }
-)";
+void TargetGraph::Program::allocate() {
     gl.program = createProgram(vertexShaderSource, fragmentShaderSource);
     uniformLocation.depthValue = getUniformLocation(gl.program, "depthValue");
     uniformLocation.color = getUniformLocation(gl.program, "color");
