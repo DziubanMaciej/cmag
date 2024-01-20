@@ -189,12 +189,14 @@ TEST(CmagProjectTest, givenTargetsWithDependenciesWhenDerivingDataThenDependenci
     const std::vector<CmagTarget> &targets = project.getTargets();
     ASSERT_EQ(5u, targets.size());
     const CmagTargetConfig &targetConfig = targets[0].configs[0];
-    const std::vector<const CmagTarget *> expectedLinkDependencies = {&targets[1], &targets[2]};
-    const std::vector<const CmagTarget *> expectedLinkInterfaceDependencies = {&targets[4]};
-    const std::vector<const CmagTarget *> expectedBuildDependencies = {&targets[1], &targets[2], &targets[3]};
-    EXPECT_EQ(expectedLinkDependencies, targetConfig.derived.linkDependencies);
-    EXPECT_EQ(expectedLinkInterfaceDependencies, targetConfig.derived.linkInterfaceDependencies);
+    const std::vector<const CmagTarget *> expectedBuildDependencies = {&targets[1], &targets[2]};
+    const std::vector<const CmagTarget *> expectedInterfaceDependencies = {&targets[4]};
+    const std::vector<const CmagTarget *> expectedManualDependencies = {&targets[3]};
+    const std::vector<const CmagTarget *> expectedAllDependencies = {&targets[1], &targets[2], &targets[4], &targets[3]};
     EXPECT_EQ(expectedBuildDependencies, targetConfig.derived.buildDependencies);
+    EXPECT_EQ(expectedInterfaceDependencies, targetConfig.derived.interfaceDependencies);
+    EXPECT_EQ(expectedManualDependencies, targetConfig.derived.manualDependencies);
+    EXPECT_EQ(expectedAllDependencies, targetConfig.derived.allDependencies);
 }
 
 TEST(CmagProjectTest, givenTargetWithOneConfigWhenDerivingDataThenAllPropertiesAreConsistent) {

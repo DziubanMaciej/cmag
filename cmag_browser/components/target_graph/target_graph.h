@@ -15,12 +15,22 @@ struct Segment;
 struct Vec;
 
 enum class CmakeDependencyType {
-    Build = 0,
-    Link = 1,
+    Build = 1,
+    Interface = 2,
+    Additional = 4,
 
-    COUNT,
-    DEFAULT = Link,
+    NONE = 0,
+    COUNT = 3,
+    DEFAULT = Build | Additional,
 };
+
+inline CmakeDependencyType operator&(CmakeDependencyType a, CmakeDependencyType b) {
+    return static_cast<CmakeDependencyType>(static_cast<int>(a) & static_cast<int>(b));
+}
+
+inline CmakeDependencyType operator^(CmakeDependencyType a, CmakeDependencyType b) {
+    return static_cast<CmakeDependencyType>(static_cast<int>(a) ^ static_cast<int>(b));
+}
 
 class TargetGraph {
 public:

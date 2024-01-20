@@ -31,7 +31,7 @@ private:
     CmagBrowserTheme &theme;
     TargetGraph targetGraph;
     ConfigSelector &configSelector;
-    int dependencyTypeComboSelection = static_cast<int>(CmakeDependencyType::DEFAULT);
+    CmakeDependencyType dependencyTypeSelected = CmakeDependencyType::DEFAULT;
     bool forceSelection = false;
     bool showDebugWidgets;
 
