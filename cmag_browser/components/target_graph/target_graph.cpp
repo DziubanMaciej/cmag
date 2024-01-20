@@ -116,20 +116,20 @@ void TargetGraph::update(ImGuiIO &io) {
     }
 
     if (mouseInside && io.MouseClicked[ImGuiMouseButton_Left]) {
+        setSelectedTarget(focusedTarget);
         if (focusedTarget) {
             targetDrag.begin(mouseX, mouseY, vpMatrix, focusedTarget);
+        } else {
+            camera.beginDrag(mouseX, mouseY);
         }
-        setSelectedTarget(focusedTarget);
     }
-    if (io.MouseReleased[ImGuiMouseButton_Left] && targetDrag.active) {
-        targetDrag.end();
-    }
-
-    if (mouseInside && io.MouseClicked[ImGuiMouseButton_Middle]) {
-        camera.beginDrag(mouseX, mouseY);
-    }
-    if (io.MouseReleased[ImGuiMouseButton_Middle] && camera.dragActive) {
-        camera.endDrag();
+    if (io.MouseReleased[ImGuiMouseButton_Left]) {
+        if (targetDrag.active) {
+            targetDrag.end();
+        }
+        if (camera.dragActive) {
+            camera.endDrag();
+        }
     }
 
     if (mouseInside && io.MouseWheel != 0) {
