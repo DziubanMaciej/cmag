@@ -152,6 +152,7 @@ void TargetGraph::render() {
 
     // Render targets
     SAFE_GL(glUseProgram(program.gl.program));
+    SAFE_GL(glUniform2f(program.uniformLocation.screenSize, bounds.width, bounds.height));
     SAFE_GL(glBindVertexArray(shapes.gl.vao));
     SAFE_GL(glEnableVertexAttribArray(0));
     for (const CmagTarget *target : targets) {
@@ -161,7 +162,7 @@ void TargetGraph::render() {
         const auto modelMatrix = TargetData::get(*target).modelMatrix;
         const auto transform = vpMatrix * modelMatrix;
         SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(transform)));
-        SAFE_GL(glUniform2i(program.uniformLocation.stippleData, 1, 1));
+        SAFE_GL(glUniform2f(program.uniformLocation.stippleData, 0, 0));
 
         // Render solid portion of the node
         if (target == selectedTarget) {
@@ -182,8 +183,6 @@ void TargetGraph::render() {
             SAFE_GL(glDrawArrays(GL_LINE_LOOP, vbBaseOffset + subShape.vertexOffset, subShape.vertexCount));
         }
     }
-    SAFE_GL(glUseProgram(0));
-    SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     // Render connections
     SAFE_GL(glUseProgram(program.gl.program));
@@ -194,9 +193,9 @@ void TargetGraph::render() {
         const Connections::DrawCall &drawCall = connections.drawCalls[drawCallIndex];
         if (drawCall.isStippled) {
             const auto stippleSize = static_cast<GLint>(static_cast<float>(bounds.width) * lineStippleScale);
-            SAFE_GL(glUniform2i(program.uniformLocation.stippleData, stippleSize, stippleSize / 2));
+            SAFE_GL(glUniform2f(program.uniformLocation.stippleData, stippleSize, 0.5f));
         } else {
-            SAFE_GL(glUniform2i(program.uniformLocation.stippleData, 1, 1));
+            SAFE_GL(glUniform2f(program.uniformLocation.stippleData, 0, 0));
         }
         if (drawCall.isSelected) {
             SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, THEME_COLOR(colorTargetGraphConnectionSelected)));
@@ -207,8 +206,6 @@ void TargetGraph::render() {
         }
         SAFE_GL(glDrawArrays(drawCall.mode, drawCall.offset, drawCall.count));
     }
-    SAFE_GL(glUseProgram(0));
-    SAFE_GL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     // Render text
     for (const CmagTarget *target : targets) {
@@ -782,6 +779,7 @@ void TargetGraph::Program::allocate() {
     uniformLocation.color = getUniformLocation(gl.program, "color");
     uniformLocation.stippleData = getUniformLocation(gl.program, "stippleData");
     uniformLocation.transform = getUniformLocation(gl.program, "transform");
+    uniformLocation.screenSize = getUniformLocation(gl.program, "screenSize");
 }
 
 void TargetGraph::Program::deallocate() {

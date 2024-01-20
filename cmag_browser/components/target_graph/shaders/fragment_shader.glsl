@@ -1,12 +1,23 @@
 #version 330 core
-out vec4 FragColor;
+#extension GL_ARB_separate_shader_objects : enable
+
 uniform vec3 color;
-uniform ivec2 stippleData;
+uniform vec2 stippleData;
+
+flat layout(location = 1) in vec2 inPrimitiveStartVertexScreenSpace;
+
+out vec4 outFragColor;
+
 void main() {
-    int summedCoords = int(gl_FragCoord.x) + int(gl_FragCoord.y);
-    if (summedCoords % stippleData[0] > stippleData[1]) {
-        discard;
+    if (stippleData[0] > 0) {
+        float t = length(inPrimitiveStartVertexScreenSpace.xy - gl_FragCoord.xy);
+        t = t / stippleData[0];
+        t = fract(t);
+        t = step(stippleData[1], t);
+        if (t == 1) {
+            discard;
+        }
     }
 
-    FragColor = vec4(color, 1.0);
+    outFragColor = vec4(color, 1.0);
 }

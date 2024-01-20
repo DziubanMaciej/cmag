@@ -191,6 +191,7 @@ private:
             GLint transform = {};
             GLint stippleData = {};
             GLint color = {};
+            GLint screenSize = {};
         } uniformLocation = {};
 
         void allocate();
