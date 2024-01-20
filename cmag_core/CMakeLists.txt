@@ -12,4 +12,4 @@ if (WIN32)
 endif()
 target_compile_definitions(cmag_core PRIVATE -DCMAG_BROWSER_BINARY_NAME="${CMAG_BROWSER_BINARY_NAME}")
 
-header_pack_generate_from_text(cmag_core shim/postamble.cmake postamble.h postamble)
+header_pack_generate(TEXT cmag_core shim/postamble.cmake postamble.h VARIABLE postamble)
