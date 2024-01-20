@@ -83,7 +83,7 @@ private:
     float textScale = 3.f;
     float arrowLengthScale = 9.3f;
     float arrowWidthScale = 3.15f;
-    float lineStippleScale = 0.02f;
+    float lineStippleScale = 0.01f;
 
     // Every target has a void* userData field to track custom, gui-specific data. We allocate a vector of our data structs
     // and bind them to each target.
@@ -161,11 +161,12 @@ private:
             GLenum mode = {};
             GLint offset = {};
             GLsizei count = {};
-            bool isStippled = {};
+            float stippleScale = {};
+            float stippleRatio = {};
             bool isFocused = {};
             bool isSelected = {};
         };
-        constexpr static inline size_t maxDrawCallsCount = 9;
+        constexpr static inline size_t maxDrawCallsCount = 12;
         size_t drawCallsCount = {};
         DrawCall drawCalls[maxDrawCallsCount] = {};
         struct {
@@ -175,7 +176,7 @@ private:
 
         void allocate(const std::vector<CmagTarget *> &targets);
         void deallocate();
-        void update(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale, CmagTarget *focusedTarget, CmagTarget *selectedTarget);
+        void update(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale, float stippleScale, CmagTarget *focusedTarget, CmagTarget *selectedTarget);
         static float calculateSegmentTrimParameter(const CmagTarget &target, const Segment &connectionSegment, const Shapes &shapes, bool isSrcTarget);
         static void calculateArrowCoordinates(const Segment &connectionSegment, float arrowLength, float arrowWidth, Vec &outA, Vec &outB, Vec &outC);
     } connections = {};

@@ -191,12 +191,10 @@ void TargetGraph::render() {
     SAFE_GL(glUniformMatrix4fv(program.uniformLocation.transform, 1, GL_FALSE, glm::value_ptr(vpMatrix)));
     for (size_t drawCallIndex = 0; drawCallIndex < connections.drawCallsCount; drawCallIndex++) {
         const Connections::DrawCall &drawCall = connections.drawCalls[drawCallIndex];
-        if (drawCall.isStippled) {
-            const auto stippleSize = static_cast<GLint>(static_cast<float>(bounds.width) * lineStippleScale);
-            SAFE_GL(glUniform2f(program.uniformLocation.stippleData, stippleSize, 0.5f));
-        } else {
-            SAFE_GL(glUniform2f(program.uniformLocation.stippleData, 0, 0));
-        }
+
+        const auto stippleSize = static_cast<float>(bounds.width) * drawCall.stippleScale;
+        SAFE_GL(glUniform2f(program.uniformLocation.stippleData, stippleSize, drawCall.stippleRatio));
+
         if (drawCall.isSelected) {
             SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, THEME_COLOR(colorTargetGraphConnectionSelected)));
         } else if (drawCall.isFocused) {
@@ -275,7 +273,7 @@ void TargetGraph::calculateWorldSpaceVerticesForTarget(const CmagTarget &target,
 }
 
 void TargetGraph::refreshConnections() {
-    connections.update(targets, cmakeConfig, displayedDependencyType, shapes, arrowLengthScale, arrowWidthScale, focusedTarget, selectedTarget);
+    connections.update(targets, cmakeConfig, displayedDependencyType, shapes, arrowLengthScale, arrowWidthScale, lineStippleScale, focusedTarget, selectedTarget);
 }
 
 void TargetGraph::showEntireGraph() {
@@ -530,7 +528,7 @@ void TargetGraph::Connections::deallocate() {
     GL_DELETE_OBJECT(gl.vao, VertexArrays);
 }
 
-void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale, CmagTarget *focusedTarget, CmagTarget *selectedTarget) {
+void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale, float stippleScale, CmagTarget *focusedTarget, CmagTarget *selectedTarget) {
     auto addSegment = [&](const CmagTarget &srcTarget, const CmagTarget &dstTarget, std::vector<float> &outLineData, std::vector<float> &outTriangleData) {
         if (srcTarget.graphical.hideConnections || dstTarget.graphical.hideConnections) {
             return;
@@ -566,9 +564,10 @@ void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, 
     };
 
     struct DrawCallCandiate {
-        DrawCallCandiate(GLenum mode, bool isStippled, bool isFocused, bool isSelected) {
+        DrawCallCandiate(GLenum mode, bool isFocused, bool isSelected, float stippleScale = 0, float stippleRatio = 0) {
             drawCall.mode = mode;
-            drawCall.isStippled = isStippled;
+            drawCall.stippleScale = stippleScale;
+            drawCall.stippleRatio = stippleRatio;
             drawCall.isFocused = isFocused;
             drawCall.isSelected = isSelected;
         }
@@ -576,24 +575,30 @@ void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, 
         DrawCall drawCall = {};
         std::vector<float> data = {};
     };
-    DrawCallCandiate lines{GL_LINES, false, false, false};
-    DrawCallCandiate stippledLines{GL_LINES, true, false, false};
-    DrawCallCandiate triangles{GL_TRIANGLES, false, false, false};
-    DrawCallCandiate linesFocused{GL_LINES, false, true, false};
-    DrawCallCandiate stippledLinesFocused{GL_LINES, true, true, false};
-    DrawCallCandiate trianglesFocused{GL_TRIANGLES, false, true, false};
-    DrawCallCandiate linesSelected{GL_LINES, false, false, true};
-    DrawCallCandiate stippledLinesSelected{GL_LINES, true, false, true};
-    DrawCallCandiate trianglesSelected{GL_TRIANGLES, false, false, true};
+    DrawCallCandiate lines{GL_LINES, false, false};
+    DrawCallCandiate linesSmallStipple{GL_LINES, false, false, stippleScale / 2, 0.5f};
+    DrawCallCandiate linesBigStipple{GL_LINES, false, false, stippleScale, 0.5f};
+    DrawCallCandiate triangles{GL_TRIANGLES, false, false};
+    DrawCallCandiate linesFocused{GL_LINES, true, false};
+    DrawCallCandiate linesFocusedSmallStipple{GL_LINES, true, false, stippleScale / 2, 0.5f};
+    DrawCallCandiate linesFocusedBigStipple{GL_LINES, true, false, stippleScale, 0.5f};
+    DrawCallCandiate trianglesFocused{GL_TRIANGLES, true, false};
+    DrawCallCandiate linesSelected{GL_LINES, false, true};
+    DrawCallCandiate linesSelectedSmallStipple{GL_LINES, false, true, stippleScale / 2, 0.5f};
+    DrawCallCandiate linesSelectedBigStipple{GL_LINES, false, true, stippleScale, 0.5f};
+    DrawCallCandiate trianglesSelected{GL_TRIANGLES, false, true};
     DrawCallCandiate *drawCallCandidates[maxDrawCallsCount] = {
         &lines,
-        &stippledLines,
+        &linesSmallStipple,
+        &linesBigStipple,
         &triangles,
         &linesFocused,
-        &stippledLinesFocused,
+        &linesFocusedSmallStipple,
+        &linesFocusedBigStipple,
         &trianglesFocused,
         &linesSelected,
-        &stippledLinesSelected,
+        &linesSelectedSmallStipple,
+        &linesSelectedBigStipple,
         &trianglesSelected,
     };
     auto selectDrawCallCandidate = [](bool isFocused, bool isSelected, DrawCallCandiate &normal, DrawCallCandiate &focused, DrawCallCandiate &selected) -> DrawCallCandiate & {
@@ -627,7 +632,7 @@ void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, 
             for (const CmagTarget *dstTarget : config->derived.interfaceDependencies) {
                 const bool isFocused = srcTarget == focusedTarget || dstTarget == focusedTarget;
                 const bool isSelected = srcTarget == selectedTarget || dstTarget == selectedTarget;
-                DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, stippledLines, stippledLinesFocused, stippledLinesSelected);
+                DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, linesBigStipple, linesFocusedBigStipple, linesSelectedBigStipple);
                 DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
                 addSegment(*srcTarget, *dstTarget, candidateLines.data, candidateTriangles.data);
             }
@@ -637,7 +642,7 @@ void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, 
             for (const CmagTarget *dstTarget : config->derived.manualDependencies) {
                 const bool isFocused = srcTarget == focusedTarget || dstTarget == focusedTarget;
                 const bool isSelected = srcTarget == selectedTarget || dstTarget == selectedTarget;
-                DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, lines, linesFocused, linesSelected);
+                DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, linesSmallStipple, linesFocusedSmallStipple, linesSelectedSmallStipple);
                 DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
                 addSegment(*srcTarget, *dstTarget, candidateLines.data, candidateTriangles.data);
             }
