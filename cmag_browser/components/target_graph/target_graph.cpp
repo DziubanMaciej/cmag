@@ -512,9 +512,7 @@ void TargetGraph::Connections::allocate(const std::vector<CmagTarget *> &targets
     for (const CmagTarget *target : targets) {
         size_t maxCountForTarget = 0;
         for (const CmagTargetConfig &config : target->configs) {
-            size_t maxCountForConfig = std::max(config.derived.linkDependencies.size(), config.derived.buildDependencies.size());
-            maxCountForConfig += config.derived.linkInterfaceDependencies.size();
-
+            const size_t maxCountForConfig = config.derived.allDependencies.size();
             maxCountForTarget = std::max(maxCountForTarget, maxCountForConfig);
         }
         maxConnectionsCount += maxCountForTarget;
@@ -615,21 +613,34 @@ void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, 
             continue;
         }
 
-        const auto &dependencies = dependencyType == CmakeDependencyType::Build ? config->derived.buildDependencies : config->derived.linkDependencies;
-        for (const CmagTarget *dstTarget : dependencies) {
-            const bool isFocused = srcTarget == focusedTarget || dstTarget == focusedTarget;
-            const bool isSelected = srcTarget == selectedTarget || dstTarget == selectedTarget;
-            DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, lines, linesFocused, linesSelected);
-            DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
-            addSegment(*srcTarget, *dstTarget, candidateLines.data, candidateTriangles.data);
+        if ((dependencyType & CmakeDependencyType::Build) != CmakeDependencyType::NONE) {
+            for (const CmagTarget *dstTarget : config->derived.buildDependencies) {
+                const bool isFocused = srcTarget == focusedTarget || dstTarget == focusedTarget;
+                const bool isSelected = srcTarget == selectedTarget || dstTarget == selectedTarget;
+                DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, lines, linesFocused, linesSelected);
+                DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
+                addSegment(*srcTarget, *dstTarget, candidateLines.data, candidateTriangles.data);
+            }
         }
 
-        for (const CmagTarget *dstTarget : config->derived.linkInterfaceDependencies) {
-            const bool isFocused = srcTarget == focusedTarget || dstTarget == focusedTarget;
-            const bool isSelected = srcTarget == selectedTarget || dstTarget == selectedTarget;
-            DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, stippledLines, stippledLinesFocused, stippledLinesSelected);
-            DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
-            addSegment(*srcTarget, *dstTarget, candidateLines.data, candidateTriangles.data);
+        if ((dependencyType & CmakeDependencyType::Interface) != CmakeDependencyType::NONE) {
+            for (const CmagTarget *dstTarget : config->derived.interfaceDependencies) {
+                const bool isFocused = srcTarget == focusedTarget || dstTarget == focusedTarget;
+                const bool isSelected = srcTarget == selectedTarget || dstTarget == selectedTarget;
+                DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, stippledLines, stippledLinesFocused, stippledLinesSelected);
+                DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
+                addSegment(*srcTarget, *dstTarget, candidateLines.data, candidateTriangles.data);
+            }
+        }
+
+        if ((dependencyType & CmakeDependencyType::Additional) != CmakeDependencyType::NONE) {
+            for (const CmagTarget *dstTarget : config->derived.manualDependencies) {
+                const bool isFocused = srcTarget == focusedTarget || dstTarget == focusedTarget;
+                const bool isSelected = srcTarget == selectedTarget || dstTarget == selectedTarget;
+                DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, lines, linesFocused, linesSelected);
+                DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
+                addSegment(*srcTarget, *dstTarget, candidateLines.data, candidateTriangles.data);
+            }
         }
     }
 

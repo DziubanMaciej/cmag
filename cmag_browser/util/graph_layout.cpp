@@ -49,7 +49,7 @@ static Graph createGraph(const std::vector<CmagTarget *> &targets, std::string_v
         graph.nodes[nodeIndex].target = targets[nodeIndex];
 
         const bool hasIngoingEdges = targets[nodeIndex]->derived.isReferenced;
-        const bool hasOutgoingEdges = targets[nodeIndex]->tryGetConfig(configName)->derived.buildDependencies.size() > 0;
+        const bool hasOutgoingEdges = targets[nodeIndex]->tryGetConfig(configName)->derived.allDependencies.size() > 0;
         if (!hasIngoingEdges && !hasOutgoingEdges) {
             graph.nodes[nodeIndex].isOrphan = true;
         }
@@ -67,7 +67,7 @@ static Graph createGraph(const std::vector<CmagTarget *> &targets, std::string_v
 
     // Initialize edges
     for (const CmagTarget *srcTarget : targets) {
-        for (const CmagTarget *dstTarget : srcTarget->tryGetConfig(configName)->derived.buildDependencies) {
+        for (const CmagTarget *dstTarget : srcTarget->tryGetConfig(configName)->derived.allDependencies) {
             Node *srcNode = findNode(srcTarget);
             Node *dstNode = findNode(dstTarget);
             graph.edges.push_back({srcNode, dstNode});

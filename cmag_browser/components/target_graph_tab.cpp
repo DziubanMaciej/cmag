@@ -97,35 +97,33 @@ void TargetGraphTab::renderSidePaneSlider(const char *label, float width, float 
 
 void TargetGraphTab::renderSidePaneDependencyTypeSelection(float width) {
     const char *labels[] = {
-        "Draw build dependencies",
-        "Draw link dependencies",
+        "Build dependencies",
+        "Interface dependencies",
+        "Manual dependencies",
     };
     const char *tooltips[] = {
-        "Derived based on LINK_LIBRARIES (target_link_libraries) and MANUALLY_ADDED_DEPENDENCIES (add_dependencies).",
-        "Derived based on LINK_LIBRARIES (target_link_libraries).",
+        "Show dependencies derived based on LINK_LIBRARIES. This property is usually populated with target_link_libraries() with PUBLIC or PRIVATE argument.",
+        "Show dependencies derived based on INTERFACE_LINK_LIBRARIES. This property is usually populated with target_link_libraries() with PUBLIC or INTERFACE argument.",
+        "Show dependencies derived based on MANUALLY_ADDED_DEPENDENCIES. This property is usually populated with add_dependencies().",
     };
     constexpr int selectionsCount = static_cast<int>(CmakeDependencyType::COUNT);
     static_assert(sizeof(labels) / sizeof(labels[0]) == selectionsCount);
     static_assert(sizeof(tooltips) / sizeof(tooltips[0]) == selectionsCount);
 
-    ImGui::SetNextItemWidth(width);
-    if (ImGui::BeginCombo("##dependencyTypeSelection", labels[dependencyTypeComboSelection])) {
-        for (int selectionIndex = 0; selectionIndex < selectionsCount; selectionIndex++) {
-            const bool isSelected = (dependencyTypeComboSelection == selectionIndex);
-            if (ImGui::Selectable(labels[selectionIndex], isSelected)) {
-                dependencyTypeComboSelection = selectionIndex;
-            }
-            if (ImGui::IsItemHovered()) {
-                ImGui::SetTooltip("%s", tooltips[selectionIndex]);
-            }
-            if (isSelected) {
-                ImGui::SetItemDefaultFocus();
-            }
+    auto renderCheckbox = [&](CmakeDependencyType currentType, int typeIndex) {
+        bool isSelected = (dependencyTypeSelected & currentType) != CmakeDependencyType::NONE;
+        ImGui::SetNextItemWidth(width);
+        if (ImGui::Checkbox(labels[typeIndex], &isSelected)) {
+            dependencyTypeSelected = dependencyTypeSelected ^ currentType;
         }
-        ImGui::EndCombo();
-    } else {
-        ImGui::SetItemTooltip("%s", tooltips[dependencyTypeComboSelection]);
-    }
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetTooltip("%s", tooltips[typeIndex]);
+        }
+    };
+
+    renderCheckbox(CmakeDependencyType::Build, 0);
+    renderCheckbox(CmakeDependencyType::Interface, 1);
+    renderCheckbox(CmakeDependencyType::Additional, 2);
 }
 
 void TargetGraphTab::renderSidePaneHideConnectionsButton(float) {
@@ -226,7 +224,7 @@ void TargetGraphTab::renderGraph(ImGuiIO &io) {
 
         // Render to an offscreen texture
         targetGraph.setCurrentCmakeConfig(configSelector.getCurrentConfig());
-        targetGraph.setDisplayedDependencyType(static_cast<CmakeDependencyType>(dependencyTypeComboSelection));
+        targetGraph.setDisplayedDependencyType(dependencyTypeSelected);
         targetGraph.update(io);
         targetGraph.render();
 
