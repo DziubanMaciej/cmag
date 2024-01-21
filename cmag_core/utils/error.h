@@ -38,6 +38,7 @@ inline void dumpLog(std::ostream &out, Arg &&arg, Args &&...args) {
 
 #define LOG_INFO(...) dumpLog(std::cout, __VA_ARGS__)
 #define LOG_ERROR(...) dumpLog(std::cerr, "ERROR: ", __VA_ARGS__)
+#define LOG_WARNING(...) dumpLog(std::cerr, "WARNING: ", __VA_ARGS__)
 
 #define LOG_TO_STRING(...)            \
     [&]() {                           \

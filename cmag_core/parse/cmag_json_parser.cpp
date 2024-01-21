@@ -68,6 +68,25 @@ ParseResult CmagJsonParser::parseTargetsFile(std::string_view json, std::vector<
     return parseTargets(node, outTargets, false);
 }
 
+ParseResult CmagJsonParser::parseAliasesFile(std::string_view json, std::vector<std::pair<std::string, std::string>> &outAliases) {
+    const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);
+    if (node.is_discarded()) {
+        return {ParseResultStatus::Malformed, "File is malformed"};
+    }
+    if (!node.is_object()) {
+        return {ParseResultStatus::InvalidNodeType, "Root node should be an object"};
+    }
+
+    for (auto aliasNodeIt = node.begin(); aliasNodeIt != node.end(); aliasNodeIt++) {
+        if (!aliasNodeIt->is_string()) {
+            return {ParseResultStatus::InvalidNodeType, "Actual target name should be a string"};
+        }
+        outAliases.emplace_back(aliasNodeIt.key(), aliasNodeIt.value());
+    }
+
+    return ParseResult::success;
+}
+
 ParseResult CmagJsonParser::parseProject(std::string_view json, CmagProject &outProject) {
     const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);
     if (node.is_discarded()) {

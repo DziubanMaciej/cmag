@@ -765,3 +765,30 @@ TEST(CmagTargetsFileParseTest, givenTargetWithLinkOnlyGenexPropertesThenParseAnd
     ASSERT_EQ(1u, target.configs.size());
     compareTargetProperties(expectedProperties, target.configs[0]);
 }
+
+TEST(CmagAliasesFileParseTest, givenEmptyAliasesListThenReturnEmptyList) {
+    const char *json = R"DELIMETER(
+    {}
+    )DELIMETER";
+    std::vector<std::pair<std::string, std::string>> aliases{};
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseAliasesFile(json, aliases).status);
+    ASSERT_EQ(0u, aliases.size());
+}
+
+TEST(CmagAliasesFileParseTest, givenNonEmptyAliasesListThenReadThemCorrectly) {
+    const char *json = R"DELIMETER(
+    {
+        "ABC": "abc",
+        "json::json": "json"
+    }
+    )DELIMETER";
+    std::vector<std::pair<std::string, std::string>> aliases{};
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseAliasesFile(json, aliases).status);
+    ASSERT_EQ(2u, aliases.size());
+
+    EXPECT_STREQ("ABC", aliases[0].first.c_str());
+    EXPECT_STREQ("abc", aliases[0].second.c_str());
+
+    EXPECT_STREQ("json::json", aliases[1].first.c_str());
+    EXPECT_STREQ("json", aliases[1].second.c_str());
+}

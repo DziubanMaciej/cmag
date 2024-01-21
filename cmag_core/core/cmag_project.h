@@ -113,6 +113,7 @@ struct CmagTarget {
     void *userData = {};
     std::string listDirName = {};
     bool isImported = false;
+    std::vector<std::string> aliases = {};
     struct {
         bool isReferenced = false; // whether this target is a dependency of some other target
     } derived = {};
@@ -135,6 +136,7 @@ public:
     CmagProject() = default;
 
     bool addTarget(CmagTarget &&newTarget);
+    bool addTargetAlias(std::string_view aliasName, std::string_view aliasedTargetName);
 
     bool deriveData();
 
