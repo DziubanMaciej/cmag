@@ -39,14 +39,6 @@ CmagDumper::~CmagDumper() {
 }
 
 CmagResult CmagDumper::dump() {
-    RETURN_ERROR(cmakeMainPass());
-    RETURN_ERROR(readCmakeAfterMainPass());
-    RETURN_ERROR(cmakeSecondPass());
-    RETURN_ERROR(readCmakeAfterSecondPass());
-    return CmagResult::Success;
-}
-
-CmagResult CmagDumper::cmakeMainPass() {
     // Shim original CMakeLists.txt and insert extra CMake code to query information about the build-system
     // and save it to a file.
     CMakeListsShimmer shimmer{sourcePath};
@@ -64,6 +56,14 @@ CmagResult CmagDumper::cmakeMainPass() {
         UNREACHABLE_CODE;
     }
 
+    RETURN_ERROR(cmakeMainPass());
+    RETURN_ERROR(readCmakeAfterMainPass());
+    RETURN_ERROR(cmakeSecondPass());
+    RETURN_ERROR(readCmakeAfterSecondPass());
+    return CmagResult::Success;
+}
+
+CmagResult CmagDumper::cmakeMainPass() {
     // Prepare CMake args
     auto cmakeArgs = cmakeArgsFromUser;
     cmakeArgs.emplace_back("-DCMAG_MAIN_FUNCTION=main");
@@ -163,24 +163,6 @@ CmagResult CmagDumper::readCmakeAfterMainPass() {
 }
 
 CmagResult CmagDumper::cmakeSecondPass() {
-    // TODO this is copy pasted from generateCmake. Make this more common.
-    // Shim original CMakeLists.txt and insert extra CMake code to query information about the build-system
-    // and save it to a file.
-    CMakeListsShimmer shimmer{sourcePath};
-    const ShimResult shimResult = shimmer.shim();
-    switch (shimResult) {
-    case ShimResult::Success:
-        break;
-    case ShimResult::InvalidDirectory:
-        LOG_ERROR("failed CMakeLists.txt shimming (invalid source directory).\n");
-        return CmagResult::FileAccessError;
-    case ShimResult::NoPermission:
-        LOG_ERROR("failed CMakeLists.txt shimming (no permission).\n");
-        return CmagResult::FileAccessError;
-    default:
-        UNREACHABLE_CODE;
-    }
-
     // Derive extra data
     if (!project.deriveData()) {
         LOG_ERROR("failed to derive extra data\n");
