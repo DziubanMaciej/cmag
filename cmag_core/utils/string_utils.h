@@ -36,6 +36,38 @@ inline std::vector<std::string_view> splitCmakeListString(std::string_view value
     return splitStringByChar(value, ignoreSingleEntry, ';');
 }
 
+inline std::string joinStringWithChar(const std::vector<std::string> &strings, char separator) {
+    // Calculate required space for output string.
+    size_t size = 1; // 1 because of null-termination
+    for (const auto &string : strings) {
+        if (!string.empty()) {
+            size += string.size() + 1; // 1 because of separator
+        }
+    }
+
+    // Prepare the string
+    std::string result{};
+    result.reserve(size);
+
+    // Copy strings into the result
+    bool separatorNeeded = false;
+    for (const auto &string : strings) {
+        if (string.empty()) {
+            continue;
+        }
+
+        if (separatorNeeded) {
+            result.push_back(separator);
+        }
+
+        result.append(string);
+
+        separatorNeeded = true;
+    }
+
+    return result;
+}
+
 inline bool isValidCmakeTargetName(std::string_view targetName, bool allowDoubleColons) {
     // See https://cmake.org/cmake/help/latest/policy/CMP0037.html for validity rules
     // for target names in CMake.

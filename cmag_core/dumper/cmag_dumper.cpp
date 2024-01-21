@@ -6,6 +6,7 @@
 #include "cmag_core/shim/cmake_lists_shimmer.h"
 #include "cmag_core/utils/error.h"
 #include "cmag_core/utils/file_utils.h"
+#include "cmag_core/utils/string_utils.h"
 #include "cmag_core/utils/subprocess.h"
 
 #include <string_view>
@@ -39,6 +40,7 @@ CmagResult CmagDumper::generateCmake(const fs::path &sourcePath, std::vector<std
     }
 
     // Prepare CMake args
+    cmakeArgs.emplace_back("-DCMAG_MAIN_FUNCTION=main");
     cmakeArgs.push_back(std::string{"-DCMAG_PROJECT_NAME="} + projectName);
     cmakeArgs.push_back(std::string{"-DCMAG_VERSION="} + cmagVersion.toString());
     cmakeArgs.push_back(std::string{"-DCMAG_EXTRA_TARGET_PROPERTIES="} + extraTargetProperties.data()); // this could be bad if string_view doesn't end with \0
@@ -129,6 +131,58 @@ CmagResult CmagDumper::readCmagProjectFromGeneration(const fs::path &buildPath) 
             LOG_ERROR("failed to create project");
             return CmagResult::ProjectCreationError;
         }
+    }
+
+    return CmagResult::Success;
+}
+
+CmagResult CmagDumper::generateCmakeAliasPass(const fs::path &sourcePath, std::vector<std::string> cmakeArgs) {
+    // TODO this is copy pasted from generateCmake. Make this more common.
+    // Shim original CMakeLists.txt and insert extra CMake code to query information about the build-system
+    // and save it to a file.
+    CMakeListsShimmer shimmer{sourcePath};
+    const ShimResult shimResult = shimmer.shim();
+    switch (shimResult) {
+    case ShimResult::Success:
+        break;
+    case ShimResult::InvalidDirectory:
+        LOG_ERROR("failed CMakeLists.txt shimming (invalid source directory).\n");
+        return CmagResult::FileAccessError;
+    case ShimResult::NoPermission:
+        LOG_ERROR("failed CMakeLists.txt shimming (no permission).\n");
+        return CmagResult::FileAccessError;
+    default:
+        UNREACHABLE_CODE;
+    }
+
+    // Derive extra data
+    if (!project.deriveData()) {
+        LOG_ERROR("failed to derive extra data\n");
+        return CmagResult::DerivationError;
+    }
+
+    // Prepare CMake args
+    cmakeArgs.emplace_back("-DCMAG_MAIN_FUNCTION=aliases");
+    cmakeArgs.push_back(std::string{"-DCMAG_PROJECT_NAME="} + projectName);
+    cmakeArgs.push_back(std::string{"-DCMAG_ALIASED_TARGETS="} + joinStringWithChar(project.getUnmatchedDependencies(), ';'));
+
+    // Call CMake
+    // TODO this is copy pasted from generateCmake. Make this more common.
+    const SubprocessResult result = runSubprocess(cmakeArgs);
+    switch (result) {
+    case SubprocessResult::Success:
+        break;
+    case SubprocessResult::CreationFailed:
+        LOG_ERROR("running CMake failed.");
+        return CmagResult::SubprocessError;
+    case SubprocessResult::ProcessKilled:
+        LOG_ERROR("CMake has been killed.");
+        return CmagResult::SubprocessError;
+    case SubprocessResult::ProcessFailed:
+        LOG_ERROR("CMake failed.");
+        return CmagResult::SubprocessError;
+    default:
+        UNREACHABLE_CODE;
     }
 
     return CmagResult::Success;
