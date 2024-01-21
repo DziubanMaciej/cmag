@@ -133,7 +133,6 @@ class CmagProject {
 public:
     CmagProject() = default;
 
-    void addTargetGraphical(std::string_view targetName, float x, float y);
     bool addTarget(CmagTarget &&newTarget);
 
     bool deriveData();
