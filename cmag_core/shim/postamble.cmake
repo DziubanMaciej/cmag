@@ -324,54 +324,92 @@ endfunction()
 
 
 
+# -------------------------------------------------------------------- Assembling JSON for .cmag-aliases file
+function(json_append_aliases OUT_VARIABLE TARGETS INDENT INDENT_INCREMENT)
+    set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
+
+    json_append_line(${OUT_VARIABLE} "{" ${INDENT})
+    foreach (ALIAS_TARGET ${CMAG_ALIASED_TARGETS})
+        if (TARGET ${ALIAS_TARGET})
+            get_target_property(ACTUAL_TARGET ${ALIAS_TARGET} ALIASED_TARGET)
+            json_append_key_value(${OUT_VARIABLE} "${ALIAS_TARGET}" "${ACTUAL_TARGET}" ${INNER_INDENT})
+        endif()
+    endforeach()
+    json_append_object_end(${OUT_VARIABLE} ${INDENT})
+
+    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
+endfunction()
+
+
+
+
+
 # -------------------------------------------------------------------- Main code
+function(cmag_postamble_main)
+    # Handle single-config and multi-config generators differently.
+    get_property(CMAG_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+    if(CMAG_IS_MULTI_CONFIG)
+        set(CMAG_CONFIGS "${CMAKE_CONFIGURATION_TYPES}")
+        set(CMAG_CONFIG "$<CONFIG>")
+        list(GET CMAKE_CONFIGURATION_TYPES 0 CMAG_CONFIG_DEFAULT)
+    else()
+        # Work out current config. It can be unspecified, in which cas we'll name it as "Default".
+        # Note that $<CONFIG> generator expression doesn't work if build type isn't explicitly
+        # specified, so we have use this placeholder.
+        set(CMAG_CONFIG ${CMAKE_BUILD_TYPE})
+        if ("${CMAG_CONFIG}d" STREQUAL "d")
+            set(CMAG_CONFIG Default)
+        endif()
+
+        set(CMAG_CONFIGS "${CMAG_CONFIG}")
+        set(CMAG_CONFIG_DEFAULT "${CMAG_CONFIG}")
+    endif()
+
+    # Write configs list
+    json_append_configs(CONFIGS_JSON "${CMAG_CONFIGS}" "  " "  ")
+    set(TARGETS_LIST_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-targets-list")
+    file(WRITE "${TARGETS_LIST_FILE}" "${CONFIGS_JSON}")
+
+    # Write global settings
+    json_append_globals(GLOBALS_JSON "${CMAG_CONFIG_DEFAULT}" "  " "  ")
+    set(GLOBALS_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-globals")
+    file(WRITE "${GLOBALS_FILE}" "${GLOBALS_JSON}")
+
+    # Write per-config targets
+    json_append_targets(TARGETS_JSON "${CMAG_CONFIG}" "  " "  ")
+    set(TARGETS_LIST_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}_${CMAG_CONFIG}.cmag-targets")
+    file(GENERATE OUTPUT "${TARGETS_LIST_FILE}" CONTENT "${TARGETS_JSON}")
+
+    message(STATUS "cmag: generating file ${TARGETS_LIST_FILE}")
+    message(STATUS "cmag: generating file ${GLOBALS_FILE}")
+    message(STATUS "cmag: generating file ${TARGETS_LIST_FILE}")
+
+    if (CMAG_JSON_DEBUG)
+        set(TARGETS_LIST_DEBUG_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-targets.debug")
+        message(STATUS "cmag: writing debug file ${TARGETS_LIST_DEBUG_FILE}")
+        file(WRITE "${TARGETS_LIST_DEBUG_FILE}" "${TARGETS_JSON}")
+    endif()
+endfunction()
+
+function(cmag_postamble_aliases)
+    json_append_aliases(ALIASES_JSON "${CMAG_ALIASED_TARGETS}" "  " "  ")
+    set(ALIASES_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-aliases")
+    file(WRITE "${ALIASES_FILE}" "${ALIASES_JSON}")
+    message(STATUS "cmag: generating file ${ALIASES_FILE}")
+endfunction()
+
 # Verify project name is set.
 if ("${CMAG_PROJECT_NAME}d" STREQUAL "d")
     message(FATAL_ERROR "cmag: CMAG_PROJECT_NAME should be set by cmag")
 endif()
 
-# Handle single-config and multi-config generators differently.
-get_property(CMAG_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
-if(CMAG_IS_MULTI_CONFIG)
-    set(CMAG_CONFIGS "${CMAKE_CONFIGURATION_TYPES}")
-    set(CMAG_CONFIG "$<CONFIG>")
-    list(GET CMAKE_CONFIGURATION_TYPES 0 CMAG_CONFIG_DEFAULT)
-else()
-    # Work out current config. It can be unspecified, in which cas we'll name it as "Default".
-    # Note that $<CONFIG> generator expression doesn't work if build type isn't explicitly
-    # specified, so we have use this placeholder.
-    set(CMAG_CONFIG ${CMAKE_BUILD_TYPE})
-    if ("${CMAG_CONFIG}d" STREQUAL "d")
-        set(CMAG_CONFIG Default)
-    endif()
-
-    set(CMAG_CONFIGS "${CMAG_CONFIG}")
-    set(CMAG_CONFIG_DEFAULT "${CMAG_CONFIG}")
-endif()
-
-# Write configs list
-json_append_configs(CONFIGS_JSON "${CMAG_CONFIGS}" "  " "  ")
-set(TARGETS_LIST_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-targets-list")
-file(WRITE "${TARGETS_LIST_FILE}" "${CONFIGS_JSON}")
-
-# Write global settings
-json_append_globals(GLOBALS_JSON "${CMAG_CONFIG_DEFAULT}" "  " "  ")
-set(GLOBALS_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-globals")
-file(WRITE "${GLOBALS_FILE}" "${GLOBALS_JSON}")
-
-# Write per-config targets
-json_append_targets(TARGETS_JSON "${CMAG_CONFIG}" "  " "  ")
-set(TARGETS_LIST_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}_${CMAG_CONFIG}.cmag-targets")
-file(GENERATE OUTPUT "${TARGETS_LIST_FILE}" CONTENT "${TARGETS_JSON}")
-
-message(STATUS "cmag: generating file ${TARGETS_LIST_FILE}")
-message(STATUS "cmag: generating file ${GLOBALS_FILE}")
-message(STATUS "cmag: generating file ${TARGETS_LIST_FILE}")
-
-if (CMAG_JSON_DEBUG)
-    set(TARGETS_LIST_DEBUG_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-targets.debug")
-    message(STATUS "cmag: writing debug file ${TARGETS_LIST_DEBUG_FILE}")
-    file(WRITE "${TARGETS_LIST_DEBUG_FILE}" "${TARGETS_JSON}")
-endif()
+# Execute main function
+if ("${CMAG_MAIN_FUNCTION}" STREQUAL "main")
+    cmag_postamble_main()
+elseif ("${CMAG_MAIN_FUNCTION}" STREQUAL "aliases")
+    cmag_postamble_aliases()
+else ()
+    message(FATAL_ERROR "cmag: invalid main function")
+endif ()
 
 # -----------------------------CMAG POSTAMBLE END---------------------------------------------

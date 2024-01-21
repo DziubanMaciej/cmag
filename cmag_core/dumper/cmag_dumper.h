@@ -11,6 +11,7 @@ enum class CmagResult {
     SubprocessError,
     JsonParseError,
     ProjectCreationError,
+    DerivationError,
 };
 
 class CmagDumper {
@@ -20,6 +21,7 @@ public:
 
     CmagResult generateCmake(const fs::path &sourcePath, std::vector<std::string> cmakeArgs, std::string_view extraTargetProperties);
     CmagResult readCmagProjectFromGeneration(const fs::path &buildPath);
+    CmagResult generateCmakeAliasPass(const fs::path &sourcePath, std::vector<std::string> cmakeArgs);
     CmagResult writeProjectToFile(const fs::path &buildPath);
     CmagResult cleanupTemporaryFiles();
     CmagResult launchProjectInGui(const fs::path &buildPath);

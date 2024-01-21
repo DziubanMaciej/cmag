@@ -66,3 +66,39 @@ TEST(IsValidCmakeTargetNameTest, givenNamesWithColonsThenReturnTrueWhenTheyAreAl
         EXPECT_FALSE(isValidCmakeTargetName(name, false));
     }
 }
+
+TEST(JoinStringWithCharTest, givenNormalStringsThenJoinProperly) {
+    std::vector<std::string> arg = {
+        "abc",
+        "a",
+        "def",
+    };
+    EXPECT_STREQ("abc;a;def", joinStringWithChar(arg, ';').c_str());
+}
+
+TEST(JoinStringWithCharTest, givenEmptyVectorThenReturnEmptyString) {
+    std::vector<std::string> arg = {};
+    EXPECT_STREQ("", joinStringWithChar(arg, ';').c_str());
+}
+
+TEST(JoinStringWithCharTest, givenEmptyStringsThenJoinProperly) {
+    std::vector<std::string> arg = {
+        "",
+        "",
+        "abc",
+        "a",
+        "",
+        "def",
+        "",
+    };
+    EXPECT_STREQ("abc;a;def", joinStringWithChar(arg, ';').c_str());
+}
+
+TEST(JoinStringWithCharTest, givenOnlyEmptyStringsThenReturnEmptyString) {
+    std::vector<std::string> arg = {
+        "",
+        "",
+        "",
+    };
+    EXPECT_STREQ("", joinStringWithChar(arg, ';').c_str());
+}

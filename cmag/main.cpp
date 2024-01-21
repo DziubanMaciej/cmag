@@ -37,6 +37,7 @@ int main(int argc, const char **argv) {
     CmagDumper dumper{argParser.getProjectName(), argParser.getJsonDebug()};
     RETURN_ERROR(dumper.generateCmake(argParser.getSourcePath(), argParser.constructArgsForCmake(), argParser.getExtraTargetProperties()));
     RETURN_ERROR(dumper.readCmagProjectFromGeneration(argParser.getBuildPath()));
+    RETURN_ERROR(dumper.generateCmakeAliasPass(argParser.getSourcePath(), argParser.constructArgsForCmake()));
     RETURN_ERROR(dumper.writeProjectToFile(argParser.getBuildPath()));
     if (!argParser.getJsonDebug()) {
         RETURN_ERROR(dumper.cleanupTemporaryFiles());
