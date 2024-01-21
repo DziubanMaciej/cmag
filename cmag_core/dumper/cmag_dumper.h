@@ -35,6 +35,8 @@ protected:
     CmagResult cmakeSecondPass();
     CmagResult readCmakeAfterSecondPass();
 
+    static CmagResult callSubprocess(const char *binaryNameForLogging, const std::vector<std::string> &args);
+
     const std::string projectName;
     const bool generationDebug;
     const fs::path sourcePath;
