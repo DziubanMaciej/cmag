@@ -146,7 +146,8 @@ TEST_F(CmagProjectParseTest, givenTargetWithNoPropertiesThenParseCorrectly) {
                     "hideConnections": false
                 },
                 "listDir": "a",
-                "isImported": false
+                "isImported": false,
+                "aliases": []
             }
         }
     }
@@ -190,7 +191,8 @@ TEST_F(CmagProjectParseTest, givenTargetWithPropertiesThenParseCorrectly) {
                     "hideConnections": false
                 },
                 "listDir": "a",
-                "isImported": false
+                "isImported": false,
+                "aliases": []
             }
         }
     }
@@ -236,7 +238,8 @@ TEST_F(CmagProjectParseTest, givenTargetWithMultipleConfigsThenParseCorrectly) {
                     "hideConnections": false
                 },
                 "listDir": "a",
-                "isImported": false
+                "isImported": false,
+                "aliases": []
             }
         }
     }
@@ -290,7 +293,8 @@ TEST_F(CmagProjectParseTest, givenMultipleTargetsThenParseCorrectly) {
                     "hideConnections": false
                 },
                 "listDir": "a",
-                "isImported": false
+                "isImported": false,
+                "aliases": []
             },
             "myTarget2" : {
                 "type": "EXECUTABLE",
@@ -305,7 +309,8 @@ TEST_F(CmagProjectParseTest, givenMultipleTargetsThenParseCorrectly) {
                     "hideConnections": false
                 },
                 "listDir": "a",
-                "isImported": false
+                "isImported": false,
+                "aliases": []
             }
         }
     }
@@ -368,7 +373,8 @@ TEST_F(CmagProjectParseTest, givenVariousTargetTypesTheParseThemCorrectly) {
                         "hideConnections": false
                     },
                     "listDir": "a",
-                    "isImported": false
+                    "isImported": false,
+                    "aliases": []
                 }
             }
         }
@@ -389,6 +395,36 @@ TEST_F(CmagProjectParseTest, givenVariousTargetTypesTheParseThemCorrectly) {
         ASSERT_EQ(1u, target.configs.size());
         compareTargetProperties(expectedProperties, target.configs[0]);
     }
+}
+
+TEST_F(CmagProjectParseTest, givenTargetWithAliasesThenParseCorrectly) {
+    const char *json = insertGlobals(R"DELIMETER(
+    {
+        "globals": %s,
+        "targets" : {
+            "myTarget" : {
+                "type": "EXECUTABLE",
+                "configs": {
+                    "Debug": {}
+                },
+                "graphical": {
+                    "x": 10,
+                    "y": 20,
+                    "hideConnections": false
+                },
+                "listDir": "a",
+                "isImported": false,
+                "aliases": [ "A", "B", "C"]
+            }
+        }
+    }
+    )DELIMETER");
+    CmagProject project{};
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseProject(json, project).status);
+    ASSERT_EQ(1u, project.getTargets().size());
+    const CmagTarget &target = project.getTargets()[0];
+    EXPECT_STREQ("myTarget", target.name.c_str());
+    EXPECT_EQ((std::vector<std::string>{"A", "B", "C"}), target.aliases);
 }
 
 TEST_F(CmagProjectParseTest, givenTargetWithInvalidTypeThenReturnError) {
@@ -550,7 +586,8 @@ TEST(CmagTargetsFileParseTest, givenTargetWithNoPropertesThenParseCorrectly) {
                 }
             },
             "listDir" : "a",
-            "isImported": false
+            "isImported": false,
+            "aliases": []
         }
     }
     )DELIMETER";
@@ -588,7 +625,8 @@ TEST(CmagTargetsFileParseTest, givenTargetWithNonGenexablePropertesThenParseCorr
                 }
             },
             "listDir" : "a",
-            "isImported": false
+            "isImported": false,
+            "aliases": []
         }
     }
     )DELIMETER";
@@ -627,7 +665,8 @@ TEST(CmagTargetsFileParseTest, givenMultipleTargetsThenParseCorrectly) {
                 }
             },
             "listDir" : "a",
-            "isImported": false
+            "isImported": false,
+            "aliases": []
         },
         "myTarget2" : {
             "type": "EXECUTABLE",
@@ -642,7 +681,8 @@ TEST(CmagTargetsFileParseTest, givenMultipleTargetsThenParseCorrectly) {
                 }
             },
             "listDir" : "a",
-            "isImported": false
+            "isImported": false,
+            "aliases": []
         }
     }
     )DELIMETER";
@@ -701,7 +741,8 @@ TEST(CmagTargetsFileParseTest, givenTargetWithGenexablePropertesThenParseCorrect
                 }
             },
             "listDir" : "a",
-            "isImported": false
+            "isImported": false,
+            "aliases": []
         }
     }
     )DELIMETER";
@@ -743,7 +784,8 @@ TEST(CmagTargetsFileParseTest, givenTargetWithLinkOnlyGenexPropertesThenParseAnd
                 }
             },
             "listDir" : "a",
-            "isImported": false
+            "isImported": false,
+            "aliases": []
         }
     }
     )DELIMETER";

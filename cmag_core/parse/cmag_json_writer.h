@@ -22,4 +22,5 @@ private:
     static nlohmann::json createTargetGraphicalNode(const CmagTargetGraphicalData &graphicalData);
     static nlohmann::json createConfigsNode(const std::vector<CmagTargetConfig> &configs);
     static nlohmann::json createConfigNode(const CmagTargetConfig &config);
+    static nlohmann::json createAliasesNode(const std::vector<std::string> &aliases);
 };
