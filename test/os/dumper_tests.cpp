@@ -5,7 +5,7 @@
 #include "test/os/cmake_generator_db.h"
 #include "test/os/fixtures.h"
 
-struct WhiteboxCmaDumper : CmagDumper {
+struct WhiteboxCmagDumper : CmagDumper {
     using CmagDumper::CmagDumper;
     using CmagDumper::project;
     using CmagDumper::projectName;
@@ -82,13 +82,11 @@ TEST_P(CmagTest, givenSimpleProjectWithCustomPropertiesThenProcessItCorrectly) {
     TestWorkspace workspace = TestWorkspace::prepare("simple");
     ASSERT_TRUE(workspace.valid);
 
-    WhiteboxCmaDumper dumper{"project", false};
+    WhiteboxCmagDumper dumper{"project", false, workspace.sourcePath, workspace.buildPath, constructCmakeArgs(workspace), "MY_CUSTOM_PROP1;MY_CUSTOM_PROP2"};
 
     {
         RaiiStdoutCapture capture{};
-        ASSERT_EQ(CmagResult::Success, dumper.generateCmake(workspace.sourcePath, constructCmakeArgs(workspace),
-                                                            "MY_CUSTOM_PROP1;MY_CUSTOM_PROP2"));
-        ASSERT_EQ(CmagResult::Success, dumper.readCmagProjectFromGeneration(workspace.buildPath));
+        ASSERT_EQ(CmagResult::Success, dumper.dump());
     }
 
     CmagGlobals &globals = dumper.project.getGlobals();
@@ -117,13 +115,11 @@ TEST_P(CmagTest, givenProjectWrittenToFileThenItCanBeParsedBack) {
     TestWorkspace workspace = TestWorkspace::prepare("simple");
     ASSERT_TRUE(workspace.valid);
 
-    WhiteboxCmaDumper dumper{"test_proj", false};
+    WhiteboxCmagDumper dumper{"test_proj", false, workspace.sourcePath, workspace.buildPath, constructCmakeArgs(workspace), "MY_CUSTOM_PROP1;MY_CUSTOM_PROP2"};
 
     {
         RaiiStdoutCapture capture{};
-        ASSERT_EQ(CmagResult::Success, dumper.generateCmake(workspace.sourcePath, constructCmakeArgs(workspace),
-                                                            "MY_CUSTOM_PROP1;MY_CUSTOM_PROP2"));
-        ASSERT_EQ(CmagResult::Success, dumper.readCmagProjectFromGeneration(workspace.buildPath));
+        ASSERT_EQ(CmagResult::Success, dumper.dump());
         ASSERT_EQ(CmagResult::Success, dumper.writeProjectToFile(workspace.buildPath));
     }
 
@@ -148,13 +144,11 @@ TEST_P(CmagTest, givenProjectWithAllTargetTypesThenAllTargetsAreDetectedCorrectl
     TestWorkspace workspace = TestWorkspace::prepare("all_types");
     ASSERT_TRUE(workspace.valid);
 
-    WhiteboxCmaDumper dumper{"project", false};
+    WhiteboxCmagDumper dumper{"project", false, workspace.sourcePath, workspace.buildPath, constructCmakeArgs(workspace), "MY_CUSTOM_PROP1;MY_CUSTOM_PROP2"};
 
     {
         RaiiStdoutCapture capture{};
-        ASSERT_EQ(CmagResult::Success, dumper.generateCmake(workspace.sourcePath, constructCmakeArgs(workspace),
-                                                            "MY_CUSTOM_PROP1;MY_CUSTOM_PROP2"));
-        ASSERT_EQ(CmagResult::Success, dumper.readCmagProjectFromGeneration(workspace.buildPath));
+        ASSERT_EQ(CmagResult::Success, dumper.dump());
     }
 
     auto targets = getSortedTargets(dumper.project);
@@ -195,12 +189,10 @@ TEST_P(CmagTest, givenProjectWithTargetsDefinedInSubdirectoriesThenAllTargetAreD
     TestWorkspace workspace = TestWorkspace::prepare("with_subdirs");
     ASSERT_TRUE(workspace.valid);
 
-    WhiteboxCmaDumper dumper{"project", false};
+    WhiteboxCmagDumper dumper{"project", false, workspace.sourcePath, workspace.buildPath, constructCmakeArgs(workspace), ""};
     {
         RaiiStdoutCapture capture{};
-        ASSERT_EQ(CmagResult::Success, dumper.generateCmake(workspace.sourcePath, constructCmakeArgs(workspace), ""));
-        ASSERT_EQ(CmagResult::Success, dumper.readCmagProjectFromGeneration(workspace.buildPath));
-        ASSERT_TRUE(dumper.project.deriveData());
+        ASSERT_EQ(CmagResult::Success, dumper.dump());
     }
 
     auto &listDirs = dumper.project.getGlobals().listDirs;
@@ -304,11 +296,10 @@ TEST_P(CmagTest, givenProjectWithTargetLinkLibrariesUsedInDifferentDirectoryThan
     TestWorkspace workspace = TestWorkspace::prepare("target_link_libraries_in_different_dir");
     ASSERT_TRUE(workspace.valid);
 
-    WhiteboxCmaDumper dumper{"project", false};
+    WhiteboxCmagDumper dumper{"project", false, workspace.sourcePath, workspace.buildPath, constructCmakeArgs(workspace), ""};
     {
         RaiiStdoutCapture capture{};
-        ASSERT_EQ(CmagResult::Success, dumper.generateCmake(workspace.sourcePath, constructCmakeArgs(workspace), ""));
-        ASSERT_EQ(CmagResult::Success, dumper.readCmagProjectFromGeneration(workspace.buildPath));
+        ASSERT_EQ(CmagResult::Success, dumper.dump());
     }
 
     auto targets = getSortedTargets(dumper.project);
@@ -339,12 +330,10 @@ TEST_P(CmagTest, givenGeneratorExpressionsInPropertiesThenResolveThemToActualVal
     TestWorkspace workspace = TestWorkspace::prepare("genex");
     ASSERT_TRUE(workspace.valid);
 
-    WhiteboxCmaDumper dumper{"project", false};
+    WhiteboxCmagDumper dumper{"project", false, workspace.sourcePath, workspace.buildPath, constructCmakeArgs(workspace), "CUSTOM_PROP"};
     {
         RaiiStdoutCapture capture{};
-        ASSERT_EQ(CmagResult::Success,
-                  dumper.generateCmake(workspace.sourcePath, constructCmakeArgs(workspace), "CUSTOM_PROP"));
-        ASSERT_EQ(CmagResult::Success, dumper.readCmagProjectFromGeneration(workspace.buildPath));
+        ASSERT_EQ(CmagResult::Success, dumper.dump());
     }
 
     ASSERT_EQ(1u, dumper.project.getTargets().size());
@@ -378,13 +367,12 @@ TEST_P(CmagTest, givenMultiConfigGeneratorCustomConfigNamesSpecifiedThenProcessT
     TestWorkspace workspace = TestWorkspace::prepare("simple");
     ASSERT_TRUE(workspace.valid);
 
-    WhiteboxCmaDumper dumper{"project", false};
+    auto cmakeArgs = constructCmakeArgs(workspace);
+    cmakeArgs.emplace_back("-DCMAKE_CONFIGURATION_TYPES=Elmo;CookieMonster");
+    WhiteboxCmagDumper dumper{"project", false, workspace.sourcePath, workspace.buildPath, cmakeArgs, ""};
     {
         RaiiStdoutCapture capture{};
-        auto cmakeArgs = constructCmakeArgs(workspace);
-        cmakeArgs.emplace_back("-DCMAKE_CONFIGURATION_TYPES=Elmo;CookieMonster");
-        ASSERT_EQ(CmagResult::Success, dumper.generateCmake(workspace.sourcePath, cmakeArgs, ""));
-        ASSERT_EQ(CmagResult::Success, dumper.readCmagProjectFromGeneration(workspace.buildPath));
+        ASSERT_EQ(CmagResult::Success, dumper.dump());
     }
 
     ASSERT_EQ(1u, dumper.project.getTargets().size());
@@ -411,14 +399,12 @@ TEST_P(CmagTest, givenSingleConfigGeneratorCustomConfigNameSpecifiedThenProcessI
     TestWorkspace workspace = TestWorkspace::prepare("simple");
     ASSERT_TRUE(workspace.valid);
 
-    WhiteboxCmaDumper dumper{"project", false};
+    auto cmakeArgs = constructCmakeArgs(workspace);
+    cmakeArgs.emplace_back("-DCMAKE_BUILD_TYPE=Elmo");
+    WhiteboxCmagDumper dumper{"project", false, workspace.sourcePath, workspace.buildPath, cmakeArgs, ""};
     {
         RaiiStdoutCapture capture{};
-        auto cmakeArgs = constructCmakeArgs(workspace);
-        cmakeArgs.emplace_back("-DCMAKE_BUILD_TYPE=Elmo");
-
-        ASSERT_EQ(CmagResult::Success, dumper.generateCmake(workspace.sourcePath, cmakeArgs, ""));
-        ASSERT_EQ(CmagResult::Success, dumper.readCmagProjectFromGeneration(workspace.buildPath));
+        ASSERT_EQ(CmagResult::Success, dumper.dump());
     }
 
     ASSERT_EQ(1u, dumper.project.getTargets().size());
