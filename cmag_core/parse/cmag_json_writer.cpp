@@ -64,6 +64,7 @@ nlohmann::json CmagJsonWriter::createTargetNode(const CmagTarget &target) {
     node["graphical"] = createTargetGraphicalNode(target.graphical);
     node["listDir"] = target.listDirName;
     node["isImported"] = target.isImported;
+    node["aliases"] = createAliasesNode(target.aliases);
     return node;
 }
 
@@ -87,6 +88,13 @@ nlohmann::json CmagJsonWriter::createConfigNode(const CmagTargetConfig &config) 
     nlohmann::json node = nlohmann::json::object();
     for (const CmagTargetProperty &property : config.properties) {
         node[property.name] = property.value;
+    }
+    return node;
+}
+nlohmann::json CmagJsonWriter::createAliasesNode(const std::vector<std::string> &aliases) {
+    nlohmann::json node = nlohmann::json::array();
+    for (const std::string &alias : aliases) {
+        node.push_back(alias);
     }
     return node;
 }

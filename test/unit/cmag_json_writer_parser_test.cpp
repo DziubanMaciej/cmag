@@ -88,6 +88,13 @@ struct CmagWriterParserTest : ::testing::Test {
             EXPECT_EQ(expGraphical.x, actGraphical.x);
             EXPECT_EQ(expGraphical.y, actGraphical.y);
             EXPECT_EQ(expGraphical.hideConnections, actGraphical.hideConnections);
+
+            ASSERT_EQ(expTarget.aliases.size(), actTarget.aliases.size());
+            for (size_t j = 0; j < expTarget.aliases.size(); j++) {
+                const auto &expAlias = expTarget.aliases[j];
+                const auto &actAlias = actTarget.aliases[j];
+                EXPECT_EQ(expAlias, actAlias);
+            }
         }
     }
 };
@@ -107,6 +114,28 @@ TEST_F(CmagWriterParserTest, givenProjectWithTargetWithoutPropertiesThenWriteAnd
         },
         {},
     });
+    verify(project);
+}
+
+TEST_F(CmagWriterParserTest, givenProjectWithTargetAliasesThenWriteAndReadCorrectly) {
+    CmagProject project;
+
+    auto addTarget = [&](const std::string &targetName, const std::vector<std::string> &aliases) {
+        CmagTarget target{
+            targetName,
+            CmagTargetType::Executable,
+            {
+                {"Debug", {}},
+            },
+        };
+        target.aliases = aliases;
+
+        project.addTarget(std::move(target));
+    };
+
+    addTarget("target1", {"A", "B", "C"});
+    addTarget("target2", {"D", "E"});
+    addTarget("target3", {});
     verify(project);
 }
 

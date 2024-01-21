@@ -51,6 +51,8 @@ private:
 
     static ParseResult parseTargetGraphical(const nlohmann::json &node, CmagTargetGraphicalData &outGraphical);
 
+    static ParseResult parseTargetAliases(const nlohmann::json &node, CmagTarget &outTarget);
+
     template <typename DstT>
     static ParseResult parseObjectField(const nlohmann::json &node, const char *name, DstT &dst);
 };

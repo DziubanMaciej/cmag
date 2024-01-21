@@ -199,6 +199,7 @@ function(json_append_target OUT_VARIABLE TGT CONFIG INDENT INDENT_INCREMENT)
         json_append_object_end(${OUT_VARIABLE} ${INNER_INNER_INDENT})
         json_append_object_end(${OUT_VARIABLE} ${INNER_INDENT})
     endif()
+    json_append_key_value_unquoted(${OUT_VARIABLE} aliases "[]" ${INNER_INDENT})
     json_append_object_end(${OUT_VARIABLE} ${INDENT})
 
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)

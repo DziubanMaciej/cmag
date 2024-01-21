@@ -246,6 +246,12 @@ ParseResult CmagJsonParser::parseTarget(const nlohmann::json &node, CmagTarget &
         return {ParseResultStatus::MissingField, LOG_TO_STRING("Missing target graphical node for target ", outTarget.name)};
     }
 
+    if (auto aliasesNodeIt = node.find("aliases"); aliasesNodeIt != node.end()) {
+        RETURN_ERROR(parseTargetAliases(*aliasesNodeIt, outTarget));
+    } else {
+        return {ParseResultStatus::MissingField, LOG_TO_STRING("Missing aliases node for target ", outTarget.name)};
+    }
+
     RETURN_ERROR(parseObjectField(node, "listDir", outTarget.listDirName));
 
     return ParseResult::success;
@@ -327,6 +333,21 @@ ParseResult CmagJsonParser::parseTargetGraphical(const nlohmann::json &node, Cma
     RETURN_ERROR(parseObjectField(node, "x", outGraphical.x));
     RETURN_ERROR(parseObjectField(node, "y", outGraphical.y));
     RETURN_ERROR(parseObjectField(node, "hideConnections", outGraphical.hideConnections));
+
+    return ParseResult::success;
+}
+ParseResult CmagJsonParser::parseTargetAliases(const nlohmann::json &node, CmagTarget &outTarget) {
+    if (!node.is_array()) {
+        return {ParseResultStatus::InvalidNodeType, "Target aliases node should be an array"};
+    }
+
+    for (const nlohmann::json &aliasNode : node) {
+        if (!aliasNode.is_string()) {
+            return {ParseResultStatus::InvalidNodeType, "Target alias should be a string value"};
+        }
+
+        outTarget.aliases.push_back(aliasNode.get<std::string>());
+    }
 
     return ParseResult::success;
 }
