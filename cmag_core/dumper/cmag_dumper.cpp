@@ -64,33 +64,14 @@ CmagResult CmagDumper::dump() {
 }
 
 CmagResult CmagDumper::cmakeMainPass() {
-    // Prepare CMake args
+    // Append cmag-specific arguments and run CMake
     auto cmakeArgs = cmakeArgsFromUser;
     cmakeArgs.emplace_back("-DCMAG_MAIN_FUNCTION=main");
     cmakeArgs.push_back(std::string{"-DCMAG_PROJECT_NAME="} + projectName);
     cmakeArgs.push_back(std::string{"-DCMAG_VERSION="} + cmagVersion.toString());
     cmakeArgs.push_back(std::string{"-DCMAG_EXTRA_TARGET_PROPERTIES="} + extraTargetProperties);
     cmakeArgs.push_back(std::string{"-DCMAG_JSON_DEBUG="} + std::to_string(generationDebug));
-
-    // Call CMake
-    const SubprocessResult result = runSubprocess(cmakeArgs);
-    switch (result) {
-    case SubprocessResult::Success:
-        break;
-    case SubprocessResult::CreationFailed:
-        LOG_ERROR("running CMake failed.");
-        return CmagResult::SubprocessError;
-    case SubprocessResult::ProcessKilled:
-        LOG_ERROR("CMake has been killed.");
-        return CmagResult::SubprocessError;
-    case SubprocessResult::ProcessFailed:
-        LOG_ERROR("CMake failed.");
-        return CmagResult::SubprocessError;
-    default:
-        UNREACHABLE_CODE;
-    }
-
-    return CmagResult::Success;
+    return callSubprocess("CMake", cmakeArgs);
 }
 
 CmagResult CmagDumper::readCmakeAfterMainPass() {
@@ -169,32 +150,12 @@ CmagResult CmagDumper::cmakeSecondPass() {
         return CmagResult::DerivationError;
     }
 
-    // Prepare CMake args
+    // Append cmag-specific arguments and run CMake
     auto cmakeArgs = cmakeArgsFromUser;
     cmakeArgs.emplace_back("-DCMAG_MAIN_FUNCTION=aliases");
     cmakeArgs.push_back(std::string{"-DCMAG_PROJECT_NAME="} + projectName);
     cmakeArgs.push_back(std::string{"-DCMAG_ALIASED_TARGETS="} + joinStringWithChar(project.getUnmatchedDependencies(), ';'));
-
-    // Call CMake
-    // TODO this is copy pasted from generateCmake. Make this more common.
-    const SubprocessResult result = runSubprocess(cmakeArgs);
-    switch (result) {
-    case SubprocessResult::Success:
-        break;
-    case SubprocessResult::CreationFailed:
-        LOG_ERROR("running CMake failed.");
-        return CmagResult::SubprocessError;
-    case SubprocessResult::ProcessKilled:
-        LOG_ERROR("CMake has been killed.");
-        return CmagResult::SubprocessError;
-    case SubprocessResult::ProcessFailed:
-        LOG_ERROR("CMake failed.");
-        return CmagResult::SubprocessError;
-    default:
-        UNREACHABLE_CODE;
-    }
-
-    return CmagResult::Success;
+    return callSubprocess("CMake", cmakeArgs);
 }
 
 CmagResult CmagDumper::readCmakeAfterSecondPass() {
@@ -238,20 +199,15 @@ CmagResult CmagDumper::launchProjectInGui(const fs::path &buildPath) {
     std::vector<std::string> browserArgs = {};
     browserArgs.push_back(browserBinaryPath.string());
     browserArgs.push_back(projectPath.string());
-    const SubprocessResult result = runSubprocess(browserArgs);
-    switch (result) {
-    case SubprocessResult::Success:
+    return callSubprocess("Gui", browserArgs);
+}
+
+CmagResult CmagDumper::callSubprocess(const char *binaryNameForLogging, const std::vector<std::string> &args) {
+    const SubprocessResult result = runSubprocess(args);
+    if (result == SubprocessResult::Success) {
         return CmagResult::Success;
-    case SubprocessResult::CreationFailed:
-        LOG_ERROR("running gui failed.");
+    } else {
+        LOG_ERROR(subprocessResultToString(result, binaryNameForLogging));
         return CmagResult::SubprocessError;
-    case SubprocessResult::ProcessKilled:
-        LOG_ERROR("gui has been killed.");
-        return CmagResult::SubprocessError;
-    case SubprocessResult::ProcessFailed:
-        LOG_ERROR("gui failed.");
-        return CmagResult::SubprocessError;
-    default:
-        UNREACHABLE_CODE;
     }
 }
