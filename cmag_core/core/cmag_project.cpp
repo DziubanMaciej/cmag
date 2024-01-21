@@ -80,7 +80,29 @@ bool CmagProject::deriveData() {
     for (CmagTarget &target : targets) {
         target.deriveData(targets);
     }
+    deriveUnmatchedDependencies();
     return globals.deriveData(targets);
+}
+
+void CmagProject::deriveUnmatchedDependencies() {
+    auto &result = derived.unmatchedDependencies;
+
+    for (const CmagTarget &target : targets) {
+        for (const CmagTargetConfig &config : target.configs) {
+            for (const std::string &dependency : config.derived.unmatchedDependencies) {
+                // Skip dependencies that cannot be CMake targets, e.g. absolute paths to system libraries.
+                if (!isValidCmakeTargetName(dependency, true)) {
+                    continue;
+                }
+
+                // Insert while ensuring uniqueness. We could use a set or keep a sorted order and
+                // search with bisection, but this brute-force linear search should be good for now.
+                if (std::find_if(result.begin(), result.end(), [&](const std::string &x) { return x == dependency; }) == result.end()) {
+                    result.push_back(dependency);
+                }
+            }
+        }
+    }
 }
 
 void CmagTargetConfig::fixupWithNonEvaled(std::string_view propertyName, std::string_view nonEvaledValue) {
@@ -235,14 +257,18 @@ void CmagTargetConfig::fixupLinkLibrariesGenex(CmagTargetProperty &property, std
     }
 }
 void CmagTargetConfig::deriveData(std::vector<CmagTarget> &targets) {
-    auto addTargetsToVector = [&targets](std::vector<std::string_view> &strings, std::vector<const CmagTarget *> &outList) {
+    auto addTargetsToVector = [&](std::vector<std::string_view> &strings, std::vector<const CmagTarget *> &outList) {
         for (std::string_view string : strings) {
             auto it = std::find_if(targets.begin(), targets.end(), [string](const CmagTarget &target) {
                 return target.name == string;
             });
+
             if (it != targets.end()) {
                 it->derived.isReferenced = true;
+                this->derived.allDependencies.push_back(&*it);
                 outList.push_back(&*it);
+            } else {
+                this->derived.unmatchedDependencies.emplace_back(string);
             }
         }
     };
@@ -250,19 +276,16 @@ void CmagTargetConfig::deriveData(std::vector<CmagTarget> &targets) {
     if (auto property = findProperty("LINK_LIBRARIES"); property != nullptr) {
         std::vector<std::string_view> dependencies = splitCmakeListString(property->value, false);
         addTargetsToVector(dependencies, derived.buildDependencies);
-        addTargetsToVector(dependencies, derived.allDependencies);
     }
 
     if (auto property = findProperty("INTERFACE_LINK_LIBRARIES"); property != nullptr) {
         std::vector<std::string_view> dependencies = splitCmakeListString(property->value, false);
         addTargetsToVector(dependencies, derived.interfaceDependencies);
-        addTargetsToVector(dependencies, derived.allDependencies);
     }
 
     if (auto property = findProperty("MANUALLY_ADDED_DEPENDENCIES"); property != nullptr) {
         std::vector<std::string_view> dependencies = splitCmakeListString(property->value, false);
         addTargetsToVector(dependencies, derived.manualDependencies);
-        addTargetsToVector(dependencies, derived.allDependencies);
     }
 }
 
