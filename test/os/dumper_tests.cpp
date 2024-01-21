@@ -140,6 +140,50 @@ TEST_P(CmagTest, givenProjectWrittenToFileThenItCanBeParsedBack) {
     }
 }
 
+TEST_P(CmagTest, givenAliasesProjectThenProcessItCorrectly) {
+    TestWorkspace workspace = TestWorkspace::prepare("aliases");
+    ASSERT_TRUE(workspace.valid);
+
+    WhiteboxCmagDumper dumper{"project", false, workspace.sourcePath, workspace.buildPath, constructCmakeArgs(workspace), ""};
+
+    {
+        RaiiStdoutCapture capture{};
+        ASSERT_EQ(CmagResult::Success, dumper.dump());
+    }
+
+    auto targets = getSortedTargets(dumper.project);
+    ASSERT_EQ(5u, targets.size());
+
+    {
+        const CmagTarget &target = targets[0];
+        EXPECT_STREQ("Exe0", target.name.c_str());
+        EXPECT_TRUE(target.aliases.empty()); // aliases that are not mentioned will not be found
+        verifyPropertyForEachConfig(target, "LINK_LIBRARIES", "LibA;LibB");
+    }
+    {
+        const CmagTarget &target = targets[1];
+        EXPECT_STREQ("Exe1", target.name.c_str());
+        EXPECT_TRUE(target.aliases.empty()); // aliases that are not mentioned will not be found
+        verifyPropertyForEachConfig(target, "LINK_LIBRARIES", "Alias::LibA::1;Alias::LibB::1");
+    }
+    {
+        const CmagTarget &target = targets[2];
+        EXPECT_STREQ("Exe2", target.name.c_str());
+        EXPECT_TRUE(target.aliases.empty()); // aliases that are not mentioned will not be found
+        verifyPropertyForEachConfig(target, "LINK_LIBRARIES", "Alias::LibA::2;Alias::LibB::2");
+    }
+    {
+        const CmagTarget &target = targets[3];
+        EXPECT_STREQ("LibA", target.name.c_str());
+        EXPECT_EQ((std::vector<std::string>{"Alias::LibA::1", "Alias::LibA::2"}), target.aliases);
+    }
+    {
+        const CmagTarget &target = targets[4];
+        EXPECT_STREQ("LibB", target.name.c_str());
+        EXPECT_EQ((std::vector<std::string>{"Alias::LibB::1", "Alias::LibB::2"}), target.aliases);
+    }
+}
+
 TEST_P(CmagTest, givenProjectWithAllTargetTypesThenAllTargetsAreDetectedCorrectly) {
     TestWorkspace workspace = TestWorkspace::prepare("all_types");
     ASSERT_TRUE(workspace.valid);
