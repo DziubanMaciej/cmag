@@ -71,6 +71,19 @@ bool CmagProject::mergeTargets(CmagTarget &dst, CmagTarget &&src) {
     return true;
 }
 
+bool CmagProject::addTargetAlias(std::string_view aliasName, std::string_view aliasedTargetName) {
+    for (CmagTarget &target : targets) {
+        if (target.name != aliasedTargetName) {
+            continue;
+        }
+
+        target.aliases.emplace_back(aliasName);
+        return true;
+    }
+
+    return false;
+}
+
 void CmagProject::addConfig(std::string_view config) {
     if (std::find(configs.begin(), configs.end(), config) == configs.end()) {
         configs.emplace_back(config);

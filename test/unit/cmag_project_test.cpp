@@ -302,6 +302,49 @@ TEST(CmagProjectTest, givenTargetWithMultipleConfigsWhenDerivingDataThenDifferin
     EXPECT_FALSE(propertiesRelWithDeb[4].isConsistent);
 }
 
+TEST(CmagProjectTest, givenAliasesWhenAddingTargetAliasesThenFillAliasesVectorCorrectly) {
+    CmagProject project = {};
+
+    CmagTarget target1 = {
+        "target1",
+        CmagTargetType::Executable,
+        {
+            {"Debug", {}},
+        },
+        {},
+    };
+
+    CmagTarget target2 = {
+        "target2",
+        CmagTargetType::Executable,
+        {
+            {"Debug", {}},
+        },
+        {},
+    };
+
+    EXPECT_TRUE(project.addTarget(CmagTarget{target1}));
+    EXPECT_TRUE(project.addTarget(CmagTarget{target2}));
+    EXPECT_TRUE(project.addTargetAlias("A", "target1"));
+    EXPECT_TRUE(project.addTargetAlias("B", "target1"));
+    EXPECT_TRUE(project.addTargetAlias("C", "target2"));
+    EXPECT_TRUE(project.addTargetAlias("D", "target2"));
+    EXPECT_FALSE(project.addTargetAlias("E", "target3"));
+    EXPECT_FALSE(project.addTargetAlias("F", "target3"));
+
+    ASSERT_EQ(2u, project.getTargets().size());
+    {
+        const CmagTarget &target = project.getTargets()[0];
+        EXPECT_EQ(target1.name, target.name);
+        EXPECT_EQ((std::vector<std::string>{"A", "B"}), target.aliases);
+    }
+    {
+        const CmagTarget &target = project.getTargets()[1];
+        EXPECT_EQ(target2.name, target.name);
+        EXPECT_EQ((std::vector<std::string>{"C", "D"}), target.aliases);
+    }
+}
+
 TEST(CmagProjectTest, givenTargetsWithListDirsWhenDerivingDataThenListDirIndicesAreCorrectlyDerived) {
     CmagProject project = {};
 

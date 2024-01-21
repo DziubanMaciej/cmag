@@ -159,6 +159,31 @@ CmagResult CmagDumper::cmakeSecondPass() {
 }
 
 CmagResult CmagDumper::readCmakeAfterSecondPass() {
+    // Read aliases file
+    std::vector<std::pair<std::string, std::string>> aliases = {};
+    {
+        std::string fileName = projectName + ".cmag-aliases";
+        fs::path file = buildPath / fileName;
+        auto fileContent = readFile(file);
+        if (!fileContent.has_value()) {
+            LOG_ERROR("failed to read ", fileName);
+            return CmagResult::FileAccessError;
+        }
+        temporaryFiles.push_back(file);
+        const ParseResult parseResult = CmagJsonParser::parseAliasesFile(fileContent.value(), aliases);
+        if (parseResult.status != ParseResultStatus::Success) {
+            LOG_ERROR("failed to parse ", fileName, ". ", parseResult.errorMessage);
+            return CmagResult::JsonParseError;
+        }
+    }
+
+    for (const auto &alias : aliases) {
+        const bool aliasedTargetFound = project.addTargetAlias(alias.first, alias.second);
+        if (!aliasedTargetFound) {
+            LOG_WARNING("alias \"%s\" for target \"%s\" is found, but the target doesn't exist.");
+        }
+    }
+
     return CmagResult::Success;
 }
 
