@@ -31,19 +31,6 @@ const char *cmagTargetTypeToString(CmagTargetType type) {
     }
 }
 
-void CmagProject::addTargetGraphical(std::string_view targetName, float x, float y) {
-    auto targetIt = std::find_if(targets.begin(), targets.end(), [targetName](const CmagTarget &target) {
-        return target.name == targetName;
-    });
-    if (targetIt == targets.end()) {
-        return;
-    }
-
-    CmagTargetGraphicalData &graphical = targetIt->graphical;
-    graphical.x = x;
-    graphical.y = y;
-}
-
 bool CmagProject::addTarget(CmagTarget &&newTarget) {
     // Register target's config if we haven't seen it yet.
     for (const CmagTargetConfig &config : newTarget.configs) {
