@@ -33,3 +33,36 @@ TEST(SplitCmakeListStringTest, givenListStringAndIgnoreSingleEntryThenReturnAllE
     EXPECT_EQ("def", result[1]);
     EXPECT_EQ("ghi", result[2]);
 }
+
+TEST(IsValidCmakeTargetNameTest, givenNormalAlphanumericNamesWhenCheckingValidityThenReturnTrue) {
+    EXPECT_TRUE(isValidCmakeTargetName("a", true));
+    EXPECT_TRUE(isValidCmakeTargetName("ABC", true));
+    EXPECT_TRUE(isValidCmakeTargetName("aBc", true));
+    EXPECT_TRUE(isValidCmakeTargetName("ZzaA", true));
+}
+
+TEST(IsValidCmakeTargetNameTest, givenNamesWithAllowedSpecialCharactersCheckingValidityThenReturnTrue) {
+    EXPECT_TRUE(isValidCmakeTargetName("a++", true));
+    EXPECT_TRUE(isValidCmakeTargetName("+B_1.+-_A", true));
+    EXPECT_TRUE(isValidCmakeTargetName("1+B_1.+-_A", true));
+}
+
+TEST(IsValidCmakeTargetNameTest, givenEmptyNameWhenCheckingValidityThenReturnFalse) {
+    EXPECT_FALSE(isValidCmakeTargetName("", true));
+}
+
+TEST(IsValidCmakeTargetNameTest, givenNamesWithColonsThenReturnTrueWhenTheyAreAllowed) {
+    const char *names[] = {
+        "abc::abc",
+        ":a:b:c:",
+        "abc::",
+        "::abc",
+        "abc:::abc",
+        ":::::::", // seriously, this is legal
+    };
+
+    for (const char *name : names) {
+        EXPECT_TRUE(isValidCmakeTargetName(name, true));
+        EXPECT_FALSE(isValidCmakeTargetName(name, false));
+    }
+}

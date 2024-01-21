@@ -35,3 +35,29 @@ inline std::vector<std::string_view> splitCmakeListString(std::string_view value
     // Split the value, so we can display it as a list of bullets in popup.
     return splitStringByChar(value, ignoreSingleEntry, ';');
 }
+
+inline bool isValidCmakeTargetName(std::string_view targetName, bool allowDoubleColons) {
+    // See https://cmake.org/cmake/help/latest/policy/CMP0037.html for validity rules
+    // for target names in CMake.
+
+    if (targetName.empty()) {
+        return false;
+    }
+
+    for (char c : targetName) {
+        // Docs: "Target names may contain upper and lower case letters, numbers, the underscore character (_), dot(.), plus(+) and minus(-)."
+        if (isalnum(c) || c == '_' || c == '.' || c == '+' || c == '-') {
+            continue;
+        }
+
+        // Docs: "As a special case, ALIAS and IMPORTED targets may contain two consecutive colons."
+        // Actually any number of colons is allowed, even on the beginning or end of the name.
+        if (c == ':' && allowDoubleColons) {
+            continue;
+        }
+
+        return false;
+    }
+
+    return true;
+}

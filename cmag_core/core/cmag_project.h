@@ -85,6 +85,7 @@ struct CmagTargetConfig {
         std::vector<const CmagTarget *> interfaceDependencies = {}; // based on INTERFACE_LINK_LIBRARIES
         std::vector<const CmagTarget *> manualDependencies = {};    // based on MANUALLY_ADDED_DEPENDENCIES
         std::vector<const CmagTarget *> allDependencies = {};
+        std::vector<std::string> unmatchedDependencies = {};
     } derived = {};
 
     void deriveData(std::vector<CmagTarget> &targets);
@@ -142,12 +143,17 @@ public:
     auto &getTargets() { return targets; }
     const auto &getGlobals() const { return globals; }
     auto &getGlobals() { return globals; }
+    const auto &getUnmatchedDependencies() const { return derived.unmatchedDependencies; }
 
 private:
+    void deriveUnmatchedDependencies();
     static bool mergeTargets(CmagTarget &dst, CmagTarget &&src);
     void addConfig(std::string_view config);
 
     CmagConfigs configs = {};
     CmagGlobals globals = {};
     std::vector<CmagTarget> targets = {};
+    struct {
+        std::vector<std::string> unmatchedDependencies;
+    } derived;
 };

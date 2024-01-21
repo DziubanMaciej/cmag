@@ -175,9 +175,9 @@ TEST(CmagProjectTest, givenTargetsWithDependenciesWhenDerivingDataThenDependenci
     EXPECT_TRUE(project.addTarget(createTarget(
         "target",
         {
-            {"LINK_LIBRARIES", "dep1;dep2"},
-            {"INTERFACE_LINK_LIBRARIES", "dep4"},
-            {"MANUALLY_ADDED_DEPENDENCIES", "depExternal;dep3"},
+            {"LINK_LIBRARIES", "dep1;dep2;depExternal1"},
+            {"INTERFACE_LINK_LIBRARIES", "dep4;depExternal2"},
+            {"MANUALLY_ADDED_DEPENDENCIES", "depExternal3;dep3"},
         })));
     EXPECT_TRUE(project.addTarget(createTarget("dep1", {})));
     EXPECT_TRUE(project.addTarget(createTarget("dep2", {})));
@@ -193,10 +193,12 @@ TEST(CmagProjectTest, givenTargetsWithDependenciesWhenDerivingDataThenDependenci
     const std::vector<const CmagTarget *> expectedInterfaceDependencies = {&targets[4]};
     const std::vector<const CmagTarget *> expectedManualDependencies = {&targets[3]};
     const std::vector<const CmagTarget *> expectedAllDependencies = {&targets[1], &targets[2], &targets[4], &targets[3]};
+    const std::vector<std::string> expectedUnmatchedDependencies = {"depExternal1", "depExternal2", "depExternal3"};
     EXPECT_EQ(expectedBuildDependencies, targetConfig.derived.buildDependencies);
     EXPECT_EQ(expectedInterfaceDependencies, targetConfig.derived.interfaceDependencies);
     EXPECT_EQ(expectedManualDependencies, targetConfig.derived.manualDependencies);
     EXPECT_EQ(expectedAllDependencies, targetConfig.derived.allDependencies);
+    EXPECT_EQ(expectedUnmatchedDependencies, targetConfig.derived.unmatchedDependencies);
 }
 
 TEST(CmagProjectTest, givenTargetWithOneConfigWhenDerivingDataThenAllPropertiesAreConsistent) {
@@ -543,6 +545,42 @@ TEST(CmagProjectTest, givenTargetsWithDependenciesWhenDerivingDataThenCorrectlyD
     ASSERT_FALSE(targets[11].derived.isReferenced);
 }
 
+TEST(CmagProjectTest, givenTargetsWithDependenciesWhenDerivingDataThenCorrectlyDeriveUnmatchedDependenciesField) {
+    CmagProject project = {};
+
+    project.getGlobals().listDirs = {CmagListDir{"a", {}}};
+
+    auto createTarget = [](const char *name, const char *linkLibs, const char *interfaceLinkLibs, const char *deps) {
+        CmagTarget target = {};
+        target.name = name;
+        target.type = CmagTargetType::Executable;
+        target.configs = {{
+            "Debug",
+            {
+                {"LINK_LIBRARIES", linkLibs},
+                {"INTERFACE_LINK_LIBRARIES", interfaceLinkLibs},
+                {"MANUALLY_ADDED_DEPENDENCIES", deps},
+            },
+        }};
+        target.listDirName = "a";
+        return target;
+    };
+
+    EXPECT_TRUE(project.addTarget(createTarget("A", "B;Ext1", "Ext2;Ext3", "Ext4;C")));
+    EXPECT_TRUE(project.addTarget(createTarget("B", "Ext1;Ext1", "", "Ext4;C")));
+    EXPECT_TRUE(project.addTarget(createTarget("C", "", "Ext4;Ext1;Ext3;Ext2", "")));
+
+    ASSERT_TRUE(project.deriveData());
+
+    const std::vector<CmagTarget> &targets = project.getTargets();
+    ASSERT_EQ(3u, targets.size());
+    EXPECT_EQ((std::vector<std::string>{"Ext1", "Ext2", "Ext3", "Ext4"}), targets[0].configs[0].derived.unmatchedDependencies);
+    EXPECT_EQ((std::vector<std::string>{"Ext1", "Ext1", "Ext4"}), targets[1].configs[0].derived.unmatchedDependencies);
+    EXPECT_EQ((std::vector<std::string>{"Ext4", "Ext1", "Ext3", "Ext2"}), targets[2].configs[0].derived.unmatchedDependencies);
+
+    EXPECT_EQ((std::vector<std::string>{"Ext1", "Ext2", "Ext3", "Ext4"}), project.getUnmatchedDependencies());
+}
+
 TEST(CmagTargetTest, givenConfigExistsWhenGetOrCreateConfigIsCalledThenReturnExistingConfig) {
     CmagTarget target = {
         "target",
@@ -611,11 +649,11 @@ TEST(CmagTargetTest, givenConfigDoesNotExistWhenGetOrCreateConfigIsCalledThenCre
 }
 
 struct CmagTargetConfigTest : ::testing::Test {
-    void executeTest(const char *evaledValue, const char *expectedValue) {
+    static void executeTest(const char *evaledValue, const char *expectedValue) {
         executeTest(evaledValue, evaledValue, expectedValue);
     }
 
-    void executeTest(const char *evaledValue, const char *nonEvaledValue, const char *expectedValue) {
+    static void executeTest(const char *evaledValue, const char *nonEvaledValue, const char *expectedValue) {
         CmagTargetConfig config = {
             "Debug",
             {
