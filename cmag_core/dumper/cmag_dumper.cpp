@@ -11,9 +11,26 @@
 
 #include <string_view>
 
-CmagDumper::CmagDumper(std::string_view projectName, bool generationDebug)
+#define RETURN_ERROR(expr)                \
+    do {                                  \
+        const CmagResult r = (expr);      \
+        if ((r) != CmagResult::Success) { \
+            return (r);                   \
+        }                                 \
+    } while (false)
+
+CmagDumper::CmagDumper(std::string_view projectName,
+                       bool generationDebug,
+                       const fs::path &sourcePath,
+                       const fs::path &buildPath,
+                       const std::vector<std::string> &cmakeArgsFromUser,
+                       const std::string &extraTargetProperties)
     : projectName(projectName),
-      generationDebug(generationDebug) {}
+      generationDebug(generationDebug),
+      sourcePath(sourcePath),
+      buildPath(buildPath),
+      cmakeArgsFromUser(cmakeArgsFromUser),
+      extraTargetProperties(extraTargetProperties) {}
 
 CmagDumper::~CmagDumper() {
     if (!generationDebug) {
@@ -21,7 +38,15 @@ CmagDumper::~CmagDumper() {
     }
 }
 
-CmagResult CmagDumper::generateCmake(const fs::path &sourcePath, std::vector<std::string> cmakeArgs, std::string_view extraTargetProperties) {
+CmagResult CmagDumper::dump() {
+    RETURN_ERROR(cmakeMainPass());
+    RETURN_ERROR(readCmakeAfterMainPass());
+    RETURN_ERROR(cmakeSecondPass());
+    RETURN_ERROR(readCmakeAfterSecondPass());
+    return CmagResult::Success;
+}
+
+CmagResult CmagDumper::cmakeMainPass() {
     // Shim original CMakeLists.txt and insert extra CMake code to query information about the build-system
     // and save it to a file.
     CMakeListsShimmer shimmer{sourcePath};
@@ -40,10 +65,11 @@ CmagResult CmagDumper::generateCmake(const fs::path &sourcePath, std::vector<std
     }
 
     // Prepare CMake args
+    auto cmakeArgs = cmakeArgsFromUser;
     cmakeArgs.emplace_back("-DCMAG_MAIN_FUNCTION=main");
     cmakeArgs.push_back(std::string{"-DCMAG_PROJECT_NAME="} + projectName);
     cmakeArgs.push_back(std::string{"-DCMAG_VERSION="} + cmagVersion.toString());
-    cmakeArgs.push_back(std::string{"-DCMAG_EXTRA_TARGET_PROPERTIES="} + extraTargetProperties.data()); // this could be bad if string_view doesn't end with \0
+    cmakeArgs.push_back(std::string{"-DCMAG_EXTRA_TARGET_PROPERTIES="} + extraTargetProperties);
     cmakeArgs.push_back(std::string{"-DCMAG_JSON_DEBUG="} + std::to_string(generationDebug));
 
     // Call CMake
@@ -67,7 +93,7 @@ CmagResult CmagDumper::generateCmake(const fs::path &sourcePath, std::vector<std
     return CmagResult::Success;
 }
 
-CmagResult CmagDumper::readCmagProjectFromGeneration(const fs::path &buildPath) {
+CmagResult CmagDumper::readCmakeAfterMainPass() {
     // Read targets list
     std::vector<fs::path> targetsFiles = {};
     {
@@ -136,7 +162,7 @@ CmagResult CmagDumper::readCmagProjectFromGeneration(const fs::path &buildPath) 
     return CmagResult::Success;
 }
 
-CmagResult CmagDumper::generateCmakeAliasPass(const fs::path &sourcePath, std::vector<std::string> cmakeArgs) {
+CmagResult CmagDumper::cmakeSecondPass() {
     // TODO this is copy pasted from generateCmake. Make this more common.
     // Shim original CMakeLists.txt and insert extra CMake code to query information about the build-system
     // and save it to a file.
@@ -162,6 +188,7 @@ CmagResult CmagDumper::generateCmakeAliasPass(const fs::path &sourcePath, std::v
     }
 
     // Prepare CMake args
+    auto cmakeArgs = cmakeArgsFromUser;
     cmakeArgs.emplace_back("-DCMAG_MAIN_FUNCTION=aliases");
     cmakeArgs.push_back(std::string{"-DCMAG_PROJECT_NAME="} + projectName);
     cmakeArgs.push_back(std::string{"-DCMAG_ALIASED_TARGETS="} + joinStringWithChar(project.getUnmatchedDependencies(), ';'));
@@ -185,6 +212,10 @@ CmagResult CmagDumper::generateCmakeAliasPass(const fs::path &sourcePath, std::v
         UNREACHABLE_CODE;
     }
 
+    return CmagResult::Success;
+}
+
+CmagResult CmagDumper::readCmakeAfterSecondPass() {
     return CmagResult::Success;
 }
 

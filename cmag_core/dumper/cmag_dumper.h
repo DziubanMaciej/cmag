@@ -16,19 +16,32 @@ enum class CmagResult {
 
 class CmagDumper {
 public:
-    CmagDumper(std::string_view projectName, bool generationDebug);
+    CmagDumper(std::string_view projectName,
+               bool generationDebug,
+               const fs::path &sourcePath,
+               const fs::path &buildPath,
+               const std::vector<std::string> &cmakeArgsFromUser,
+               const std::string &extraTargetProperties);
     ~CmagDumper();
 
-    CmagResult generateCmake(const fs::path &sourcePath, std::vector<std::string> cmakeArgs, std::string_view extraTargetProperties);
-    CmagResult readCmagProjectFromGeneration(const fs::path &buildPath);
-    CmagResult generateCmakeAliasPass(const fs::path &sourcePath, std::vector<std::string> cmakeArgs);
+    CmagResult dump();
     CmagResult writeProjectToFile(const fs::path &buildPath);
     CmagResult cleanupTemporaryFiles();
     CmagResult launchProjectInGui(const fs::path &buildPath);
 
 protected:
-    std::string projectName;
-    bool generationDebug;
+    CmagResult cmakeMainPass();
+    CmagResult readCmakeAfterMainPass();
+    CmagResult cmakeSecondPass();
+    CmagResult readCmakeAfterSecondPass();
+
+    const std::string projectName;
+    const bool generationDebug;
+    const fs::path sourcePath;
+    const fs::path buildPath;
+    const std::vector<std::string> cmakeArgsFromUser;
+    const std::string extraTargetProperties;
+
     CmagProject project = {};
     std::vector<fs::path> temporaryFiles = {};
 };
