@@ -1,4 +1,3 @@
-#include "cmag_core/utils/error.h"
 #include "cmag_core/utils/subprocess.h"
 
 #include <Windows.h>
