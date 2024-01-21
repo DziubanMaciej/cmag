@@ -91,6 +91,10 @@ void CmagProject::addConfig(std::string_view config) {
 }
 bool CmagProject::deriveData() {
     for (CmagTarget &target : targets) {
+        target.derived = {};
+    }
+
+    for (CmagTarget &target : targets) {
         target.deriveData(targets);
     }
     deriveUnmatchedDependencies();
@@ -270,6 +274,8 @@ void CmagTargetConfig::fixupLinkLibrariesGenex(CmagTargetProperty &property, std
     }
 }
 void CmagTargetConfig::deriveData(std::vector<CmagTarget> &targets) {
+    derived = {};
+
     auto addTargetsToVector = [&](std::vector<std::string_view> &strings, std::vector<const CmagTarget *> &outList) {
         for (std::string_view string : strings) {
             auto it = std::find_if(targets.begin(), targets.end(), [string](const CmagTarget &target) {
@@ -350,6 +356,10 @@ bool CmagGlobals::deriveData(const std::vector<CmagTarget> &targets) {
 }
 
 bool CmagGlobals::deriveDataListDirs(const std::vector<CmagTarget> &targets) {
+    for (CmagListDir &listDir : listDirs) {
+        listDir.derived = {};
+    }
+
     for (size_t targetIndex = 0u; targetIndex < targets.size(); targetIndex++) {
         const CmagTarget &target = targets[targetIndex];
 
@@ -373,7 +383,7 @@ bool CmagGlobals::deriveDataListDirs(const std::vector<CmagTarget> &targets) {
 }
 
 bool CmagGlobals::deriveDataFolders(const std::vector<CmagTarget> &targets) {
-    derived.folders.clear();
+    derived = {};
     derived.folders.push_back(CmagFolder{"", ""});
 
     for (size_t targetIndex = 0u; targetIndex < targets.size(); targetIndex++) {
