@@ -279,7 +279,7 @@ void CmagTargetConfig::deriveData(std::vector<CmagTarget> &targets) {
     auto addTargetsToVector = [&](std::vector<std::string_view> &strings, std::vector<const CmagTarget *> &outList) {
         for (std::string_view string : strings) {
             auto it = std::find_if(targets.begin(), targets.end(), [string](const CmagTarget &target) {
-                return target.name == string;
+                return target.matchesName(string);
             });
 
             if (it != targets.end()) {
@@ -502,4 +502,12 @@ const CmagTargetProperty *CmagTarget::getPropertyValue(std::string_view property
 
 bool CmagTarget::isIgnoredImportedTarget() const {
     return isImported && !derived.isReferenced;
+}
+bool CmagTarget::matchesName(std::string_view name) const {
+    if (name == this->name) {
+        return true;
+    }
+    return std::any_of(aliases.begin(), aliases.end(), [&](const std::string &alias) {
+        return alias == name;
+    });
 }

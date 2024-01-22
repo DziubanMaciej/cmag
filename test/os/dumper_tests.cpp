@@ -63,6 +63,12 @@ struct CmagTest : CmagOsTest, testing::WithParamInterface<CMakeGenerator> {
         }
     }
 
+    static void verifyDependenciesForEachConfig(const CmagTarget &target, const std::vector<const CmagTarget *> &dependencies) {
+        for (const CmagTargetConfig &config : target.configs) {
+            EXPECT_EQ(dependencies, config.derived.allDependencies);
+        }
+    }
+
     static void verifyNoProperty(const CmagTargetConfig &config, const char *name) {
         for (const CmagTargetProperty &prop : config.properties) {
             EXPECT_STRNE(name, prop.name.c_str());
@@ -151,26 +157,32 @@ TEST_P(CmagTest, givenAliasesProjectThenProcessItCorrectly) {
         ASSERT_EQ(CmagResult::Success, dumper.dump());
     }
 
-    auto targets = getSortedTargets(dumper.project);
-    ASSERT_EQ(5u, targets.size());
+    // Additional data derivation is needed, because dependencies from aliases will be filled only after the second phase CMake run.
+    // CmagDumper doesn't derive data after second phase, because it doesn't have to. But we need to do it for this test.
+    EXPECT_TRUE(dumper.project.deriveData());
 
+    const auto &targets = dumper.project.getTargets();
+    ASSERT_EQ(5u, targets.size());
     {
         const CmagTarget &target = targets[0];
         EXPECT_STREQ("Exe0", target.name.c_str());
         EXPECT_TRUE(target.aliases.empty()); // aliases that are not mentioned will not be found
         verifyPropertyForEachConfig(target, "LINK_LIBRARIES", "LibA;LibB");
+        verifyDependenciesForEachConfig(target, {&targets[3], &targets[4]});
     }
     {
         const CmagTarget &target = targets[1];
         EXPECT_STREQ("Exe1", target.name.c_str());
         EXPECT_TRUE(target.aliases.empty()); // aliases that are not mentioned will not be found
         verifyPropertyForEachConfig(target, "LINK_LIBRARIES", "Alias::LibA::1;Alias::LibB::1");
+        verifyDependenciesForEachConfig(target, {&targets[3], &targets[4]});
     }
     {
         const CmagTarget &target = targets[2];
         EXPECT_STREQ("Exe2", target.name.c_str());
         EXPECT_TRUE(target.aliases.empty()); // aliases that are not mentioned will not be found
         verifyPropertyForEachConfig(target, "LINK_LIBRARIES", "Alias::LibA::2;Alias::LibB::2");
+        verifyDependenciesForEachConfig(target, {&targets[3], &targets[4]});
     }
     {
         const CmagTarget &target = targets[3];
