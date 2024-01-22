@@ -368,36 +368,43 @@ function(cmag_postamble_main)
     endif()
 
     # Write configs list
-    json_append_configs(CONFIGS_JSON "${CMAG_CONFIGS}" "  " "  ")
     set(TARGETS_LIST_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-targets-list")
+    if (CMAG_JSON_DEBUG)
+        message(STATUS "cmag: generating file ${TARGETS_LIST_FILE}")
+    endif()
+    json_append_configs(CONFIGS_JSON "${CMAG_CONFIGS}" "  " "  ")
     file(WRITE "${TARGETS_LIST_FILE}" "${CONFIGS_JSON}")
 
     # Write global settings
-    json_append_globals(GLOBALS_JSON "${CMAG_CONFIG_DEFAULT}" "  " "  ")
     set(GLOBALS_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-globals")
+    if (CMAG_JSON_DEBUG)
+        message(STATUS "cmag: generating file ${GLOBALS_FILE}")
+    endif()
+    json_append_globals(GLOBALS_JSON "${CMAG_CONFIG_DEFAULT}" "  " "  ")
     file(WRITE "${GLOBALS_FILE}" "${GLOBALS_JSON}")
 
     # Write per-config targets
-    json_append_targets(TARGETS_JSON "${CMAG_CONFIG}" "  " "  ")
     set(TARGETS_LIST_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}_${CMAG_CONFIG}.cmag-targets")
+    if (CMAG_JSON_DEBUG)
+        message(STATUS "cmag: generating file ${TARGETS_LIST_FILE}")
+    endif()
+    json_append_targets(TARGETS_JSON "${CMAG_CONFIG}" "  " "  ")
     file(GENERATE OUTPUT "${TARGETS_LIST_FILE}" CONTENT "${TARGETS_JSON}")
-
-    message(STATUS "cmag: generating file ${TARGETS_LIST_FILE}")
-    message(STATUS "cmag: generating file ${GLOBALS_FILE}")
-    message(STATUS "cmag: generating file ${TARGETS_LIST_FILE}")
 
     if (CMAG_JSON_DEBUG)
         set(TARGETS_LIST_DEBUG_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-targets.debug")
-        message(STATUS "cmag: writing debug file ${TARGETS_LIST_DEBUG_FILE}")
+        message(STATUS "cmag: generating file ${TARGETS_LIST_DEBUG_FILE}")
         file(WRITE "${TARGETS_LIST_DEBUG_FILE}" "${TARGETS_JSON}")
     endif()
 endfunction()
 
 function(cmag_postamble_aliases)
-    json_append_aliases(ALIASES_JSON "${CMAG_ALIASED_TARGETS}" "  " "  ")
     set(ALIASES_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-aliases")
+    if (CMAG_JSON_DEBUG)
+        message(STATUS "cmag: generating file ${ALIASES_FILE}")
+    endif()
+    json_append_aliases(ALIASES_JSON "${CMAG_ALIASED_TARGETS}" "  " "  ")
     file(WRITE "${ALIASES_FILE}" "${ALIASES_JSON}")
-    message(STATUS "cmag: generating file ${ALIASES_FILE}")
 endfunction()
 
 # Verify project name is set.
