@@ -102,3 +102,22 @@ TEST(JoinStringWithCharTest, givenOnlyEmptyStringsThenReturnEmptyString) {
     };
     EXPECT_STREQ("", joinStringWithChar(arg, ';').c_str());
 }
+
+TEST(CompareCMakeVersionsTest, givenThreeComponentVersionsThenCompareCorrectly) {
+    EXPECT_LT(0, compareCmakeVersions("3.10.11", "4.10.11"));
+    EXPECT_LT(0, compareCmakeVersions("3.10.11", "3.11.11"));
+    EXPECT_LT(0, compareCmakeVersions("3.10.11", "3.10.12"));
+
+    EXPECT_EQ(0, compareCmakeVersions("3.10.11", "3.10.11"));
+
+    EXPECT_GT(0, compareCmakeVersions("4.10.11", "3.10.11"));
+    EXPECT_GT(0, compareCmakeVersions("3.11.11", "3.10.11"));
+    EXPECT_GT(0, compareCmakeVersions("3.10.12", "3.10.11"));
+}
+
+TEST(CompareCMakeVersionsTest, givenShortVersionsThenCompareCorrectly) {
+    EXPECT_EQ(0, compareCmakeVersions("3.13", "3.13"));
+    EXPECT_EQ(0, compareCmakeVersions("3.10.0", "3.10"));
+    EXPECT_EQ(0, compareCmakeVersions("3.0.0", "3"));
+    EXPECT_GT(0, compareCmakeVersions("4.10.11", "3.10"));
+}

@@ -274,3 +274,20 @@ TEST(DumperArgumentParserTest, givenLaunchGuiArgumentThenItIsParsedCorrectly) {
         EXPECT_TRUE(parser.getLaunchGui());
     }
 }
+
+TEST(DumperArgumentParserTest, givenMakeFindPackageGlobalArgumentThenItIsParsedCorrectly) {
+    {
+        const char *argv[] = {"cmag", "cmake", ".."};
+        const int argc = sizeof(argv) / sizeof(argv[0]);
+        DumperArgumentParser parser{argc, argv};
+        EXPECT_TRUE(parser.isValid());
+        EXPECT_FALSE(parser.getMakeFindPackageGlobal());
+    }
+    {
+        const char *argv[] = {"cmag", "-f", "cmake", ".."};
+        const int argc = sizeof(argv) / sizeof(argv[0]);
+        DumperArgumentParser parser{argc, argv};
+        EXPECT_TRUE(parser.isValid());
+        EXPECT_TRUE(parser.getMakeFindPackageGlobal());
+    }
+}

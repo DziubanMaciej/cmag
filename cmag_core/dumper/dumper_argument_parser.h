@@ -15,6 +15,7 @@ public:
     auto getJsonDebug() const { return jsonDebug; }
     auto getLaunchGui() const { return launchGui; }
     auto getShowVersion() const { return showVersion; }
+    auto getMakeFindPackageGlobal() const { return makeFindPackageGlobal; }
 
     const auto &getSourcePath() const { return sourcePath; }
     const auto &getBuildPath() const { return buildPath; }
@@ -38,6 +39,7 @@ private:
     bool showVersion = false;
     bool jsonDebug = false;
     bool launchGui = false;
+    bool makeFindPackageGlobal = false;
 
     // Cmake args
     fs::path sourcePath = {};

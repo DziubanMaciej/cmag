@@ -55,6 +55,10 @@ DumperArgumentParser::DumperArgumentParser(int argc, const char **argv) : argc(a
             launchGui = true;
             validArg = true;
         }
+        if (arg == "-f") {
+            makeFindPackageGlobal = true;
+            validArg = true;
+        }
 
         // Check validity of current arg
         if (!validArg) {
@@ -235,6 +239,10 @@ Cmag supports a number of additional arguments, all of which must be specified b
           by additional properties. Multiple properties are delimited by a semicolon.
     -d    json debug. Dump json files before generator expression evaluation. Useful for cmag development.
     -g    launch gui. Open generated project in cmag_browser immediately.
+    -f    make find_package() global. By default IMPORTED targets are scoped only to the directory in which they are
+          created. This causes cmag to be unable to gather all information about them. This option enables a CMake
+          switch CMAKE_FIND_PACKAGE_TARGETS_GLOBAL, which make them all scoped globally. Use with caution - this can
+          potentially break something in a project, which is not ready for it.
 
 Examples:
     cmag cmake ..

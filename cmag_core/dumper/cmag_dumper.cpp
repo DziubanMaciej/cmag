@@ -21,12 +21,14 @@
 
 CmagDumper::CmagDumper(std::string_view projectName,
                        bool generationDebug,
+                       bool makeFindPackagesGlobal,
                        const fs::path &sourcePath,
                        const fs::path &buildPath,
                        const std::vector<std::string> &cmakeArgsFromUser,
                        const std::string &extraTargetProperties)
     : projectName(projectName),
       generationDebug(generationDebug),
+      makeFindPackagesGlobal(makeFindPackagesGlobal),
       sourcePath(sourcePath),
       buildPath(buildPath),
       cmakeArgsFromUser(cmakeArgsFromUser),
@@ -60,6 +62,7 @@ CmagResult CmagDumper::dump() {
     RETURN_ERROR(readCmakeAfterMainPass());
     RETURN_ERROR(cmakeSecondPass());
     RETURN_ERROR(readCmakeAfterSecondPass());
+    verifyWarnings();
     return CmagResult::Success;
 }
 
@@ -71,6 +74,7 @@ CmagResult CmagDumper::cmakeMainPass() {
     cmakeArgs.push_back(std::string{"-DCMAG_VERSION="} + cmagVersion.toString());
     cmakeArgs.push_back(std::string{"-DCMAG_EXTRA_TARGET_PROPERTIES="} + extraTargetProperties);
     cmakeArgs.push_back(std::string{"-DCMAG_JSON_DEBUG="} + std::to_string(generationDebug));
+    cmakeArgs.push_back(std::string{"-DCMAKE_FIND_PACKAGE_TARGETS_GLOBAL="} + std::to_string(makeFindPackagesGlobal));
     return callSubprocess("CMake", cmakeArgs);
 }
 
@@ -225,6 +229,16 @@ CmagResult CmagDumper::launchProjectInGui(const fs::path &buildPath) {
     browserArgs.push_back(browserBinaryPath.string());
     browserArgs.push_back(projectPath.string());
     return callSubprocess("Gui", browserArgs);
+}
+
+void CmagDumper::verifyWarnings() {
+    if (makeFindPackagesGlobal) {
+        const std::string &cmakeVersion = project.getGlobals().cmakeVersion;
+        const char *minimumVersion = "3.24.0";
+        if (compareCmakeVersions(cmakeVersion.c_str(), minimumVersion) > 0) {
+            LOG_WARNING("CMAKE_FIND_PACKAGE_TARGETS_GLOBAL is set to true, but your CMake version is too old. This option is supported starting with ", minimumVersion, ".");
+        }
+    }
 }
 
 CmagResult CmagDumper::callSubprocess(const char *binaryNameForLogging, const std::vector<std::string> &args) {

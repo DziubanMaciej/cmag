@@ -18,6 +18,7 @@ class CmagDumper {
 public:
     CmagDumper(std::string_view projectName,
                bool generationDebug,
+               bool makeFindPackagesGlobal,
                const fs::path &sourcePath,
                const fs::path &buildPath,
                const std::vector<std::string> &cmakeArgsFromUser,
@@ -34,11 +35,13 @@ protected:
     CmagResult readCmakeAfterMainPass();
     CmagResult cmakeSecondPass();
     CmagResult readCmakeAfterSecondPass();
+    void verifyWarnings();
 
     static CmagResult callSubprocess(const char *binaryNameForLogging, const std::vector<std::string> &args);
 
     const std::string projectName;
     const bool generationDebug;
+    const bool makeFindPackagesGlobal;
     const fs::path sourcePath;
     const fs::path buildPath;
     const std::vector<std::string> cmakeArgsFromUser;

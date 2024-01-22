@@ -37,6 +37,7 @@ int main(int argc, const char **argv) {
     CmagDumper dumper{
         argParser.getProjectName(),
         argParser.getJsonDebug(),
+        argParser.getMakeFindPackageGlobal(),
         argParser.getSourcePath(),
         argParser.getBuildPath(),
         argParser.constructArgsForCmake(),

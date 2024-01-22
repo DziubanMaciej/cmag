@@ -1,5 +1,6 @@
 #pragma once
 
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -92,4 +93,29 @@ inline bool isValidCmakeTargetName(std::string_view targetName, bool allowDouble
     }
 
     return true;
+}
+
+inline int32_t compareCmakeVersions(const char *left, const char *right) {
+    // Returns:
+    //   negative, if left is newer
+    //   0 if equal
+    //   positive, if right is newer.
+    // This function is not very safe and does not perform any error checking.
+
+    auto versionToValue = [](const char *version) -> int32_t {
+        std::istringstream stream{version};
+
+        const int componentsCount = 3;
+        int32_t values[componentsCount] = {};
+        for (int &value : values) {
+            stream >> value;
+            stream.get(); // skip the dot
+        }
+
+        return (values[0] << 20) | (values[1] << 10) | (values[2] << 0);
+    };
+
+    const int32_t valueLeft = versionToValue(left);
+    const int32_t valueRight = versionToValue(right);
+    return valueRight - valueLeft;
 }
