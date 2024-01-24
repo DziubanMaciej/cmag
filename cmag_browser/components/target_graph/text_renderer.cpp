@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <glm/gtc/type_ptr.hpp>
 #include <imgui/imgui.h>
 
 constexpr GLuint verticesInQuad = 6;

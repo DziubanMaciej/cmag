@@ -8,7 +8,7 @@ function(target_common_setup TARGET_NAME)
     target_compile_features(${TARGET_NAME} PRIVATE cxx_std_17)
 
     target_compile_options(${TARGET_NAME} PRIVATE
-            $<$<CXX_COMPILER_ID:MSVC>:/W4>
+            $<$<CXX_COMPILER_ID:MSVC>:/W4 /WX>
             $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall -Wextra -Wpedantic -Werror>
     )
 endfunction()

@@ -3,7 +3,7 @@
 #include "cmag_browser/util/gl_extensions.h"
 #include "cmag_browser/util/movable_primitive.h"
 
-#include <glm/gtc/type_ptr.hpp>
+#include <glm/matrix.hpp>
 #include <string>
 #include <string_view>
 #include <vector>

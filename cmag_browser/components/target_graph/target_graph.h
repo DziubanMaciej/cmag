@@ -5,7 +5,9 @@
 #include "cmag_core/core/cmag_project.h"
 
 #include <array>
-#include <glm/glm.hpp>
+#include <glm/matrix.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec4.hpp>
 #include <unordered_map>
 
 class CmagBrowserTheme;

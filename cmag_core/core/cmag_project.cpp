@@ -502,11 +502,11 @@ const CmagTargetProperty *CmagTarget::getPropertyValue(std::string_view property
 bool CmagTarget::isIgnoredImportedTarget() const {
     return isImported && !derived.isReferenced;
 }
-bool CmagTarget::matchesName(std::string_view name) const {
-    if (name == this->name) {
+bool CmagTarget::matchesName(std::string_view nameToMatch) const {
+    if (nameToMatch == this->name) {
         return true;
     }
     return std::any_of(aliases.begin(), aliases.end(), [&](const std::string &alias) {
-        return alias == name;
+        return alias == nameToMatch;
     });
 }

@@ -13,6 +13,7 @@ if (CMAG_BUILD_BROWSER)
     target_include_directories(OpenGL::GL INTERFACE ${CMAKE_CURRENT_LIST_DIR}/gl_headers)
 
     add_subdirectory(glm)
+    target_compile_definitions(glm INTERFACE GLM_FORCE_SILENT_WARNINGS=1)
     set_target_properties(uninstall PROPERTIES FOLDER ThirdParty)
 
     set(GLFW_BUILD_DOCS OFF)

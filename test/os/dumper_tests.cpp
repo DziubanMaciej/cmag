@@ -126,7 +126,7 @@ TEST_P(CmagTest, givenProjectWrittenToFileThenItCanBeParsedBack) {
     {
         RaiiStdoutCapture capture{};
         ASSERT_EQ(CmagResult::Success, dumper.dump());
-        ASSERT_EQ(CmagResult::Success, dumper.writeProjectToFile(workspace.buildPath));
+        ASSERT_EQ(CmagResult::Success, dumper.writeProjectToFile());
     }
 
     std::optional<std::string> projectJson = readFile(workspace.buildPath / "test_proj.cmag-project");
