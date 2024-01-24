@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  formatting:
+  Formatting:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,7 +19,7 @@ jobs:
     - name: Assert no diff
       run: git diff --exit-code
 
-  build_and_run:
+  Test:
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -79,3 +79,48 @@ jobs:
     - name: Test
       working-directory: ${{ steps.strings.outputs.build-output-dir }}
       run: ctest --build-config ${{ matrix.build_type }} --verbose
+
+  TestCmake3_15:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+
+    steps:
+    - name: Set reusable strings
+      id: strings
+      shell: bash
+      run: |
+        echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+        echo "cmake_dir=${{ github.workspace }}/cmake-3.15.0-rc4-Linux-x86_64/bin" >> "$GITHUB_OUTPUT"
+
+    - name: Install ninja and mesa
+      run: sudo apt-get install -y ninja-build libgl1-mesa-dev
+
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        submodules: 'true'
+
+    - name: Download CMake 3.15
+      run: |
+        wget -O ${{ github.workspace }}/cmake3.15.tar.gz https://cmake.org/files/v3.15/cmake-3.15.0-rc4-Linux-x86_64.tar.gz
+        tar -xzf ${{ github.workspace }}/cmake3.15.tar.gz -C ${{ github.workspace }}
+
+    - name: CMake
+      run: >
+        ${{ steps.strings.outputs.cmake_dir }}/cmake -B ${{ steps.strings.outputs.build-output-dir }}
+        -DCMAKE_CXX_COMPILER=g++
+        -DCMAKE_C_COMPILER=gcc
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAG_BUILD_BROWSER=1
+        -DCMAG_BUILD_TESTS=1
+        -DGLFW_BUILD_X11=OFF
+        -S ${{ github.workspace }}
+
+    - name: Build
+      run: ${{ steps.strings.outputs.cmake_dir }}/cmake --build ${{ steps.strings.outputs.build-output-dir }}
+
+    - name: Test
+      working-directory: ${{ steps.strings.outputs.build-output-dir }}
+      run: ${{ steps.strings.outputs.cmake_dir }}/ctest --verbose
