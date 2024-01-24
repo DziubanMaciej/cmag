@@ -85,9 +85,19 @@ macro(json_append_target_property OUT_VARIABLE TGT NAME PROPERTY INDENT GENEX_EV
 
 endmacro()
 
+function (is_property_allowed_on_target OUT_BOOL TARGET_TYPE PROPERTY_NAME)
+    if(CMAKE_VERSION VERSION_LESS "3.19" AND TARGET_TYPE STREQUAL "INTERFACE_LIBRARY" AND NOT PROPERTY_NAME MATCHES "^INTERFACE_")
+        set(${OUT_BOOL} FALSE PARENT_SCOPE)
+    else()
+        set(${OUT_BOOL} TRUE PARENT_SCOPE)
+    endif()
+endfunction()
+
 function (json_append_target_properties OUT_VARIABLE TGT INDENT INDENT_INCREMENT)
     set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
     set(INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
+
+    get_target_property(TARGET_TYPE ${TGT} TYPE)
 
     # This is a list of properties which may contain generator expressions (genexes) after querying
     # with $<TARGET_PROPERTY>. We have to manually wrap them with genex eval to resolve to actual
@@ -128,6 +138,10 @@ function (json_append_target_properties OUT_VARIABLE TGT INDENT INDENT_INCREMENT
         if(NOT INDEX EQUAL -1)
             continue()
         endif()
+        is_property_allowed_on_target(IS_PROPERTY_ALLOWED ${TARGET_TYPE} ${PROP})
+        if (NOT ${IS_PROPERTY_ALLOWED})
+            continue()
+        endif()
 
         json_append_target_property(${OUT_VARIABLE} ${TGT} ${PROP} ${PROP} ${INNER_INDENT} FALSE FALSE)
     endforeach()
@@ -140,6 +154,10 @@ function (json_append_target_properties OUT_VARIABLE TGT INDENT INDENT_INCREMENT
         if(INDEX EQUAL -1)
             continue()
         endif()
+        is_property_allowed_on_target(IS_PROPERTY_ALLOWED ${TARGET_TYPE} ${PROP})
+        if (NOT ${IS_PROPERTY_ALLOWED})
+            continue()
+        endif()
 
         json_append_target_property(${OUT_VARIABLE} ${TGT} ${PROP} ${PROP} ${INNER_INDENT} FALSE FALSE)
     endforeach()
@@ -150,6 +168,10 @@ function (json_append_target_properties OUT_VARIABLE TGT INDENT INDENT_INCREMENT
     foreach(PROP ${PROPERTIES_TO_QUERY})
         list(FIND GENEXABLE_PROPERTIES ${PROP} INDEX)
         if(INDEX EQUAL -1)
+            continue()
+        endif()
+        is_property_allowed_on_target(IS_PROPERTY_ALLOWED ${TARGET_TYPE} ${PROP})
+        if (NOT ${IS_PROPERTY_ALLOWED})
             continue()
         endif()
 

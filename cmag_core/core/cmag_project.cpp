@@ -129,7 +129,6 @@ void CmagTargetConfig::fixupWithNonEvaled(std::string_view propertyName, std::st
             return p.name == propertyName;
         });
         if (it == properties.end()) {
-            // Technically this should never happen and we should crash, but let's be liberal and ignore this.
             return;
         }
 
@@ -391,7 +390,7 @@ bool CmagGlobals::deriveDataFolders(const std::vector<CmagTarget> &targets) {
         const CmagTargetProperty *property = target.getPropertyValue("FOLDER");
         if (property == nullptr) {
             derived.folders[0].targetIndices.push_back(targetIndex);
-            continue; // this shouldn't really happen, since we force FOLDER to be dumped, but let's be liberal.
+            continue;
         }
         if (!property->isConsistent) {
             return false;
