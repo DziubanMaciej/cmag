@@ -191,7 +191,7 @@ CmagResult CmagDumper::readCmakeAfterSecondPass() {
     return CmagResult::Success;
 }
 
-CmagResult CmagDumper::writeProjectToFile(const fs::path &buildPath) {
+CmagResult CmagDumper::writeProjectToFile() {
     std::string fileName = std::string(projectName) + ".cmag-project";
     fs::path filePath = buildPath / fileName;
     std::ofstream outFile{filePath, std::ios::out};
@@ -219,7 +219,7 @@ CmagResult CmagDumper::cleanupTemporaryFiles() {
     return CmagResult::Success;
 }
 
-CmagResult CmagDumper::launchProjectInGui(const fs::path &buildPath) {
+CmagResult CmagDumper::launchProjectInGui() {
     const fs::path browserBinaryPath = getExeLocation().parent_path() / CMAG_BROWSER_BINARY_NAME;
 
     std::string fileName = std::string(projectName) + ".cmag-project";

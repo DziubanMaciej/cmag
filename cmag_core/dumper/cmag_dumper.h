@@ -26,9 +26,9 @@ public:
     ~CmagDumper();
 
     CmagResult dump();
-    CmagResult writeProjectToFile(const fs::path &buildPath);
+    CmagResult writeProjectToFile();
     CmagResult cleanupTemporaryFiles();
-    CmagResult launchProjectInGui(const fs::path &buildPath);
+    CmagResult launchProjectInGui();
 
 protected:
     CmagResult cmakeMainPass();

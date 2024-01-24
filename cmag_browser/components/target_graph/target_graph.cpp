@@ -8,7 +8,6 @@
 
 #include <generated/fragment_shader.glsl.h>
 #include <generated/vertex_shader.glsl.h>
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui/imgui.h>
 #include <memory>
@@ -152,7 +151,7 @@ void TargetGraph::render() {
 
     // Render targets
     SAFE_GL(glUseProgram(program.gl.program));
-    SAFE_GL(glUniform2f(program.uniformLocation.screenSize, bounds.width, bounds.height));
+    SAFE_GL(glUniform2f(program.uniformLocation.screenSize, static_cast<float>(bounds.width), static_cast<float>(bounds.height)));
     SAFE_GL(glBindVertexArray(shapes.gl.vao));
     SAFE_GL(glEnableVertexAttribArray(0));
     for (const CmagTarget *target : targets) {

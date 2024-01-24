@@ -44,12 +44,12 @@ int main(int argc, const char **argv) {
         argParser.getExtraTargetProperties(),
     };
     RETURN_ERROR(dumper.dump());
-    RETURN_ERROR(dumper.writeProjectToFile(argParser.getBuildPath()));
+    RETURN_ERROR(dumper.writeProjectToFile());
     if (!argParser.getJsonDebug()) {
         RETURN_ERROR(dumper.cleanupTemporaryFiles());
     }
     if (argParser.getLaunchGui()) {
-        RETURN_ERROR(dumper.launchProjectInGui(argParser.getBuildPath()));
+        RETURN_ERROR(dumper.launchProjectInGui());
     }
     return 0;
 }
