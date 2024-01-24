@@ -6,4 +6,4 @@ target_link_libraries(cmag PRIVATE cmag_core)
 add_subdirectories()
 target_setup_vs_folders(cmag)
 
-install(TARGETS cmag)
+install(TARGETS cmag RUNTIME DESTINATION bin)

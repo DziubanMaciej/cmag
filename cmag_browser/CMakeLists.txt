@@ -6,7 +6,7 @@ target_link_libraries(cmag_browser PRIVATE Imgui Stb cmag_core glm)
 add_subdirectories()
 target_setup_vs_folders(cmag_browser)
 
-install(TARGETS cmag_browser)
+install(TARGETS cmag_browser RUNTIME DESTINATION bin)
 
 function(add_asset INPUT_FILE_NAME OUTPUT_FILE_NAME VARIABLE_NAME)
     set(INPUT_FILE "assets/${INPUT_FILE_NAME}")

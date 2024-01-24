@@ -9,9 +9,11 @@ add_subdirectory(header_pack)
 set_target_properties(header_pack PROPERTIES FOLDER ThirdParty)
 
 if (CMAG_BUILD_BROWSER)
-    add_subdirectory(gl)
+    find_package(OpenGL REQUIRED)
+    target_include_directories(OpenGL::GL INTERFACE ${CMAKE_CURRENT_LIST_DIR}/gl_headers)
+
     add_subdirectory(glm)
-    set_target_properties(glm uninstall PROPERTIES FOLDER ThirdParty)
+    set_target_properties(uninstall PROPERTIES FOLDER ThirdParty)
 
     set(GLFW_BUILD_DOCS OFF)
     set(GLFW_INSTALL OFF)
@@ -24,4 +26,3 @@ if (CMAG_BUILD_BROWSER)
 endif()
 
 add_subdirectory(json)
-set_target_properties(nlohmann_json PROPERTIES FOLDER ThirdParty)
