@@ -30,7 +30,7 @@ cmag_browser project.cmag-project
 Currently, *cmag* is not distributed in any open repositories.
 
 # From source
-Compilation requirements: `git`, `cmake` and a C++ compiler. Run the commands below. Note that the `install` command must be run with administrative privileges. To install to a custom location without administrative privileges, pass `-DCMAKE_INSTALL_PREFIX=<path>` to the first `cmake` command.
+Compilation requirements: `git`, `cmake` (minimum 3.15.0) and a C++ compiler (C++17 required). Run the commands below. Note that the `install` command must be run with administrative privileges. To install to a custom location without administrative privileges, pass `-DCMAKE_INSTALL_PREFIX=<path>` to the first `cmake` command.
 ```
 git submodule update --init --recursive
 mkdir build
