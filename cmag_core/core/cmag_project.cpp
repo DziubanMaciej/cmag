@@ -272,7 +272,7 @@ void CmagTargetConfig::fixupLinkLibrariesGenex(CmagTargetProperty &property, std
         elementIndex++;
     }
 }
-void CmagTargetConfig::deriveData(std::vector<CmagTarget> &targets) {
+void CmagTargetConfig::deriveData(const CmagTarget &owningTarget, std::vector<CmagTarget> &targets) {
     derived = {};
 
     auto addTargetsToVector = [&](std::vector<std::string_view> &strings, std::vector<const CmagTarget *> &outList) {
@@ -282,9 +282,15 @@ void CmagTargetConfig::deriveData(std::vector<CmagTarget> &targets) {
             });
 
             if (it != targets.end()) {
-                it->derived.isReferenced = true;
-                this->derived.allDependencies.push_back(&*it);
-                outList.push_back(&*it);
+                CmagTarget *dependency = &*it;
+
+                if (&owningTarget == dependency) {
+                    continue;
+                }
+
+                dependency->derived.isReferenced = true;
+                this->derived.allDependencies.push_back(dependency);
+                outList.push_back(dependency);
             } else {
                 this->derived.unmatchedDependencies.emplace_back(string);
             }
@@ -443,7 +449,7 @@ void CmagGlobals::insertDerivedTargetWithFolder(size_t targetIndex, const std::v
 
 void CmagTarget::deriveData(std::vector<CmagTarget> &targets) {
     for (CmagTargetConfig &config : configs) {
-        config.deriveData(targets);
+        config.deriveData(*this, targets);
     }
     deriveDataPropertyConsistency();
 }

@@ -322,6 +322,76 @@ TEST_F(CmagProjectDeriveTest, givenTargetsWithDependenciesWhenDerivingDataThenDe
     EXPECT_EQ(expectedUnmatchedDependencies, targetConfig.derived.unmatchedDependencies);
 }
 
+TEST_F(CmagProjectDeriveTest, givenSelfDependenciesWhenDerivingDataThenIgnoreThem) {
+    project.getGlobals().listDirs = {CmagListDir{"a", {}}};
+
+    auto createTarget = [](const char *name, std::vector<CmagTargetProperty> properties) {
+        CmagTarget target = {};
+        target.name = name;
+        target.type = CmagTargetType::Executable;
+        target.configs = {
+            {
+                "Debug",
+                properties,
+            }};
+        target.listDirName = "a";
+        return target;
+    };
+
+    EXPECT_TRUE(project.addTarget(createTarget(
+        "A",
+        {
+            {"LINK_LIBRARIES", "A;B;C"},
+            {"INTERFACE_LINK_LIBRARIES", "A;B;C"},
+            {"MANUALLY_ADDED_DEPENDENCIES", "A;B;C"},
+        })));
+    EXPECT_TRUE(project.addTarget(createTarget(
+        "B",
+        {
+            {"LINK_LIBRARIES", "C"},
+            {"INTERFACE_LINK_LIBRARIES", "C"},
+            {"MANUALLY_ADDED_DEPENDENCIES", "C"},
+        })));
+    EXPECT_TRUE(project.addTarget(createTarget(
+        "C",
+        {
+            {"LINK_LIBRARIES", "C"},
+            {"INTERFACE_LINK_LIBRARIES", "C"},
+            {"MANUALLY_ADDED_DEPENDENCIES", "C"},
+        })));
+
+    ASSERT_TRUE(project.deriveData());
+
+    const std::vector<CmagTarget> &targets = project.getTargets();
+    ASSERT_EQ(3u, targets.size());
+    {
+        const CmagTargetConfig &targetConfig = targets[0].configs[0];
+
+        const std::vector<const CmagTarget *> expectedDependencies = {&targets[1], &targets[2]};
+        EXPECT_EQ(expectedDependencies, targetConfig.derived.buildDependencies);
+        EXPECT_EQ(expectedDependencies, targetConfig.derived.interfaceDependencies);
+        EXPECT_EQ(expectedDependencies, targetConfig.derived.manualDependencies);
+        EXPECT_TRUE(targetConfig.derived.unmatchedDependencies.empty());
+    }
+    {
+        const CmagTargetConfig &targetConfig = targets[1].configs[0];
+
+        const std::vector<const CmagTarget *> expectedDependencies = {&targets[2]};
+        EXPECT_EQ(expectedDependencies, targetConfig.derived.buildDependencies);
+        EXPECT_EQ(expectedDependencies, targetConfig.derived.interfaceDependencies);
+        EXPECT_EQ(expectedDependencies, targetConfig.derived.manualDependencies);
+        EXPECT_TRUE(targetConfig.derived.unmatchedDependencies.empty());
+    }
+    {
+        const CmagTargetConfig &targetConfig = targets[2].configs[0];
+
+        EXPECT_TRUE(targetConfig.derived.buildDependencies.empty());
+        EXPECT_TRUE(targetConfig.derived.interfaceDependencies.empty());
+        EXPECT_TRUE(targetConfig.derived.manualDependencies.empty());
+        EXPECT_TRUE(targetConfig.derived.unmatchedDependencies.empty());
+    }
+}
+
 TEST_F(CmagProjectDeriveTest, givenTargetWithOneConfigWhenDerivingDataThenAllPropertiesAreConsistent) {
     project.getGlobals().listDirs = {CmagListDir{"a", {}}};
 

@@ -88,7 +88,7 @@ struct CmagTargetConfig {
         std::vector<std::string> unmatchedDependencies = {};
     } derived = {};
 
-    void deriveData(std::vector<CmagTarget> &targets);
+    void deriveData(const CmagTarget &owningTarget, std::vector<CmagTarget> &targets);
     void fixupWithNonEvaled(std::string_view propertyName, std::string_view nonEvaledValue);
     CmagTargetProperty *findProperty(std::string_view propertyName);
     const CmagTargetProperty *findProperty(std::string_view propertyName) const;
