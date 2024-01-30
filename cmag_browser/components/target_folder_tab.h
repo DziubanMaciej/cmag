@@ -16,7 +16,8 @@ public:
     void render();
 
 private:
-    void renderOptions();
+    void renderHeaders();
+    void renderHeadersWarnings();
     void renderFolder(bool renderSelf, const CmagFolder &folder);
     void renderTarget(CmagTarget &target);
 

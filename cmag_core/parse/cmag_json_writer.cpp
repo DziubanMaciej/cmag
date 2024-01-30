@@ -20,13 +20,14 @@ nlohmann::json CmagJsonWriter::createGlobalsNode(const CmagGlobals &globals) {
     WRITE_GLOBAL_FIELD(cmagVersion);
     WRITE_GLOBAL_FIELD(cmakeVersion);
     WRITE_GLOBAL_FIELD(cmakeProjectName);
-    WRITE_GLOBAL_FIELD(cmagProjectName);
+    WRITE_GLOBAL_FIELD(useFolders);
     WRITE_GLOBAL_FIELD(sourceDir);
     WRITE_GLOBAL_FIELD(buildDir);
     WRITE_GLOBAL_FIELD(generator);
     WRITE_GLOBAL_FIELD(compilerId);
     WRITE_GLOBAL_FIELD(compilerVersion);
     WRITE_GLOBAL_FIELD(os);
+    WRITE_GLOBAL_FIELD(cmagProjectName);
 #undef WRITE_GLOBAL_FIELD
     node["listDirs"] = createGlobalValueListDirs(globals);
     return node;

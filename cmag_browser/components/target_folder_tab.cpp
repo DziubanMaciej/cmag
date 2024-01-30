@@ -5,6 +5,7 @@
 #include "cmag_browser/ui_utils/raii_imgui_style.h"
 #include "cmag_browser/ui_utils/tooltip.h"
 #include "cmag_core/core/cmake_generator.h"
+#include "cmag_core/utils/string_utils.h"
 
 TargetFolderTab::TargetFolderTab(const CmagBrowserTheme &theme, CmagProject &project, TargetGraphTab &targetGraphTab)
     : theme(theme),
@@ -12,27 +13,39 @@ TargetFolderTab::TargetFolderTab(const CmagBrowserTheme &theme, CmagProject &pro
       targetGraphTab(targetGraphTab) {}
 
 void TargetFolderTab::render() {
-    renderOptions();
+    renderHeaders();
     renderFolder(false, project.getGlobals().derived.folders[0]);
 }
 
-void TargetFolderTab::renderOptions() {
-    const float windowWidth = ImGui::GetContentRegionAvail().x;
+void TargetFolderTab::renderHeaders() {
+    renderHeadersWarnings();
+    ImGui::Checkbox("Show ignored targets", &showIgnoredTargets);
+}
 
-    const CMakeGenerator *generator = project.getGlobals().derived.generator;
-    if (project.getGlobals().derived.folders[0].childIndices.empty()) {
-        RaiiImguiStyle style{};
-        style.textWrapWidth(windowWidth);
-        style.color(ImGuiCol_Text, theme.colorWarning);
+void TargetFolderTab::renderHeadersWarnings() {
+    const float windowWidth = ImGui::GetContentRegionAvail().x;
+    const CmagGlobals &globals = project.getGlobals();
+
+    RaiiImguiStyle style{};
+    style.textWrapWidth(windowWidth);
+    style.color(ImGuiCol_Text, theme.colorWarning);
+
+    const CMakeGenerator *generator = globals.derived.generator;
+    if (globals.derived.folders[0].childIndices.empty()) {
         ImGui::Text("The project does not use FOLDER property for its targets, so there is nothing interesting to be shown in this tab.");
-    } else if (generator && !generator->supportsTargetFolders) {
-        RaiiImguiStyle style{};
-        style.textWrapWidth(windowWidth);
-        style.color(ImGuiCol_Text, theme.colorWarning);
-        ImGui::Text("Warning: the %s generator does not visualize FOLDER property in any way, so this structure cannot be seen in any tool.", generator->name.c_str());
+        return;
     }
 
-    ImGui::Checkbox("Show ignored targets", &showIgnoredTargets);
+    if (generator && !generator->supportsTargetFolders) {
+        ImGui::Text("Warning: the %s generator does not visualize FOLDER property in any way, so this structure cannot be seen in any tool.", generator->name.c_str());
+        return;
+    }
+
+    if (isCMakeFalse(globals.useFolders)) {
+        ImGui::Text("Warning: the property USE_FOLDERS is set to %s, which will disable visualization of FOLDER property in your IDE.", globals.useFolders.c_str());
+    } else if (!isCMakeTrue(globals.useFolders)) {
+        ImGui::Text("Warning: the property USE_FOLDERS is not set to a valid boolean value. Visualization of FOLDER property in your IDE may or may not work depending on your CMake version and policy CMP0143");
+    }
 }
 
 void TargetFolderTab::renderFolder(bool renderSelf, const CmagFolder &folder) {

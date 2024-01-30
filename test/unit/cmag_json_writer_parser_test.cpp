@@ -42,6 +42,7 @@ struct CmagWriterParserTest : ::testing::Test {
         EXPECT_EQ(expGlobals.compilerId, actGlobals.compilerId);
         EXPECT_EQ(expGlobals.compilerVersion, actGlobals.compilerVersion);
         EXPECT_EQ(expGlobals.os, actGlobals.os);
+        EXPECT_EQ(expGlobals.useFolders, actGlobals.useFolders);
 
         ASSERT_EQ(expGlobals.listDirs.size(), actGlobals.listDirs.size());
         for (size_t i = 0; i < expGlobals.listDirs.size(); i++) {
@@ -295,6 +296,7 @@ TEST_F(CmagWriterParserTest, givenProjectWithSetGlobalsThenWriteAndReadCorrectly
     globals.compilerId = "1.0.0.0.0";
     globals.compilerVersion = "GNU Clang";
     globals.os = "Serenity";
+    globals.useFolders = "ON";
     globals.listDirs = {
         CmagListDir{"a", {1, 2}},
         CmagListDir{"b", {}},
