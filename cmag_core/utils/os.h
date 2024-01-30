@@ -16,8 +16,6 @@ BITFIELD_ENUM(OperatingSystem)
 
 #elif _WIN32
 
-#define CMAG_OS windows
-
 #define CMAG_OS (OperatingSystem::Windows)
 
 #else
