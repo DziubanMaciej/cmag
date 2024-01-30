@@ -40,6 +40,7 @@ CmagBrowserTheme CmagBrowserTheme::createDarkTheme() {
         ImColorGrey(0.7f),                     // colorPropertyValue;
         ImColorGrey(0.8f),                     // colorPopup;
         ImColor(48, 73, 96, 255),              // colorHyperlink;
+        ImColor(255, 204, 0, 255),             // colorWarning;
         ImColor(grayBackgroundLighterLighter), // colorTargetGraphBackground
         vistaBlue,                             // colorTargetGraphNode
         vistaBlueLighter,                      // colorTargetGraphNodeFocused

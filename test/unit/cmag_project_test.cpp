@@ -1,4 +1,5 @@
 #include "cmag_core/core/cmag_project.h"
+#include "cmag_core/core/cmake_generator.h"
 
 #include <gtest/gtest.h>
 
@@ -531,6 +532,26 @@ TEST_F(CmagProjectDeriveTest, givenTargetsWithListDirsWhenDerivingDataThenListDi
     EXPECT_EQ((std::vector<size_t>{1}), listDirs[1].derived.targetIndices);
     EXPECT_EQ((std::vector<size_t>{2, 3}), listDirs[2].derived.targetIndices);
     EXPECT_EQ((std::vector<size_t>{5}), listDirs[3].derived.targetIndices);
+}
+
+TEST_F(CmagProjectDeriveTest, givenVariousCMakeGeneratorsWhenDerivingDataThenDeriveCorrectGenerator) {
+    ASSERT_TRUE(project.deriveData());
+    EXPECT_EQ(nullptr, project.getGlobals().derived.generator);
+
+    project.getGlobals().listDirs = {CmagListDir{"a", {}}};
+    project.getGlobals().generator = "Unix Makefiles";
+    ASSERT_TRUE(project.deriveData());
+    EXPECT_EQ(&CMakeGenerator::unixMakefiles, project.getGlobals().derived.generator);
+
+    project.getGlobals().listDirs = {CmagListDir{"a", {}}};
+    project.getGlobals().generator = "Visual Studio 16 2019";
+    ASSERT_TRUE(project.deriveData());
+    EXPECT_EQ(&CMakeGenerator::vs2019, project.getGlobals().derived.generator);
+
+    project.getGlobals().listDirs = {CmagListDir{"a", {}}};
+    project.getGlobals().generator = "Bla bla";
+    ASSERT_TRUE(project.deriveData());
+    EXPECT_EQ(nullptr, project.getGlobals().derived.generator);
 }
 
 TEST_F(CmagProjectDeriveTest, givenTargetsWithoutFoldersWhenDerivingDataThenAssignAllOfThemToRootFolder) {

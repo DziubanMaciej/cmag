@@ -6,6 +6,7 @@
 
 struct CmagTarget;
 class CmagProject;
+struct CMakeGenerator;
 
 enum class CmagTargetType {
     Invalid,
@@ -59,11 +60,13 @@ struct CmagGlobals {
     std::vector<CmagListDir> listDirs = {};
 
     struct {
-        std::vector<CmagFolder> folders;
+        const CMakeGenerator *generator = {};
+        std::vector<CmagFolder> folders = {};
     } derived = {};
 
 private:
     friend CmagProject;
+    void deriveGenerator();
     bool deriveData(const std::vector<CmagTarget> &targets);
     bool deriveDataListDirs(const std::vector<CmagTarget> &targets);
     bool deriveDataFolders(const std::vector<CmagTarget> &targets);

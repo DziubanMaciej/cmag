@@ -29,6 +29,7 @@ public:
     ImColor colorPropertyValue = {};
     ImColor colorPopup = {};
     ImColor colorHyperlink = {};
+    ImColor colorWarning = {};
     ImColor colorTargetGraphBackground = {};
     ImColor colorTargetGraphNode = {};
     ImColor colorTargetGraphNodeFocused = {};
