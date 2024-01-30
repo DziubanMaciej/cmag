@@ -1,15 +1,9 @@
 #pragma once
 
+#include "cmag_core/core/cmake_generator.h"
 #include "cmag_core/utils/subprocess.h"
 
 #include <memory>
-
-struct CMakeGenerator {
-    std::string name;
-    std::string gtestName;
-    bool isMultiConfig;
-    bool isVisualStudio;
-};
 
 struct CmakeGeneratorDb {
     static void init(bool allGenerators) {
