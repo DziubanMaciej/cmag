@@ -1,5 +1,6 @@
 #include "cmag_project.h"
 
+#include "cmag_core/core/cmake_generator.h"
 #include "cmag_core/utils/string_utils.h"
 
 #include <algorithm>
@@ -357,7 +358,18 @@ CmagTargetConfig &CmagTarget::getOrCreateConfig(std::string_view configName) {
 }
 
 bool CmagGlobals::deriveData(const std::vector<CmagTarget> &targets) {
+    derived = {};
+    deriveGenerator();
     return deriveDataListDirs(targets) && deriveDataFolders(targets);
+}
+
+void CmagGlobals::deriveGenerator() {
+    for (const CMakeGenerator *cmakeGenerator : CMakeGenerator::allGenerators) {
+        if (cmakeGenerator->name == this->generator) {
+            derived.generator = cmakeGenerator;
+            break;
+        }
+    }
 }
 
 bool CmagGlobals::deriveDataListDirs(const std::vector<CmagTarget> &targets) {
@@ -388,7 +400,6 @@ bool CmagGlobals::deriveDataListDirs(const std::vector<CmagTarget> &targets) {
 }
 
 bool CmagGlobals::deriveDataFolders(const std::vector<CmagTarget> &targets) {
-    derived = {};
     derived.folders.push_back(CmagFolder{"", ""});
 
     for (size_t targetIndex = 0u; targetIndex < targets.size(); targetIndex++) {
