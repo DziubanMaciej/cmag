@@ -136,13 +136,14 @@ ParseResult CmagJsonParser::parseGlobalValues(const nlohmann::json &node, CmagGl
     PARSE_GLOBAL_FIELD(cmagVersion);
     PARSE_GLOBAL_FIELD(cmakeVersion);
     PARSE_GLOBAL_FIELD(cmakeProjectName);
-    PARSE_GLOBAL_FIELD(cmagProjectName);
+    PARSE_GLOBAL_FIELD(useFolders);
     PARSE_GLOBAL_FIELD(sourceDir);
     PARSE_GLOBAL_FIELD(buildDir);
     PARSE_GLOBAL_FIELD(generator);
     PARSE_GLOBAL_FIELD(compilerId);
     PARSE_GLOBAL_FIELD(compilerVersion);
     PARSE_GLOBAL_FIELD(os);
+    PARSE_GLOBAL_FIELD(cmagProjectName);
 #undef PARSE_GLOBAL_FIELD
 
     if (auto listDirsNodeIt = node.find("listDirs"); listDirsNodeIt != node.end()) {

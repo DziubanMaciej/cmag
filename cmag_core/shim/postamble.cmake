@@ -48,6 +48,13 @@ function(json_append_key_value_unquoted OUT_VARIABLE KEY VALUE INDENT)
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
 endfunction()
 
+function(json_append_global_property OUT_VARIABLE KEY PROPERTY_NAME INDENT)
+    get_property(VALUE GLOBAL PROPERTY "${PROPERTY_NAME}")
+    json_append_key_value(${OUT_VARIABLE} ${KEY} "${VALUE}" ${INDENT})
+
+    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
+endfunction()
+
 macro(json_strip_trailing_comma)
     string(REGEX REPLACE ",\n$" "\n" ${OUT_VARIABLE} "${${OUT_VARIABLE}}")
 endmacro()
@@ -295,6 +302,10 @@ function (json_append_lists_files OUT_VARIABLE DIR INDENT INDENT_INCREMENT)
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
 endfunction()
 
+function (json_append_global_properties OUT_VARIABLE INDENT INDENT_INCREMENT)
+    get_property()
+endfunction()
+
 function(json_append_globals OUT_VARIABLE SELECTED_CONFIG INDENT INDENT_INCREMENT)
     set(INNER_INDENT "${INDENT}${INDENT_INCREMENT}")
     set(INNER_INNER_INDENT "${INDENT}${INDENT_INCREMENT}${INDENT_INCREMENT}")
@@ -313,6 +324,7 @@ function(json_append_globals OUT_VARIABLE SELECTED_CONFIG INDENT INDENT_INCREMEN
     json_append_key_value(${OUT_VARIABLE} compilerId "${CMAKE_CXX_COMPILER_ID}" ${INNER_INDENT})
     json_append_key_value(${OUT_VARIABLE} compilerVersion "${CMAKE_CXX_COMPILER_VERSION}" ${INNER_INDENT})
     json_append_key_value(${OUT_VARIABLE} os "${CMAKE_SYSTEM_NAME}" ${INNER_INDENT})
+    json_append_global_property(${OUT_VARIABLE} useFolders USE_FOLDERS ${INNER_INDENT})
 
     json_append_object_begin(${OUT_VARIABLE} "listDirs" ${INNER_INDENT})
     json_append_lists_files(${OUT_VARIABLE} ${CMAKE_CURRENT_SOURCE_DIR} ${INNER_INNER_INDENT} ${INDENT_INCREMENT})

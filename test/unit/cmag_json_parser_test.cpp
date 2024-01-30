@@ -21,6 +21,7 @@ struct CmagParseTest : ::testing::Test {
                 "compilerId": "",
                 "compilerVersion": "",
                 "os": "",
+                "useFolders": "",
                 "listDirs": { "a": [] }
             }
         )DELIMETER";
@@ -76,6 +77,7 @@ TEST_F(CmagProjectParseTest, givenProjectWithGlobalsSetThenParseCorrectly) {
                 "compilerId": "H",
                 "compilerVersion": "I",
                 "os": "J",
+                "useFolders": "K",
                 "listDirs": {
                     "a": [ "b", "c" ],
                     "b": [],
@@ -102,6 +104,7 @@ TEST_F(CmagProjectParseTest, givenProjectWithGlobalsSetThenParseCorrectly) {
     EXPECT_STREQ(globals.compilerId.c_str(), "H");
     EXPECT_STREQ(globals.compilerVersion.c_str(), "I");
     EXPECT_STREQ(globals.os.c_str(), "J");
+    EXPECT_STREQ(globals.useFolders.c_str(), "K");
 
     ASSERT_EQ(4, globals.listDirs.size());
     EXPECT_STREQ("a", globals.listDirs[0].name.c_str());
@@ -523,6 +526,7 @@ TEST(CmagGlobalsFileParseTest, givenAllFieldsSpecifiedThenParseCorrectly) {
         "compilerId": "H",
         "compilerVersion": "I",
         "os": "J",
+        "useFolders": "K",
         "listDirs": { "K": [ "L" ], "L": [] }
     }
     )DELIMETER";
@@ -541,6 +545,7 @@ TEST(CmagGlobalsFileParseTest, givenAllFieldsSpecifiedThenParseCorrectly) {
     EXPECT_STREQ(globals.compilerId.c_str(), "H");
     EXPECT_STREQ(globals.compilerVersion.c_str(), "I");
     EXPECT_STREQ(globals.os.c_str(), "J");
+    EXPECT_STREQ(globals.useFolders.c_str(), "K");
 
     ASSERT_EQ(2u, globals.listDirs.size());
     EXPECT_STREQ("K", globals.listDirs[0].name.c_str());

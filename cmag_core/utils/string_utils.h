@@ -119,3 +119,37 @@ inline int32_t compareCmakeVersions(const char *left, const char *right) {
     const int32_t valueRight = versionToValue(right);
     return valueRight - valueLeft;
 }
+
+inline bool isCMakeTrue(std::string_view value) {
+    const char *trueValues[] = {
+        "1",
+        "ON",
+        "YES",
+        "TRUE",
+        "Y",
+    };
+    for (const char *trueValue : trueValues) {
+        if (value == trueValue) {
+            return true;
+        }
+    }
+    return false;
+}
+
+inline bool isCMakeFalse(std::string_view value) {
+    const char *falseValues[] = {
+        "0",
+        "OFF",
+        "NO",
+        "FALSE",
+        "N",
+        "IGNORE",
+        "NOTFOUND",
+    };
+    for (const char *falseValue : falseValues) {
+        if (value == falseValue) {
+            return true;
+        }
+    }
+    return false;
+}

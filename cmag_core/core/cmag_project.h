@@ -57,6 +57,7 @@ struct CmagGlobals {
     std::string compilerId = {};
     std::string compilerVersion = {};
     std::string os = {};
+    std::string useFolders;
     std::vector<CmagListDir> listDirs = {};
 
     struct {
