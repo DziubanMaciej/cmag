@@ -26,13 +26,17 @@ CmakeGeneratorDb::CmakeGeneratorDb(bool allGenerators) {
 
         // Perform a dummy CMake run to see, whether this generator works. If it does,
         // add it to our list.
+        printf("%s available: ", generator->gtestName.c_str());
         if (isGeneratorAvailable(generator->name.c_str())) {
+            printf("YES\n");
             generators.push_back(*generator);
 
             // Mark already seen generators
             hasVisualStudio |= generator->isVisualStudio;
             hasMultiConfig |= generator->isMultiConfig;
             hasSingleConfig |= (!generator->isMultiConfig);
+        } else {
+            printf("NO\n");
         }
     }
 }
