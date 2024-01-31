@@ -20,13 +20,14 @@ struct CMakeGenerator {
     const static CMakeGenerator unixMakefiles;
     const static CMakeGenerator minGwMakefiles;
     const static CMakeGenerator xcode;
+
     static inline const CMakeGenerator *allGenerators[] = {
-        &vs2017,
-        &vs2019,
         &vs2022,
-        &ninja,
+        &vs2019,
+        &vs2017,
         &ninjaMultiConfig,
         &unixMakefiles,
+        &ninja,
         &minGwMakefiles,
         &xcode,
     };
