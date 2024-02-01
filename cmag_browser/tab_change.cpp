@@ -1,6 +1,10 @@
+#include "cmag_browser/browser_state.h"
 #include "cmag_browser/tab_change.h"
 
 #include <imgui.h>
+
+TabChange::TabChange(BrowserState &browser)
+    : browser(browser) {}
 
 void TabChange::change(TabSelection newSelection) {
     if (selection != TabSelection::Auto) {
@@ -44,8 +48,9 @@ void TabChange::renderPopup() {
 
             const char *tabName = tabNames[static_cast<int>(tabSelection)];
             if (ImGui::Selectable(tabName, false)) {
-                popup = {};
                 this->change(tabSelection);
+                browser.getTargetSelection().select(popup.targetToSelect);
+                popup = {};
             }
         }
 
@@ -54,8 +59,9 @@ void TabChange::renderPopup() {
         popup = {};
     }
 }
-void TabChange::showPopup(TabChange::TabSelection currentTab) {
+void TabChange::showPopup(TabChange::TabSelection currentTab, CmagTarget *targetToSelect) {
     popup.shouldBeOpen = true;
     popup.isOpen = false;
     popup.currentTab = currentTab;
+    popup.targetToSelect = targetToSelect;
 }

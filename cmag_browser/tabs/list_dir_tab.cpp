@@ -56,8 +56,7 @@ void ListDirTab::renderTarget(CmagTarget &target) {
         browser.getTargetSelection().select(&target);
     }
     if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
-        browser.getTargetSelection().select(&target);
-        browser.getTabChange().showPopup(TabChange::TabSelection::ListDir);
+        browser.getTabChange().showPopup(TabChange::TabSelection::ListDir, &target);
     }
 }
 
