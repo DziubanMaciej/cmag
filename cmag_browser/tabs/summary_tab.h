@@ -1,24 +1,23 @@
 #pragma once
 
+#include "cmag_browser/browser_state.h"
+
 #include <imgui/imgui.h>
 #include <string>
 
-class CmagProject;
-class ConfigSelector;
-class CmagBrowserTheme;
+struct CmagGlobals;
 
 class SummaryTab {
 public:
-    SummaryTab(const CmagBrowserTheme &theme, CmagProject &project, ConfigSelector &configSelector);
+    SummaryTab(BrowserState &browser);
     void render();
 
 private:
     void renderTableRowString(const char *name, const std::string &value, const char *tooltip, const char *tooltipHyperlink = nullptr);
     void renderTableRowSelectedConfig();
     static void renderTableRowSpacer();
+    static std::string createCompilerString(const CmagGlobals &globals);
 
-    const CmagBrowserTheme &theme;
-    CmagProject &project;
-    ConfigSelector &configSelector;
+    BrowserState &browser;
     std::string compiler;
 };

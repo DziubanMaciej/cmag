@@ -1,20 +1,15 @@
 #include "summary_tab.h"
 
-#include "cmag_browser/config_selector.h"
-#include "cmag_browser/ui_utils/raii_imgui_style.h"
 #include "cmag_browser/ui_utils/tooltip.h"
 #include "cmag_core/core/cmag_project.h"
 
-SummaryTab::SummaryTab(const CmagBrowserTheme &theme, CmagProject &project, ConfigSelector &configSelector)
-    : theme(theme),
-      project(project),
-      configSelector(configSelector),
-      compiler(project.getGlobals().compilerId + " " + project.getGlobals().compilerVersion) {
+SummaryTab::SummaryTab(BrowserState &browser)
+    : browser(browser),
+      compiler(createCompilerString(browser.getProject().getGlobals())) {
 }
 
 void SummaryTab::render() {
-    const CmagGlobals &globals = project.getGlobals();
-
+    const CmagGlobals &globals = browser.getProject().getGlobals();
     const ImGuiTableFlags tableFlags = ImGuiTableFlags_SizingFixedFit;
     if (ImGui::BeginTable("Table populating", 2, tableFlags)) {
         renderTableRowSelectedConfig();
@@ -47,7 +42,7 @@ void SummaryTab::renderTableRowString(const char *name, const std::string &value
     ImGui::Text("%s", value.c_str());
     const ImVec2 posMax = ImGui::GetItemRectMax();
 
-    if (Tooltip::begin(theme, posMin, posMax, tooltip, tooltipHyperlink)) {
+    if (Tooltip::begin(browser.getTheme(), posMin, posMax, tooltip, tooltipHyperlink)) {
         Tooltip::end();
     }
 }
@@ -57,11 +52,11 @@ void SummaryTab::renderTableRowSelectedConfig() {
     const ImVec2 posMin = ImGui::GetCursorPos();
     ImGui::Text("Selected config");
     ImGui::TableNextColumn();
-    configSelector.render(0, true);
+    browser.getConfigSelector().render(0, true);
     const ImVec2 posMax = ImGui::GetItemRectMax();
 
     if (Tooltip::isRectHovered(posMin, posMax)) {
-        configSelector.renderTooltip();
+        browser.getConfigSelector().renderTooltip();
     }
 }
 
@@ -69,4 +64,8 @@ void SummaryTab::renderTableRowSpacer() {
     ImGui::TableNextRow();
     ImGui::TableNextColumn();
     ImGui::Text(" ");
+}
+
+std::string SummaryTab::createCompilerString(const CmagGlobals &globals) {
+    return globals.compilerId + " " + globals.compilerVersion;
 }

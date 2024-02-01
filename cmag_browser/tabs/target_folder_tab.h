@@ -5,8 +5,6 @@
 #include <imgui/imgui.h>
 #include <string_view>
 
-class CmagBrowserTheme;
-class CmagProject;
 struct CmagTarget;
 struct CmagFolder;
 class TargetGraphTab;
