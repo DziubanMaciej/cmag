@@ -17,7 +17,7 @@ add_asset(folder.png folder_icon.h folderIconPngBytes)
 add_asset(cmake_icon.png cmake_icon.h cmakeIconPngBytes)
 
 function(add_shader INPUT_FILE_NAME OUTPUT_FILE_NAME VARIABLE_NAME)
-    set(SHADERS_DIR "components/target_graph/shaders")
+    set(SHADERS_DIR "target_graph/shaders")
     set(INPUT_FILE "${SHADERS_DIR}/${INPUT_FILE_NAME}")
     header_pack_generate(TEXT cmag_browser "${INPUT_FILE}" "${OUTPUT_FILE_NAME}" VARIABLE "${VARIABLE_NAME}" INPUT_SOURCE_GROUP "${SHADERS_DIR}" OUTPUT_SOURCE_GROUP generated)
 endfunction()
