@@ -145,27 +145,25 @@ int main(int argc, const char **argv) {
         ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
         ImGui::Begin("ContentWindow", nullptr, windowFlags);
         if (ImGui::BeginTabBar("root")) {
-            ImGuiTabItemFlags targetGraphTabFlags = 0;
-            if (targetGraphTab.fetchForceSelection()) {
-                targetGraphTabFlags |= ImGuiTabItemFlags_SetSelected;
-            }
+            const TabChange::TabSelection selection = browserState.getTabChange().fetch();
+            auto createTabItemFlags = [&selection](TabChange::TabSelection tab) { return tab == selection ? ImGuiTabItemFlags_SetSelected : ImGuiTabItemFlags_None; };
 
-            if (ImGui::BeginTabItem("Target graph", nullptr, targetGraphTabFlags)) {
+            if (ImGui::BeginTabItem("Target graph", nullptr, createTabItemFlags(TabChange::TargetGraph))) {
                 targetGraphTab.render(io);
                 ImGui::EndTabItem();
             }
 
-            if (ImGui::BeginTabItem("List files")) {
+            if (ImGui::BeginTabItem("List files", nullptr, createTabItemFlags(TabChange::ListDir))) {
                 listFileTab.render();
                 ImGui::EndTabItem();
             }
 
-            if (ImGui::BeginTabItem("Target folders")) {
+            if (ImGui::BeginTabItem("Target folders", nullptr, createTabItemFlags(TabChange::TargetFolder))) {
                 targetFolderTab.render();
                 ImGui::EndTabItem();
             }
 
-            if (ImGui::BeginTabItem("Summary")) {
+            if (ImGui::BeginTabItem("Summary", nullptr, createTabItemFlags(TabChange::Summary))) {
                 summaryTab.render();
                 ImGui::EndTabItem();
             }

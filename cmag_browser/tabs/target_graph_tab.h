@@ -9,9 +9,6 @@ class TargetGraphTab {
 public:
     TargetGraphTab(BrowserState &browser, bool showDebugWidgets);
 
-    void selectTargetAndFocus(CmagTarget *target);
-    bool fetchForceSelection();
-
     void render(ImGuiIO &io);
 
 private:

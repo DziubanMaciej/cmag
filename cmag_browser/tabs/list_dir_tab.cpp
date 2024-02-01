@@ -55,6 +55,10 @@ void ListDirTab::renderTarget(CmagTarget &target) {
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
         browser.getTargetSelection().select(&target);
     }
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
+        browser.getTargetSelection().select(&target);
+        browser.getTabChange().change(TabChange::TargetGraph);
+    }
 }
 
 void ListDirTab::renderTooltip(const std::string &currentName) {
