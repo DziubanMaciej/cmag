@@ -3,9 +3,8 @@
 #include "cmag_browser/tabs/target_graph_tab.h"
 #include "cmag_browser/ui_utils/tooltip.h"
 
-ListDirTab::ListDirTab(BrowserState &browser, TargetGraphTab &targetGraphTab)
-    : browser(browser),
-      targetGraphTab(targetGraphTab) {}
+ListDirTab::ListDirTab(BrowserState &browser)
+    : browser(browser) {}
 
 void ListDirTab::render() {
     renderOptions();
@@ -44,17 +43,17 @@ void ListDirTab::renderListDir(const char *parentName, const CmagListDir &listDi
 }
 
 void ListDirTab::renderTarget(CmagTarget &target) {
-    const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_Leaf;
     const char *targetName = target.name.c_str();
     const char *targetType = cmagTargetTypeToString(target.type);
-    const bool treeNodeOpen = ImGui::TreeNodeEx(targetName, treeNodeFlags, u8"\u01A5 %s (%s)", targetName, targetType);
+
+    // TODO make this more robust
+    char buffer[1024];
+    snprintf(buffer, sizeof(buffer), u8"\u01A5 %s (%s)", targetName, targetType);
+
+    ImGui::Selectable(buffer, browser.getTargetSelection().isSelected(target));
 
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-        targetGraphTab.selectTargetAndFocus(&target);
-    }
-
-    if (treeNodeOpen) {
-        ImGui::TreePop();
+        browser.getTargetSelection().select(&target);
     }
 }
 

@@ -6,9 +6,8 @@
 #include "cmag_core/core/cmake_generator.h"
 #include "cmag_core/utils/string_utils.h"
 
-TargetFolderTab::TargetFolderTab(BrowserState &browser, TargetGraphTab &targetGraphTab)
-    : browser(browser),
-      targetGraphTab(targetGraphTab) {}
+TargetFolderTab::TargetFolderTab(BrowserState &browser)
+    : browser(browser) {}
 
 void TargetFolderTab::render() {
     renderHeaders();
@@ -77,16 +76,16 @@ void TargetFolderTab::renderFolder(bool renderSelf, const CmagFolder &folder) {
 }
 
 void TargetFolderTab::renderTarget(CmagTarget &target) {
-    const ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_Leaf;
     const char *targetName = target.name.c_str();
     const char *targetType = cmagTargetTypeToString(target.type);
-    const bool treeNodeOpen = ImGui::TreeNodeEx(targetName, treeNodeFlags, u8"\u01A5 %s (%s)", targetName, targetType);
+
+    // TODO make this more robust
+    char buffer[1024];
+    snprintf(buffer, sizeof(buffer), u8"\u01A5 %s (%s)", targetName, targetType);
+
+    ImGui::Selectable(buffer, browser.getTargetSelection().isSelected(target));
 
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-        targetGraphTab.selectTargetAndFocus(&target);
-    }
-
-    if (treeNodeOpen) {
-        ImGui::TreePop();
+        browser.getTargetSelection().select(&target);
     }
 }
