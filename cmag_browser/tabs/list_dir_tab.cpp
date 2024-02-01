@@ -1,6 +1,6 @@
 #include "list_dir_tab.h"
 
-#include "cmag_browser/components/target_graph_tab.h"
+#include "cmag_browser/tabs/target_graph_tab.h"
 #include "cmag_browser/ui_utils/tooltip.h"
 #include "cmag_core/core/cmag_project.h"
 
