@@ -12,20 +12,18 @@ public:
         Summary,
     };
 
-    void change(TabSelection newSelection) {
-        if (selection != TabSelection::Auto) {
-            LOG_WARNING("Multiple tab selection in one frame detected. Only last one will be honored");
-        }
+    void change(TabSelection newSelection);
+    TabSelection fetch();
 
-        selection = newSelection;
-    }
-
-    TabSelection fetch() {
-        const TabSelection result = selection;
-        selection = TabSelection::Auto;
-        return result;
-    }
+    void renderPopup();
+    void showPopup(TabSelection currentTab);
 
 private:
     TabSelection selection = TabSelection::Auto;
+
+    struct {
+        bool shouldBeOpen = false;
+        bool isOpen = false;
+        TabSelection currentTab = TabSelection::Auto;
+    } popup;
 };
