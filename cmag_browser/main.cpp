@@ -127,7 +127,7 @@ int main(int argc, const char **argv) {
     BrowserState browserState{theme, cmagProject};
 
     TargetGraphTab targetGraphTab{browserState, argParser.getShowDebugWidgets()};
-    ListDirTab listFileTab{theme, cmagProject, targetGraphTab};
+    ListDirTab listFileTab{browserState, targetGraphTab};
     TargetFolderTab targetFolderTab{browserState, targetGraphTab};
     SummaryTab summaryTab{browserState};
     theme.setup();
