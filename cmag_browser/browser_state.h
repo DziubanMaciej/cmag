@@ -19,5 +19,5 @@ private:
     CmagProject &project;
     ConfigSelector configSelector;
     TargetSelection targetSelection{};
-    TabChange tabChange{};
+    TabChange tabChange;
 };

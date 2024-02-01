@@ -228,7 +228,7 @@ void TargetGraphTab::renderGraph(ImGuiIO &io) {
 
         if (CmagTarget *target = targetGraph.getFocusedTarget(); target != nullptr) {
             if (io.MouseClicked[ImGuiMouseButton_Right]) {
-                browser.getTabChange().showPopup(TabChange::TargetGraph);
+                browser.getTabChange().showPopup(TabChange::TargetGraph, target);
             }
             if (!browser.getTabChange().isPopupShown()) {
                 ImGui::SetTooltip("%s\n(%s)", target->name.c_str(), cmagTargetTypeToString(target->type));

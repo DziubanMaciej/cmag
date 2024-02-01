@@ -89,7 +89,6 @@ void TargetFolderTab::renderTarget(CmagTarget &target) {
         browser.getTargetSelection().select(&target);
     }
     if (ImGui::IsItemClicked(ImGuiMouseButton_Right)) {
-        browser.getTargetSelection().select(&target);
-        browser.getTabChange().showPopup(TabChange::TabSelection::TargetFolder);
+        browser.getTabChange().showPopup(TabChange::TabSelection::TargetFolder, &target);
     }
 }
