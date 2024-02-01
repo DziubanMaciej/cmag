@@ -17,8 +17,13 @@ ConfigSelector::ConfigSelector(const CmagBrowserTheme &theme, CmagProject &proje
             currentSelection = static_cast<int>(configIndex);
         }
     }
+
+    if (selectionsCount == 1) {
+        const char *format = "Only %s config is available. This is common for single config generators. See output of cmag -h about --merge option to be able to compare multiple configs";
+        snprintf(singleConfigGeneratorWarning, sizeof(singleConfigGeneratorWarning), format, configs[0]);
+    }
 }
-void ConfigSelector::render(float width, bool skipTooltip) {
+void ConfigSelector::render(float width) {
     if (width != 0) {
         ImGui::SetNextItemWidth(width);
     }
@@ -28,21 +33,24 @@ void ConfigSelector::render(float width, bool skipTooltip) {
     ImGui::Combo("##ConfigSelection", &currentSelection, configs.get(), selectionsCount);
     if (selectionsCount == 1) {
         ImGui::EndDisabled();
-        if (!skipTooltip && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled)) {
-            renderTooltip();
-        }
     }
 }
 
-void ConfigSelector::renderTooltip() {
-    if (selectionsCount == 1) {
-        const char *format = "Only %s config is available. This is common for single config generators. See output of cmag -h about --merge option to be able to compare multiple configs";
-        char buffer[256];
-        snprintf(buffer, sizeof(buffer), format, configs[0]);
+void ConfigSelector::renderTooltipLastItem() {
+    if (singleConfigGeneratorWarning[0] != '\0') {
+        TooltipBuilder(theme)
+            .setHoverLastItem()
+            .addText(singleConfigGeneratorWarning)
+            .execute();
+    }
+}
 
-        if (Tooltip::begin(theme, {}, ImGui::GetWindowSize(), buffer, nullptr)) {
-            Tooltip::end();
-        }
+void ConfigSelector::renderTooltipRect(ImVec2 min, ImVec2 max) {
+    if (singleConfigGeneratorWarning[0] != '\0') {
+        TooltipBuilder(theme)
+            .setHoverRect(min, max)
+            .addText(singleConfigGeneratorWarning)
+            .execute();
     }
 }
 

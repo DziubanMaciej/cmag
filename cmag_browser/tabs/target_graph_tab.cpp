@@ -45,6 +45,7 @@ void TargetGraphTab::renderSidePane(float width) {
     }
 
     browser.getConfigSelector().render(width);
+    browser.getConfigSelector().renderTooltipLastItem();
     renderSidePaneDependencyTypeSelection(width);
     if (ImGui::Button("Fit camera")) {
         targetGraph.showEntireGraph();
@@ -193,16 +194,15 @@ void TargetGraphTab::renderPropertyTablePopup(const CmagTargetProperty &property
     const ImVec2 cellMin = ImGui::GetCursorPos();
     const ImVec2 cellMax = {cellMin.x + ImGui::GetContentRegionAvail().x, cellMin.y + ImGui::CalcTextSize("").y};
 
-    const char *content = showValue ? property.value.c_str() : property.name.c_str();
-    if (Tooltip::begin(theme, cellMin, cellMax, content)) {
-        {
+    TooltipBuilder(theme)
+        .setHoverRect(cellMin, cellMax)
+        .addTextOneLine(showValue ? property.value.c_str() : property.name.c_str())
+        .execute([&]() {
             auto popupStyle = theme.setupPopup();
             auto textStyle = theme.setupPropertyName(false, property.isConsistent);
             const char *contentExtra = property.isConsistent ? "This property has the same value for all configs." : "This property has a different value for different configs.";
             ImGui::Text("%s", contentExtra);
-        }
-        Tooltip::end();
-    }
+        });
 }
 
 void TargetGraphTab::renderGraph(ImGuiIO &io) {

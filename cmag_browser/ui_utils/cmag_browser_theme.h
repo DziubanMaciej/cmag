@@ -14,7 +14,6 @@ public:
     RaiiImguiStyle setupPropertyName(bool isEmpty, bool isConsistent) const;
     RaiiImguiStyle setupPropertyValue() const;
     RaiiImguiStyle setupPopup() const;
-    RaiiImguiStyle setupPopup(float textWrapWidth) const;
     RaiiImguiStyle setupHyperlink() const;
 
     static CmagBrowserTheme createDarkTheme();

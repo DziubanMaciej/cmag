@@ -42,9 +42,11 @@ void SummaryTab::renderTableRowString(const char *name, const std::string &value
     ImGui::Text("%s", value.c_str());
     const ImVec2 posMax = ImGui::GetItemRectMax();
 
-    if (Tooltip::begin(browser.getTheme(), posMin, posMax, tooltip, tooltipHyperlink)) {
-        Tooltip::end();
-    }
+    TooltipBuilder(browser.getTheme())
+        .addHyperlink(tooltipHyperlink)
+        .setHoverRect(posMin, posMax)
+        .addText(tooltip)
+        .execute();
 }
 void SummaryTab::renderTableRowSelectedConfig() {
     ImGui::TableNextRow();
@@ -52,12 +54,10 @@ void SummaryTab::renderTableRowSelectedConfig() {
     const ImVec2 posMin = ImGui::GetCursorPos();
     ImGui::Text("Selected config");
     ImGui::TableNextColumn();
-    browser.getConfigSelector().render(0, true);
+    browser.getConfigSelector().render(0);
     const ImVec2 posMax = ImGui::GetItemRectMax();
 
-    if (Tooltip::isRectHovered(posMin, posMax)) {
-        browser.getConfigSelector().renderTooltip();
-    }
+    browser.getConfigSelector().renderTooltipRect(posMin, posMax);
 }
 
 void SummaryTab::renderTableRowSpacer() {

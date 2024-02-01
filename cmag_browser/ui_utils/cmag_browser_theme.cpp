@@ -119,15 +119,8 @@ RaiiImguiStyle CmagBrowserTheme::setupPropertyValue() const {
 }
 
 RaiiImguiStyle CmagBrowserTheme::setupPopup() const {
-    return setupPopup(maxWidthPopup);
-}
-
-RaiiImguiStyle CmagBrowserTheme::setupPopup(float textWrapWidth) const {
     RaiiImguiStyle raiiStyle{};
     raiiStyle.color(ImGuiCol_Text, colorPopup);
-    if (textWrapWidth > 0) {
-        raiiStyle.textWrapWidth(textWrapWidth);
-    }
     return raiiStyle;
 }
 

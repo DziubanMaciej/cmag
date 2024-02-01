@@ -61,9 +61,10 @@ void ListDirTab::renderTarget(CmagTarget &target) {
 }
 
 void ListDirTab::renderTooltip(const std::string &currentName) {
-    if (Tooltip::begin(browser.getTheme(), ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), currentName.c_str(), nullptr, true)) {
-        Tooltip::end();
-    }
+    TooltipBuilder(browser.getTheme())
+        .setHoverLastItem()
+        .addTextOneLine(currentName.c_str())
+        .execute();
 }
 
 const char *ListDirTab::deriveRelativeName(const char *parentName, const std::string &currentName) {

@@ -1,40 +1,91 @@
 #include "tooltip.h"
 
 #include "cmag_browser/ui_utils/cmag_browser_theme.h"
+#include "cmag_core/utils/error.h"
 #include "cmag_core/utils/filesystem.h"
 
-bool Tooltip::begin(const CmagBrowserTheme &theme, ImVec2 min, ImVec2 max, const char *tooltip, const char *tooltipHyperlink, bool forceOneLine) {
-    if (!isRectHovered(min, max)) {
-        return false;
+TooltipBuilder::TooltipBuilder(const CmagBrowserTheme &theme)
+    : theme(theme) {}
+
+TooltipBuilder &TooltipBuilder::setHoverRect(ImVec2 rectMin, ImVec2 rectMax) {
+    hover.type = Hover::Type::Rect;
+    hover.rectMin = rectMin;
+    hover.rectMax = rectMax;
+    return *this;
+}
+
+TooltipBuilder &TooltipBuilder::setHoverLastItem() {
+    hover.type = Hover::Type::LastItem;
+    return *this;
+}
+
+TooltipBuilder &TooltipBuilder::setHoverAlways() {
+    hover.type = Hover::Type::Always;
+    return *this;
+}
+
+TooltipBuilder &TooltipBuilder::addHyperlink(const char *newHyperlink) {
+    hyperlink.hyperlink = newHyperlink;
+    return *this;
+}
+
+TooltipBuilder &TooltipBuilder::addText(const char *text) {
+    FATAL_ERROR_IF(texts.textsCount >= texts.maxTexts, "Too many texts pushed to TooltipBuilder");
+
+    texts.texts[texts.textsCount].text = text;
+    texts.texts[texts.textsCount].forceOneLine = false;
+    texts.textsCount++;
+
+    return *this;
+}
+
+TooltipBuilder &TooltipBuilder::addTextOneLine(const char *text) {
+    FATAL_ERROR_IF(texts.textsCount >= texts.maxTexts, "Too many texts pushed to TooltipBuilder");
+
+    texts.texts[texts.textsCount].text = text;
+    texts.texts[texts.textsCount].forceOneLine = true;
+    texts.textsCount++;
+
+    return *this;
+}
+
+void TooltipBuilder::execute() {
+    static const auto emptyBody = []() {};
+    execute(emptyBody);
+}
+
+bool TooltipBuilder::Hover::isTooltipVisible() const {
+    switch (type) {
+    case Hover::Type::Rect: {
+        const ImVec2 mousePos = ImGui::GetMousePos();
+        return rectMin.x <= mousePos.x && mousePos.x <= rectMax.x && rectMin.y <= mousePos.y && mousePos.y <= rectMax.y;
     }
-
-    if (tooltipHyperlink != nullptr && ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
-        openHyperlink(tooltipHyperlink);
+    case Hover::Type::LastItem:
+        return ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled);
+    case Hover::Type::Always:
+        return true;
+    default:
+        FATAL_ERROR("Unknown Hover::Type");
     }
+}
 
-    if (ImGui::BeginTooltip()) {
-        if (tooltipHyperlink) {
-            auto textStyle = theme.setupPopup(ImGui::CalcTextSize(tooltipHyperlink).x);
-            ImGui::Text("%s", tooltip);
-
-            auto hyperlinkStyle = theme.setupHyperlink();
-            ImGui::Text("%s", tooltipHyperlink);
-        } else {
-            auto textStyle = forceOneLine ? theme.setupPopup(0) : theme.setupPopup();
-            ImGui::Text("%s", tooltip);
+void TooltipBuilder::Texts::render(const CmagBrowserTheme &theme) const {
+    for (int i = 0; i < textsCount; i++) {
+        RaiiImguiStyle oneLineStyle{};
+        if (!texts[i].forceOneLine) {
+            oneLineStyle.textWrapWidth(theme.maxWidthPopup);
         }
 
-        return true;
+        ImGui::Text("%s", texts[i].text);
+    }
+}
+void TooltipBuilder::Hyperlink::render(const CmagBrowserTheme &theme) const {
+    if (hyperlink) {
+        auto hyperlinkStyle = theme.setupHyperlink();
+        ImGui::Text("%s", hyperlink);
     }
 
-    return false;
-}
-
-void Tooltip::end() {
-    ImGui::EndTooltip();
-}
-
-bool Tooltip::isRectHovered(ImVec2 min, ImVec2 max) {
-    const ImVec2 mousePos = ImGui::GetMousePos();
-    return min.x <= mousePos.x && mousePos.x <= max.x && min.y <= mousePos.y && mousePos.y <= max.y;
+    if (hyperlink != nullptr && ImGui::GetIO().MouseClicked[ImGuiMouseButton_Left]) {
+        openHyperlink(hyperlink);
+    }
 }
