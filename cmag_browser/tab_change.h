@@ -17,6 +17,7 @@ public:
 
     void renderPopup();
     void showPopup(TabSelection currentTab);
+    bool isPopupShown() const { return popup.shouldBeOpen || popup.isOpen; }
 
 private:
     TabSelection selection = TabSelection::Auto;
