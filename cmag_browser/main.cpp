@@ -124,11 +124,12 @@ int main(int argc, const char **argv) {
 
     // Init browser components
     CmagBrowserTheme theme = CmagBrowserTheme::createDarkTheme();
-    ConfigSelector configSelector{theme, cmagProject};
-    TargetGraphTab targetGraphTab{theme, cmagProject, configSelector, argParser.getShowDebugWidgets()};
+    BrowserState browserState{theme, cmagProject};
+
+    TargetGraphTab targetGraphTab{browserState, argParser.getShowDebugWidgets()};
     ListDirTab listFileTab{theme, cmagProject, targetGraphTab};
     TargetFolderTab targetFolderTab{theme, cmagProject, targetGraphTab};
-    SummaryTab summaryTab{theme, cmagProject, configSelector};
+    SummaryTab summaryTab{theme, cmagProject, browserState.getConfigSelector()};
     theme.setup();
 
     while (!glfwWindowShouldClose(window)) {

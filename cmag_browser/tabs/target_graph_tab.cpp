@@ -5,10 +5,9 @@
 #include "cmag_browser/ui_utils/tooltip.h"
 #include "cmag_core/utils/string_utils.h"
 
-TargetGraphTab::TargetGraphTab(CmagBrowserTheme &theme, CmagProject &project, ConfigSelector &configSelector, bool showDebugWidgets)
-    : theme(theme),
-      targetGraph(theme, project, configSelector.getCurrentConfig()),
-      configSelector(configSelector),
+TargetGraphTab::TargetGraphTab(BrowserState &browser, bool showDebugWidgets)
+    : browser(browser),
+      targetGraph(browser.getTheme(), browser.getProject(), browser.getConfigSelector().getCurrentConfig()),
       showDebugWidgets(showDebugWidgets) {}
 
 void TargetGraphTab::selectTargetAndFocus(CmagTarget *target) {
@@ -56,7 +55,7 @@ void TargetGraphTab::renderSidePane(float width) {
         renderSidePaneSlider("stipple", width, 0.005f, 0.1f, targetGraph.getLineStippleScalePtr());
     }
 
-    configSelector.render(width);
+    browser.getConfigSelector().render(width);
     renderSidePaneDependencyTypeSelection(width);
     if (ImGui::Button("Fit camera")) {
         targetGraph.showEntireGraph();
@@ -160,6 +159,8 @@ void TargetGraphTab::renderPropertyPopup() {
 }
 
 void TargetGraphTab::renderPropertyTable(float width) {
+    const CmagBrowserTheme &theme = browser.getTheme();
+
     CmagTarget *selectedTarget = targetGraph.getSelectedTarget();
     if (selectedTarget == nullptr) {
         return;
@@ -172,7 +173,7 @@ void TargetGraphTab::renderPropertyTable(float width) {
     auto tableStyle = theme.setupPropertyTable();
     if (ImGui::BeginTable("Table populating", 2, tableFlags, propertyTableSize)) {
 
-        const CmagTargetConfig *config = selectedTarget->tryGetConfig(configSelector.getCurrentConfig());
+        const CmagTargetConfig *config = selectedTarget->tryGetConfig(browser.getConfigSelector().getCurrentConfig());
         for (const CmagTargetProperty &property : config->properties) {
             ImGui::TableNextRow();
 
@@ -196,6 +197,8 @@ void TargetGraphTab::renderPropertyTable(float width) {
     ImGui::EndTable();
 }
 void TargetGraphTab::renderPropertyTablePopup(const CmagTargetProperty &property, bool showValue) const {
+    const CmagBrowserTheme &theme = browser.getTheme();
+
     const char *content = showValue ? property.value.c_str() : property.name.c_str();
     if (Tooltip::begin(theme, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), content)) {
         {
@@ -223,7 +226,7 @@ void TargetGraphTab::renderGraph(ImGuiIO &io) {
         targetGraph.setScreenSpacePosition(static_cast<size_t>(textureX), static_cast<size_t>(textureY));
 
         // Render to an offscreen texture
-        targetGraph.setCurrentCmakeConfig(configSelector.getCurrentConfig());
+        targetGraph.setCurrentCmakeConfig(browser.getConfigSelector().getCurrentConfig());
         targetGraph.setDisplayedDependencyType(dependencyTypeSelected);
         targetGraph.update(io);
         targetGraph.render();
