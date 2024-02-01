@@ -167,6 +167,8 @@ int main(int argc, const char **argv) {
                 summaryTab.render();
                 ImGui::EndTabItem();
             }
+
+            browserState.getTabChange().renderPopup();
         }
         ImGui::EndTabBar();
 
