@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cmag_browser/browser_state.h"
+
 #include <imgui/imgui.h>
 #include <string_view>
 
@@ -11,7 +13,7 @@ class TargetGraphTab;
 
 class TargetFolderTab {
 public:
-    TargetFolderTab(const CmagBrowserTheme &theme, CmagProject &project, TargetGraphTab &targetGraphTab);
+    TargetFolderTab(BrowserState &browser, TargetGraphTab &targetGraphTab);
 
     void render();
 
@@ -21,8 +23,7 @@ private:
     void renderFolder(bool renderSelf, const CmagFolder &folder);
     void renderTarget(CmagTarget &target);
 
-    const CmagBrowserTheme &theme;
-    CmagProject &project;
+    BrowserState &browser;
     TargetGraphTab &targetGraphTab;
     bool showIgnoredTargets = false;
 };
