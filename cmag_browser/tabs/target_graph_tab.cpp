@@ -155,8 +155,7 @@ void TargetGraphTab::renderPropertyTable(float width) {
         return;
     }
 
-    ImVec2 propertyTableSize = ImGui::GetContentRegionAvail();
-    propertyTableSize.x = width;
+    const ImVec2 propertyTableSize{width, 0};
     const ImGuiTableFlags tableFlags = ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
 
     auto tableStyle = theme.setupPropertyTable();
@@ -165,22 +164,25 @@ void TargetGraphTab::renderPropertyTable(float width) {
         const CmagTargetConfig *config = selectedTarget->tryGetConfig(browser.getConfigSelector().getCurrentConfig());
         for (const CmagTargetProperty &property : config->properties) {
             ImGui::TableNextRow();
-
             ImGui::TableNextColumn();
             {
+                renderPropertyTablePopup(property, false);
+
                 auto nameStyle = theme.setupPropertyName(property.value.empty(), property.isConsistent);
                 ImGui::Text("%s", property.name.c_str());
+
+                scheduleOpenPropertyPopupOnClick(property);
             }
-            scheduleOpenPropertyPopupOnClick(property);
-            renderPropertyTablePopup(property, false);
 
             ImGui::TableNextColumn();
             {
+                renderPropertyTablePopup(property, true);
+
                 auto valueStyle = theme.setupPropertyValue();
                 ImGui::Text("%s", property.value.c_str());
+
+                scheduleOpenPropertyPopupOnClick(property);
             }
-            scheduleOpenPropertyPopupOnClick(property);
-            renderPropertyTablePopup(property, true);
         }
     }
     ImGui::EndTable();
@@ -188,8 +190,11 @@ void TargetGraphTab::renderPropertyTable(float width) {
 void TargetGraphTab::renderPropertyTablePopup(const CmagTargetProperty &property, bool showValue) const {
     const CmagBrowserTheme &theme = browser.getTheme();
 
+    const ImVec2 cellMin = ImGui::GetCursorPos();
+    const ImVec2 cellMax = {cellMin.x + ImGui::GetContentRegionAvail().x, cellMin.y + ImGui::CalcTextSize("").y};
+
     const char *content = showValue ? property.value.c_str() : property.name.c_str();
-    if (Tooltip::begin(theme, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), content)) {
+    if (Tooltip::begin(theme, cellMin, cellMax, content)) {
         {
             auto popupStyle = theme.setupPopup();
             auto textStyle = theme.setupPropertyName(false, property.isConsistent);
