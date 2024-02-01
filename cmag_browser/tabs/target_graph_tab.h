@@ -1,15 +1,13 @@
 #pragma once
 
+#include "cmag_browser/browser_state.h"
 #include "cmag_browser/target_graph/target_graph.h"
 
 #include <imgui/imgui.h>
 
-class CmagBrowserTheme;
-class ConfigSelector;
-
 class TargetGraphTab {
 public:
-    TargetGraphTab(CmagBrowserTheme &theme, CmagProject &project, ConfigSelector &configSelector, bool showDebugWidgets);
+    TargetGraphTab(BrowserState &browser, bool showDebugWidgets);
 
     void selectTargetAndFocus(CmagTarget *target);
     bool fetchForceSelection();
@@ -28,9 +26,8 @@ private:
 
     void scheduleOpenPropertyPopupOnClick(const CmagTargetProperty &property);
 
-    CmagBrowserTheme &theme;
+    BrowserState &browser;
     TargetGraph targetGraph;
-    ConfigSelector &configSelector;
     CmakeDependencyType dependencyTypeSelected = CmakeDependencyType::DEFAULT;
     bool forceSelection = false;
     bool showDebugWidgets;
