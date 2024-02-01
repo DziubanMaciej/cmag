@@ -2,16 +2,14 @@
 
 #include "cmag_browser/tabs/target_graph_tab.h"
 #include "cmag_browser/ui_utils/tooltip.h"
-#include "cmag_core/core/cmag_project.h"
 
-ListDirTab::ListDirTab(const CmagBrowserTheme &theme, CmagProject &project, TargetGraphTab &targetGraphTab)
-    : theme(theme),
-      project(project),
+ListDirTab::ListDirTab(BrowserState &browser, TargetGraphTab &targetGraphTab)
+    : browser(browser),
       targetGraphTab(targetGraphTab) {}
 
 void ListDirTab::render() {
     renderOptions();
-    renderListDir(nullptr, project.getGlobals().listDirs[0]);
+    renderListDir(nullptr, browser.getProject().getGlobals().listDirs[0]);
 }
 
 void ListDirTab::renderOptions() {
@@ -30,12 +28,12 @@ void ListDirTab::renderListDir(const char *parentName, const CmagListDir &listDi
     renderTooltip(listDir.name);
     if (treeNodeOpen) {
         for (const size_t listDirIndex : listDir.childIndices) {
-            const CmagListDir &childListDir = project.getGlobals().listDirs[listDirIndex];
+            const CmagListDir &childListDir = browser.getProject().getGlobals().listDirs[listDirIndex];
             renderListDir(listDir.name.c_str(), childListDir);
         }
 
         for (const size_t targetIndex : listDir.derived.targetIndices) {
-            CmagTarget &target = project.getTargets()[targetIndex];
+            CmagTarget &target = browser.getProject().getTargets()[targetIndex];
             if (showIgnoredTargets || !target.isIgnoredImportedTarget()) {
                 renderTarget(target);
             }
@@ -61,7 +59,7 @@ void ListDirTab::renderTarget(CmagTarget &target) {
 }
 
 void ListDirTab::renderTooltip(const std::string &currentName) {
-    if (Tooltip::begin(theme, ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), currentName.c_str(), nullptr, true)) {
+    if (Tooltip::begin(browser.getTheme(), ImGui::GetItemRectMin(), ImGui::GetItemRectMax(), currentName.c_str(), nullptr, true)) {
         Tooltip::end();
     }
 }
