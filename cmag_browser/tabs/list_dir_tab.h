@@ -7,11 +7,10 @@
 
 struct CmagTarget;
 struct CmagListDir;
-class TargetGraphTab;
 
 class ListDirTab {
 public:
-    ListDirTab(BrowserState &browser, TargetGraphTab &targetGraphTab);
+    explicit ListDirTab(BrowserState &browser);
 
     void render();
 
@@ -23,6 +22,5 @@ private:
     static const char *deriveRelativeName(const char *parentName, const std::string &currentName);
 
     BrowserState &browser;
-    TargetGraphTab &targetGraphTab;
     bool showIgnoredTargets = false;
 };

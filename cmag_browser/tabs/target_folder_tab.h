@@ -7,11 +7,10 @@
 
 struct CmagTarget;
 struct CmagFolder;
-class TargetGraphTab;
 
 class TargetFolderTab {
 public:
-    TargetFolderTab(BrowserState &browser, TargetGraphTab &targetGraphTab);
+    explicit TargetFolderTab(BrowserState &browser);
 
     void render();
 
@@ -22,6 +21,5 @@ private:
     void renderTarget(CmagTarget &target);
 
     BrowserState &browser;
-    TargetGraphTab &targetGraphTab;
     bool showIgnoredTargets = false;
 };
