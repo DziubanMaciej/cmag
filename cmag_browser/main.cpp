@@ -128,7 +128,7 @@ int main(int argc, const char **argv) {
 
     TargetGraphTab targetGraphTab{browserState, argParser.getShowDebugWidgets()};
     ListDirTab listFileTab{theme, cmagProject, targetGraphTab};
-    TargetFolderTab targetFolderTab{theme, cmagProject, targetGraphTab};
+    TargetFolderTab targetFolderTab{browserState, targetGraphTab};
     SummaryTab summaryTab{theme, cmagProject, browserState.getConfigSelector()};
     theme.setup();
 

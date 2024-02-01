@@ -2,19 +2,17 @@
 
 #include "cmag_browser/tabs/target_graph_tab.h"
 #include "cmag_browser/ui_utils/cmag_browser_theme.h"
-#include "cmag_browser/ui_utils/raii_imgui_style.h"
 #include "cmag_browser/ui_utils/tooltip.h"
 #include "cmag_core/core/cmake_generator.h"
 #include "cmag_core/utils/string_utils.h"
 
-TargetFolderTab::TargetFolderTab(const CmagBrowserTheme &theme, CmagProject &project, TargetGraphTab &targetGraphTab)
-    : theme(theme),
-      project(project),
+TargetFolderTab::TargetFolderTab(BrowserState &browser, TargetGraphTab &targetGraphTab)
+    : browser(browser),
       targetGraphTab(targetGraphTab) {}
 
 void TargetFolderTab::render() {
     renderHeaders();
-    renderFolder(false, project.getGlobals().derived.folders[0]);
+    renderFolder(false, browser.getProject().getGlobals().derived.folders[0]);
 }
 
 void TargetFolderTab::renderHeaders() {
@@ -24,11 +22,11 @@ void TargetFolderTab::renderHeaders() {
 
 void TargetFolderTab::renderHeadersWarnings() {
     const float windowWidth = ImGui::GetContentRegionAvail().x;
-    const CmagGlobals &globals = project.getGlobals();
+    const CmagGlobals &globals = browser.getProject().getGlobals();
 
     RaiiImguiStyle style{};
     style.textWrapWidth(windowWidth);
-    style.color(ImGuiCol_Text, theme.colorWarning);
+    style.color(ImGuiCol_Text, browser.getTheme().colorWarning);
 
     const CMakeGenerator *generator = globals.derived.generator;
     if (globals.derived.folders[0].childIndices.empty()) {
@@ -61,12 +59,12 @@ void TargetFolderTab::renderFolder(bool renderSelf, const CmagFolder &folder) {
 
     if (renderChildren) {
         for (const size_t childFolderIndex : folder.childIndices) {
-            const CmagFolder &childFolder = project.getGlobals().derived.folders[childFolderIndex];
+            const CmagFolder &childFolder = browser.getProject().getGlobals().derived.folders[childFolderIndex];
             renderFolder(true, childFolder);
         }
 
         for (const size_t targetIndex : folder.targetIndices) {
-            CmagTarget &target = project.getTargets()[targetIndex];
+            CmagTarget &target = browser.getProject().getTargets()[targetIndex];
             if (showIgnoredTargets || !target.isIgnoredImportedTarget()) {
                 renderTarget(target);
             }
