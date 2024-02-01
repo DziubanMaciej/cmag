@@ -7,7 +7,7 @@
 
 TargetGraphTab::TargetGraphTab(BrowserState &browser, bool showDebugWidgets)
     : browser(browser),
-      targetGraph(browser.getTheme(), browser.getProject(), browser.getConfigSelector().getCurrentConfig()),
+      targetGraph(browser),
       showDebugWidgets(showDebugWidgets) {}
 
 void TargetGraphTab::selectTargetAndFocus(CmagTarget *target) {
@@ -126,7 +126,7 @@ void TargetGraphTab::renderSidePaneDependencyTypeSelection(float width) {
 }
 
 void TargetGraphTab::renderSidePaneHideConnectionsButton(float) {
-    CmagTarget *target = targetGraph.getSelectedTarget();
+    CmagTarget *target = browser.getTargetSelection().getMutableSelection();
     if (target == nullptr) {
         return;
     }
@@ -161,7 +161,7 @@ void TargetGraphTab::renderPropertyPopup() {
 void TargetGraphTab::renderPropertyTable(float width) {
     const CmagBrowserTheme &theme = browser.getTheme();
 
-    CmagTarget *selectedTarget = targetGraph.getSelectedTarget();
+    const CmagTarget *selectedTarget = browser.getTargetSelection().getSelection();
     if (selectedTarget == nullptr) {
         return;
     }
