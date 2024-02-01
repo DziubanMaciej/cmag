@@ -1,5 +1,6 @@
 #pragma once
 
+#include "cmag_browser/browser_state.h"
 #include "cmag_browser/target_graph/text_renderer.h"
 #include "cmag_browser/util/gl_extensions.h"
 #include "cmag_core/core/cmag_project.h"
@@ -10,7 +11,6 @@
 #include <glm/vec4.hpp>
 #include <unordered_map>
 
-class CmagBrowserTheme;
 struct ImGuiIO;
 struct ShapeInfo;
 struct Segment;
@@ -36,7 +36,7 @@ inline CmakeDependencyType operator^(CmakeDependencyType a, CmakeDependencyType 
 
 class TargetGraph {
 public:
-    TargetGraph(const CmagBrowserTheme &theme, CmagProject &project, std::string_view defaultConfig);
+    TargetGraph(BrowserState &browser);
     ~TargetGraph();
 
     void setScreenSpaceAvailableSpace(float spaceX, float spaceY);
@@ -48,7 +48,6 @@ public:
     void update(ImGuiIO &io);
 
     void render();
-    CmagTarget *getSelectedTarget() { return selectedTarget; }
     CmagTarget *getFocusedTarget() { return focusedTarget; }
 
     auto getTexture() const { return framebuffer.colorTex; }
@@ -73,9 +72,8 @@ private:
     static void calculateWorldSpaceVerticesForTarget(const CmagTarget &target, const Shapes &shapes, float *outVertices, size_t *outVerticesCount);
 
     // General data and subobjects
-    const CmagBrowserTheme &theme;
+    BrowserState &browser;
     std::vector<CmagTarget *> targets = {};
-    CmagTarget *selectedTarget = nullptr;
     CmagTarget *focusedTarget = nullptr;
     TextRenderer textRenderer = {};
     glm::mat4 projectionMatrix = {};
@@ -178,7 +176,7 @@ private:
 
         void allocate(const std::vector<CmagTarget *> &targets);
         void deallocate();
-        void update(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale, float stippleScale, CmagTarget *focusedTarget, CmagTarget *selectedTarget);
+        void update(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale, float stippleScale, const CmagTarget *focusedTarget, const CmagTarget *selectedTarget);
         static float calculateSegmentTrimParameter(const CmagTarget &target, const Segment &connectionSegment, const Shapes &shapes, bool isSrcTarget);
         static void calculateArrowCoordinates(const Segment &connectionSegment, float arrowLength, float arrowWidth, Vec &outA, Vec &outB, Vec &outC);
     } connections = {};

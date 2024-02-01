@@ -12,9 +12,9 @@
 #include <imgui/imgui.h>
 #include <memory>
 
-TargetGraph::TargetGraph(const CmagBrowserTheme &theme, CmagProject &project, std::string_view defaultConfig)
-    : theme(theme) {
-    fillTargetsVector(project.getTargets());
+TargetGraph::TargetGraph(BrowserState &browser)
+    : browser(browser) {
+    fillTargetsVector(browser.getProject().getTargets());
 
     shapes.allocate();
     connections.allocate(targets);
@@ -23,11 +23,11 @@ TargetGraph::TargetGraph(const CmagBrowserTheme &theme, CmagProject &project, st
 
     projectionMatrix = glm::ortho(-worldSpaceHalfWidth, worldSpaceHalfWidth, -worldSpaceHalfHeight, worldSpaceHalfHeight);
 
-    setCurrentCmakeConfig(defaultConfig);
+    setCurrentCmakeConfig(browser.getConfigSelector().getCurrentConfig());
 
-    if (project.getGlobals().needsLayout) {
+    if (browser.getProject().getGlobals().needsLayout) {
         resetGraphLayout();
-        project.getGlobals().needsLayout = true;
+        browser.getProject().getGlobals().needsLayout = true;
     }
     showEntireGraph();
 }
@@ -137,6 +137,7 @@ void TargetGraph::update(ImGuiIO &io) {
 }
 
 void TargetGraph::render() {
+    const CmagBrowserTheme &theme = browser.getTheme();
 #define THEME_COLOR(name) (&theme.name.Value.x)
 
     SAFE_GL(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer.fbo));
@@ -164,7 +165,7 @@ void TargetGraph::render() {
         SAFE_GL(glUniform2f(program.uniformLocation.stippleData, 0, 0));
 
         // Render solid portion of the node
-        if (target == selectedTarget) {
+        if (browser.getTargetSelection().isSelected(*target)) {
             SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, THEME_COLOR(colorTargetGraphNodeSelected)));
         } else if (target == focusedTarget) {
             SAFE_GL(glUniform3fv(program.uniformLocation.color, 1, THEME_COLOR(colorTargetGraphNodeFocused)));
@@ -242,7 +243,7 @@ float TargetGraph::calculateDepthValueForTarget(const CmagTarget &target, bool f
     constexpr float textOffset = 0.01f;
 
     float result = valueDefault;
-    if (&target == selectedTarget) {
+    if (browser.getTargetSelection().isSelected(target)) {
         result = valueSelected;
     } else if (&target == focusedTarget) {
         result = valueFocused;
@@ -272,7 +273,7 @@ void TargetGraph::calculateWorldSpaceVerticesForTarget(const CmagTarget &target,
 }
 
 void TargetGraph::refreshConnections() {
-    connections.update(targets, cmakeConfig, displayedDependencyType, shapes, arrowLengthScale, arrowWidthScale, lineStippleScale, focusedTarget, selectedTarget);
+    connections.update(targets, cmakeConfig, displayedDependencyType, shapes, arrowLengthScale, arrowWidthScale, lineStippleScale, focusedTarget, browser.getTargetSelection().getSelection());
 }
 
 void TargetGraph::showEntireGraph() {
@@ -342,10 +343,10 @@ void TargetGraph::setFocusedTarget(CmagTarget *target) {
 }
 
 void TargetGraph::setSelectedTarget(CmagTarget *target) {
-    if (target == selectedTarget) {
+    if (browser.getTargetSelection().isSelected(*target)) {
         return;
     }
-    selectedTarget = target;
+    browser.getTargetSelection().select(target);
     refreshConnections();
 }
 
@@ -527,7 +528,7 @@ void TargetGraph::Connections::deallocate() {
     GL_DELETE_OBJECT(gl.vao, VertexArrays);
 }
 
-void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale, float stippleScale, CmagTarget *focusedTarget, CmagTarget *selectedTarget) {
+void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale, float stippleScale, const CmagTarget *focusedTarget, const CmagTarget *selectedTarget) {
     auto addSegment = [&](const CmagTarget &srcTarget, const CmagTarget &dstTarget, std::vector<float> &outLineData, std::vector<float> &outTriangleData) {
         if (srcTarget.graphical.hideConnections || dstTarget.graphical.hideConnections) {
             return;
