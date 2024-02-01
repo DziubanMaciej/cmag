@@ -226,8 +226,13 @@ void TargetGraphTab::renderGraph(ImGuiIO &io) {
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + (space.y - textureHeight) / 2);
         ImGui::Image(texture, ImVec2(textureWidth, textureHeight));
 
-        if (const CmagTarget *target = targetGraph.getFocusedTarget(); target != nullptr) {
-            ImGui::SetTooltip("%s\n(%s)", target->name.c_str(), cmagTargetTypeToString(target->type));
+        if (CmagTarget *target = targetGraph.getFocusedTarget(); target != nullptr) {
+            if (io.MouseClicked[ImGuiMouseButton_Right]) {
+                browser.getTabChange().showPopup(TabChange::TargetGraph);
+            }
+            if (!browser.getTabChange().isPopupShown()) {
+                ImGui::SetTooltip("%s\n(%s)", target->name.c_str(), cmagTargetTypeToString(target->type));
+            }
         }
     }
 }
