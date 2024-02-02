@@ -113,6 +113,7 @@ void TargetGraph::update(ImGuiIO &io) {
         for (ConnectionData &connection : connections.connectionsData) {
             if (Vec{mouseWorld.x, mouseWorld.y}.isInsidePolygon(connection.hoverQuad, 4)) {
                 focusedConnection = &connection;
+                break;
             }
         }
     }
