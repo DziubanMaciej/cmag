@@ -248,6 +248,14 @@ void TargetGraphTab::renderGraph(ImGuiIO &io) {
                     .execute();
             }
         }
+
+        if (TargetGraph::ConnectionData *connection = targetGraph.getFocusedConnection(); connection != nullptr) {
+            std::string text = connection->src->name + " -> " + connection->dst->name;
+            TooltipBuilder(browser.getTheme())
+                .setHoverAlways()
+                .addText(text.c_str())
+                .execute();
+        }
     }
 }
 
