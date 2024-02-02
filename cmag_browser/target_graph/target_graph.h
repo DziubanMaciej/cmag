@@ -4,6 +4,7 @@
 #include "cmag_browser/target_graph/text_renderer.h"
 #include "cmag_browser/util/gl_extensions.h"
 #include "cmag_core/core/cmag_project.h"
+#include "cmag_core/utils/enum_utils.h"
 
 #include <array>
 #include <glm/matrix.hpp>
@@ -26,17 +27,18 @@ enum class CmakeDependencyType {
     DEFAULT = Build | Additional,
 };
 
-inline CmakeDependencyType operator&(CmakeDependencyType a, CmakeDependencyType b) {
-    return static_cast<CmakeDependencyType>(static_cast<int>(a) & static_cast<int>(b));
-}
-
-inline CmakeDependencyType operator^(CmakeDependencyType a, CmakeDependencyType b) {
-    return static_cast<CmakeDependencyType>(static_cast<int>(a) ^ static_cast<int>(b));
-}
+BITFIELD_ENUM(CmakeDependencyType)
 
 class TargetGraph {
 public:
-    TargetGraph(BrowserState &browser);
+    struct ConnectionData {
+        const CmagTarget *src = nullptr;
+        const CmagTarget *dst = nullptr;
+        CmakeDependencyType type = CmakeDependencyType::DEFAULT;
+        float hoverQuad[8] = {};
+    };
+
+    explicit TargetGraph(BrowserState &browser);
     ~TargetGraph();
 
     void setScreenSpaceAvailableSpace(float spaceX, float spaceY);
@@ -169,6 +171,7 @@ private:
         constexpr static inline size_t maxDrawCallsCount = 12;
         size_t drawCallsCount = {};
         DrawCall drawCalls[maxDrawCallsCount] = {};
+        std::vector<ConnectionData> connectionsData = {};
         struct {
             GLuint vbo = {};
             GLuint vao = {};
@@ -176,7 +179,8 @@ private:
 
         void allocate(const std::vector<CmagTarget *> &targets);
         void deallocate();
-        void update(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale, float stippleScale, const CmagTarget *focusedTarget, const CmagTarget *selectedTarget);
+        void updateTopology(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig);
+        void update(CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale, float stippleScale, const CmagTarget *focusedTarget, const CmagTarget *selectedTarget);
         static float calculateSegmentTrimParameter(const CmagTarget &target, const Segment &connectionSegment, const Shapes &shapes, bool isSrcTarget);
         static void calculateArrowCoordinates(const Segment &connectionSegment, float arrowLength, float arrowWidth, Vec &outA, Vec &outB, Vec &outC);
     } connections = {};
