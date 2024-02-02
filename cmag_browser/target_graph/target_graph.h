@@ -51,6 +51,7 @@ public:
 
     void render();
     CmagTarget *getFocusedTarget() { return focusedTarget; }
+    ConnectionData *getFocusedConnection() { return focusedConnection; }
 
     auto getTexture() const { return framebuffer.colorTex; }
     auto getTextureWidth() const { return bounds.width; }
