@@ -1,6 +1,5 @@
 #include "target_graph_tab.h"
 
-#include "cmag_browser/config_selector.h"
 #include "cmag_browser/ui_utils/cmag_browser_theme.h"
 #include "cmag_browser/ui_utils/tooltip.h"
 #include "cmag_core/utils/string_utils.h"
@@ -79,8 +78,11 @@ void TargetGraphTab::renderSidePaneSlider(const char *label, float width, float 
         targetGraph.refreshModelMatrices();
         targetGraph.refreshConnections();
     }
-    if (tooltipNeeded && ImGui::IsItemHovered()) {
-        ImGui::SetTooltip("%s", label);
+    if (tooltipNeeded) {
+        TooltipBuilder(browser.getTheme())
+            .setHoverLastItem()
+            .addText(label)
+            .execute();
     }
 }
 
@@ -100,14 +102,17 @@ void TargetGraphTab::renderSidePaneDependencyTypeSelection(float width) {
     static_assert(sizeof(tooltips) / sizeof(tooltips[0]) == selectionsCount);
 
     auto renderCheckbox = [&](CmakeDependencyType currentType, int typeIndex) {
+        FATAL_ERROR_IF(typeIndex >= selectionsCount, "Incorrect type index");
+
         bool isSelected = (dependencyTypeSelected & currentType) != CmakeDependencyType::NONE;
         ImGui::SetNextItemWidth(width);
         if (ImGui::Checkbox(labels[typeIndex], &isSelected)) {
             dependencyTypeSelected = dependencyTypeSelected ^ currentType;
         }
-        if (ImGui::IsItemHovered()) {
-            ImGui::SetTooltip("%s", tooltips[typeIndex]);
-        }
+        TooltipBuilder(browser.getTheme())
+            .setHoverLastItem()
+            .addText(tooltips[typeIndex])
+            .execute();
     };
 
     renderCheckbox(CmakeDependencyType::Build, 0);
@@ -236,7 +241,11 @@ void TargetGraphTab::renderGraph(ImGuiIO &io) {
                 browser.getTabChange().showPopup(TabChange::TargetGraph, target);
             }
             if (!browser.getTabChange().isPopupShown()) {
-                ImGui::SetTooltip("%s\n(%s)", target->name.c_str(), cmagTargetTypeToString(target->type));
+                std::string text = target->name + " (" + cmagTargetTypeToString(target->type) + ")";
+                TooltipBuilder(browser.getTheme())
+                    .setHoverAlways()
+                    .addText(text.c_str())
+                    .execute();
             }
         }
     }
