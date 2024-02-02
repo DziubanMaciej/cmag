@@ -273,7 +273,8 @@ void TargetGraph::calculateWorldSpaceVerticesForTarget(const CmagTarget &target,
 }
 
 void TargetGraph::refreshConnections() {
-    connections.update(targets, cmakeConfig, displayedDependencyType, shapes, arrowLengthScale, arrowWidthScale, lineStippleScale, focusedTarget, browser.getTargetSelection().getSelection());
+    connections.updateTopology(targets, cmakeConfig);
+    connections.update(displayedDependencyType, shapes, arrowLengthScale, arrowWidthScale, lineStippleScale, focusedTarget, browser.getTargetSelection().getSelection());
 }
 
 void TargetGraph::showEntireGraph() {
@@ -516,7 +517,7 @@ void TargetGraph::Connections::allocate(const std::vector<CmagTarget *> &targets
         maxConnectionsCount += maxCountForTarget;
     }
 
-    // Each connection is represented by two vertices
+    // Prepare shared vertex buffer for rendering all the connections. Each connection is represented by two vertices
     const size_t verticesPerConnection = 5; // line + triangle
     const GLint attribsPerVertex = 2;       // x,y
     const size_t dataSize = maxConnectionsCount * verticesPerConnection * attribsPerVertex * sizeof(float);
@@ -528,7 +529,28 @@ void TargetGraph::Connections::deallocate() {
     GL_DELETE_OBJECT(gl.vao, VertexArrays);
 }
 
-void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig, CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale, float stippleScale, const CmagTarget *focusedTarget, const CmagTarget *selectedTarget) {
+void TargetGraph::Connections::updateTopology(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig) {
+    connectionsData.clear();
+
+    for (const CmagTarget *srcTarget : targets) {
+        const CmagTargetConfig *config = srcTarget->tryGetConfig(cmakeConfig);
+        if (config == nullptr) {
+            continue;
+        }
+
+        for (const CmagTarget *dstTarget : config->derived.buildDependencies) {
+            connectionsData.push_back(ConnectionData{srcTarget, dstTarget, CmakeDependencyType::Build});
+        }
+        for (const CmagTarget *dstTarget : config->derived.interfaceDependencies) {
+            connectionsData.push_back(ConnectionData{srcTarget, dstTarget, CmakeDependencyType::Interface});
+        }
+        for (const CmagTarget *dstTarget : config->derived.manualDependencies) {
+            connectionsData.push_back(ConnectionData{srcTarget, dstTarget, CmakeDependencyType::Additional});
+        }
+    }
+}
+
+void TargetGraph::Connections::update(CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale, float stippleScale, const CmagTarget *focusedTarget, const CmagTarget *selectedTarget) {
     auto addSegment = [&](const CmagTarget &srcTarget, const CmagTarget &dstTarget, std::vector<float> &outLineData, std::vector<float> &outTriangleData) {
         if (srcTarget.graphical.hideConnections || dstTarget.graphical.hideConnections) {
             return;
@@ -611,41 +633,28 @@ void TargetGraph::Connections::update(const std::vector<CmagTarget *> &targets, 
         return normal;
     };
 
-    // Analyze dependencies of all targets and gather what connections they have.
-    for (const CmagTarget *srcTarget : targets) {
-        const CmagTargetConfig *config = srcTarget->tryGetConfig(cmakeConfig);
-        if (config == nullptr) {
-            continue;
+    // Loop through visible connections and add them to the vertex data
+    for (ConnectionData &connection : connectionsData) {
+        if (hasCmakeDependencyTypeBit(connection.type, dependencyType & CmakeDependencyType::Build)) {
+            const bool isFocused = connection.src == focusedTarget || connection.dst == focusedTarget;
+            const bool isSelected = connection.src == selectedTarget || connection.dst == selectedTarget;
+            DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, lines, linesFocused, linesSelected);
+            DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
+            addSegment(*connection.src, *connection.dst, candidateLines.data, candidateTriangles.data);
         }
-
-        if ((dependencyType & CmakeDependencyType::Build) != CmakeDependencyType::NONE) {
-            for (const CmagTarget *dstTarget : config->derived.buildDependencies) {
-                const bool isFocused = srcTarget == focusedTarget || dstTarget == focusedTarget;
-                const bool isSelected = srcTarget == selectedTarget || dstTarget == selectedTarget;
-                DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, lines, linesFocused, linesSelected);
-                DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
-                addSegment(*srcTarget, *dstTarget, candidateLines.data, candidateTriangles.data);
-            }
+        if (hasCmakeDependencyTypeBit(connection.type, dependencyType & CmakeDependencyType::Interface)) {
+            const bool isFocused = connection.src == focusedTarget || connection.dst == focusedTarget;
+            const bool isSelected = connection.src == selectedTarget || connection.dst == selectedTarget;
+            DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, linesBigStipple, linesFocusedBigStipple, linesSelectedBigStipple);
+            DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
+            addSegment(*connection.src, *connection.dst, candidateLines.data, candidateTriangles.data);
         }
-
-        if ((dependencyType & CmakeDependencyType::Interface) != CmakeDependencyType::NONE) {
-            for (const CmagTarget *dstTarget : config->derived.interfaceDependencies) {
-                const bool isFocused = srcTarget == focusedTarget || dstTarget == focusedTarget;
-                const bool isSelected = srcTarget == selectedTarget || dstTarget == selectedTarget;
-                DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, linesBigStipple, linesFocusedBigStipple, linesSelectedBigStipple);
-                DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
-                addSegment(*srcTarget, *dstTarget, candidateLines.data, candidateTriangles.data);
-            }
-        }
-
-        if ((dependencyType & CmakeDependencyType::Additional) != CmakeDependencyType::NONE) {
-            for (const CmagTarget *dstTarget : config->derived.manualDependencies) {
-                const bool isFocused = srcTarget == focusedTarget || dstTarget == focusedTarget;
-                const bool isSelected = srcTarget == selectedTarget || dstTarget == selectedTarget;
-                DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, linesSmallStipple, linesFocusedSmallStipple, linesSelectedSmallStipple);
-                DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
-                addSegment(*srcTarget, *dstTarget, candidateLines.data, candidateTriangles.data);
-            }
+        if (hasCmakeDependencyTypeBit(connection.type, dependencyType & CmakeDependencyType::Additional)) {
+            const bool isFocused = connection.src == focusedTarget || connection.dst == focusedTarget;
+            const bool isSelected = connection.src == selectedTarget || connection.dst == selectedTarget;
+            DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, linesSmallStipple, linesFocusedSmallStipple, linesSelectedSmallStipple);
+            DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
+            addSegment(*connection.src, *connection.dst, candidateLines.data, candidateTriangles.data);
         }
     }
 
