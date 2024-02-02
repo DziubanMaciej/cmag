@@ -111,7 +111,6 @@ void TargetGraph::update(ImGuiIO &io) {
         for (ConnectionData &connection : connections.connectionsData) {
             if (isPointInsidePolygon(Vec{mouseWorld.x, mouseWorld.y}, connection.hoverQuad, 4)) {
                 focusedConnection = &connection;
-                printf("Connection = {%s -> %s}\n", connection.src->name.c_str(), connection.dst->name.c_str());
             }
         }
     }
@@ -603,8 +602,8 @@ void TargetGraph::Connections::update(CmakeDependencyType dependencyType, const 
                                             .scaled(arrowWidthScale);
         connection.hoverQuad[0] = segment.start + perpendicularOffset;
         connection.hoverQuad[1] = segment.start - perpendicularOffset;
-        connection.hoverQuad[2] = segment.end + perpendicularOffset;
-        connection.hoverQuad[3] = segment.end - perpendicularOffset;
+        connection.hoverQuad[2] = segment.end - perpendicularOffset;
+        connection.hoverQuad[3] = segment.end + perpendicularOffset;
     };
 
     struct DrawCallCandiate {
