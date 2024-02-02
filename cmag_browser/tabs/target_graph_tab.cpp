@@ -236,44 +236,50 @@ void TargetGraphTab::renderGraph(ImGuiIO &io) {
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + (space.y - textureHeight) / 2);
         ImGui::Image(texture, ImVec2(textureWidth, textureHeight));
 
+        // Display popups
         if (CmagTarget *target = targetGraph.getFocusedTarget(); target != nullptr) {
-            if (io.MouseClicked[ImGuiMouseButton_Right]) {
-                browser.getTabChange().showPopup(TabChange::TargetGraph, target);
-            }
-            if (!browser.getTabChange().isPopupShown()) {
-                std::string text = target->name + " (" + cmagTargetTypeToString(target->type) + ")";
-                TooltipBuilder(browser.getTheme())
-                    .setHoverAlways()
-                    .addText(text.c_str())
-                    .execute();
-            }
+            renderTargetPopup(io, target);
         }
-
         if (TargetGraph::ConnectionData *connection = targetGraph.getFocusedConnection(); connection != nullptr) {
-            std::string text = connection->src->name + " -> " + connection->dst->name;
-
-            const char *dependencyTypeText = "Unknown dependency";
-            switch (connection->type) {
-            case CmakeDependencyType::Build:
-                dependencyTypeText = "Build dependency";
-                break;
-            case CmakeDependencyType::Interface:
-                dependencyTypeText = "Interface dependency";
-                break;
-            case CmakeDependencyType::Additional:
-                dependencyTypeText = "Manual dependency";
-                break;
-            default:
-                LOG_WARNING("Unknown dependency type");
-            }
-
-            TooltipBuilder(browser.getTheme())
-                .setHoverAlways()
-                .addText(text.c_str())
-                .addText(dependencyTypeText)
-                .execute();
+            renderConnectionPopup(connection);
         }
     }
+}
+void TargetGraphTab::renderTargetPopup(const ImGuiIO &io, CmagTarget *target) {
+    if (io.MouseClicked[ImGuiMouseButton_Right]) {
+        browser.getTabChange().showPopup(TabChange::TargetGraph, target);
+    }
+    if (!browser.getTabChange().isPopupShown()) {
+        std::string text = target->name + " (" + cmagTargetTypeToString(target->type) + ")";
+        TooltipBuilder(browser.getTheme())
+            .setHoverAlways()
+            .addText(text.c_str())
+            .execute();
+    }
+}
+void TargetGraphTab::renderConnectionPopup(const TargetGraph::ConnectionData *connection) {
+    std::string text = connection->src->name + " -> " + connection->dst->name;
+
+    const char *dependencyTypeText = "Unknown dependency";
+    switch (connection->type) {
+    case CmakeDependencyType::Build:
+        dependencyTypeText = "Build dependency";
+        break;
+    case CmakeDependencyType::Interface:
+        dependencyTypeText = "Interface dependency";
+        break;
+    case CmakeDependencyType::Additional:
+        dependencyTypeText = "Manual dependency";
+        break;
+    default:
+        LOG_WARNING("Unknown dependency type");
+    }
+
+    TooltipBuilder(browser.getTheme())
+        .setHoverAlways()
+        .addText(text.c_str())
+        .addText(dependencyTypeText)
+        .execute();
 }
 
 void TargetGraphTab::scheduleOpenPropertyPopupOnClick(const CmagTargetProperty &property) {

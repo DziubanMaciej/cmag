@@ -20,6 +20,8 @@ private:
     void renderPropertyTable(float width);
     void renderPropertyTablePopup(const CmagTargetProperty &property, bool showValue) const;
     void renderGraph(ImGuiIO &io);
+    void renderConnectionPopup(const TargetGraph::ConnectionData *connection);
+    void renderTargetPopup(const ImGuiIO &io, CmagTarget *target);
 
     void scheduleOpenPropertyPopupOnClick(const CmagTargetProperty &property);
 
