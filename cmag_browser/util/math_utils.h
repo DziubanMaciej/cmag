@@ -1,13 +1,40 @@
 #pragma once
 
+#include <cmath>
 #include <cstddef>
-
-bool isPointInsidePolygon(float pointX, float pointY, const float *polygon, size_t length);
 
 struct Vec {
     float x;
     float y;
+
+    Vec operator-(const Vec &other) const {
+        return Vec{x - other.x, y - other.y};
+    }
+
+    Vec operator+(const Vec &other) const {
+        return Vec{x + other.x, y + other.y};
+    }
+
+    Vec rotated90() const {
+        return Vec{y, -x};
+    }
+
+    Vec normalized() const {
+        const float length = calculateLength();
+        return Vec{x / length, y / length};
+    }
+
+    Vec scaled(float scale) const {
+        return Vec{x * scale, y * scale};
+    }
+
+    float calculateLength() const {
+        return sqrtf(x * x + y * y);
+    }
 };
+
+bool isPointInsidePolygon(float pointX, float pointY, const float *polygon, size_t length);
+bool isPointInsidePolygon(Vec point, const Vec *polygon, size_t vertexCountInPolygon);
 
 struct Segment {
     Vec start;

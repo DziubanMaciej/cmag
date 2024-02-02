@@ -3,6 +3,7 @@
 #include "cmag_browser/browser_state.h"
 #include "cmag_browser/target_graph/text_renderer.h"
 #include "cmag_browser/util/gl_extensions.h"
+#include "cmag_browser/util/math_utils.h"
 #include "cmag_core/core/cmag_project.h"
 #include "cmag_core/utils/enum_utils.h"
 
@@ -15,7 +16,6 @@
 struct ImGuiIO;
 struct ShapeInfo;
 struct Segment;
-struct Vec;
 
 enum class CmakeDependencyType {
     Build = 1,
@@ -35,7 +35,7 @@ public:
         const CmagTarget *src = nullptr;
         const CmagTarget *dst = nullptr;
         CmakeDependencyType type = CmakeDependencyType::DEFAULT;
-        float hoverQuad[8] = {};
+        Vec hoverQuad[4] = {};
     };
 
     explicit TargetGraph(BrowserState &browser);
@@ -77,6 +77,7 @@ private:
     BrowserState &browser;
     std::vector<CmagTarget *> targets = {};
     CmagTarget *focusedTarget = nullptr;
+    ConnectionData *focusedConnection = nullptr;
     TextRenderer textRenderer = {};
     glm::mat4 projectionMatrix = {};
     std::string_view cmakeConfig = {};

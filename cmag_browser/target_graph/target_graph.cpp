@@ -4,7 +4,6 @@
 #include "cmag_browser/target_graph/shapes.h"
 #include "cmag_browser/ui_utils/cmag_browser_theme.h"
 #include "cmag_browser/util/gl_helpers.h"
-#include "cmag_browser/util/math_utils.h"
 
 #include <generated/fragment_shader.glsl.h>
 #include <generated/vertex_shader.glsl.h>
@@ -84,7 +83,10 @@ void TargetGraph::update(ImGuiIO &io) {
     const bool mouseInside = -1 <= mouseX && mouseX <= 1 && -1 <= mouseY && mouseY <= 1;
     const bool mouseMoved = io.MousePos.x != io.MousePosPrev.x || io.MousePos.y != io.MousePosPrev.y;
 
+    // Calculate mouse position in world space
     const glm::mat4 vpMatrix = projectionMatrix * camera.viewMatrix;
+    const glm::mat4 clipToWorldMatrix = glm::inverse(vpMatrix);
+    const glm::vec4 mouseWorld = clipToWorldMatrix * glm::vec4(mouseX, mouseY, 0, 1);
 
     if (mouseInside && !targetDrag.active) {
         CmagTarget *currentFocusedTarget = nullptr;
@@ -102,6 +104,16 @@ void TargetGraph::update(ImGuiIO &io) {
         setFocusedTarget(currentFocusedTarget);
     } else {
         setFocusedTarget(nullptr);
+    }
+
+    focusedConnection = nullptr;
+    if (mouseInside && !targetDrag.active && focusedTarget == nullptr) {
+        for (ConnectionData &connection : connections.connectionsData) {
+            if (isPointInsidePolygon(Vec{mouseWorld.x, mouseWorld.y}, connection.hoverQuad, 4)) {
+                focusedConnection = &connection;
+                printf("Connection = {%s -> %s}\n", connection.src->name.c_str(), connection.dst->name.c_str());
+            }
+        }
     }
 
     if (mouseMoved) {
@@ -551,38 +563,48 @@ void TargetGraph::Connections::updateTopology(const std::vector<CmagTarget *> &t
 }
 
 void TargetGraph::Connections::update(CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale, float stippleScale, const CmagTarget *focusedTarget, const CmagTarget *selectedTarget) {
-    auto addSegment = [&](const CmagTarget &srcTarget, const CmagTarget &dstTarget, std::vector<float> &outLineData, std::vector<float> &outTriangleData) {
-        if (srcTarget.graphical.hideConnections || dstTarget.graphical.hideConnections) {
+    auto addSegment = [&](ConnectionData &connection, std::vector<float> &outLineData, std::vector<float> &outTriangleData) {
+        if (connection.src->graphical.hideConnections || connection.dst->graphical.hideConnections) {
             return;
         }
 
-        const Vec srcCenter{srcTarget.graphical.x, srcTarget.graphical.y};
-        const Vec dstCenter{dstTarget.graphical.x, dstTarget.graphical.y};
-        Segment connection{srcCenter, dstCenter};
+        const Vec srcCenter{connection.src->graphical.x, connection.src->graphical.y};
+        const Vec dstCenter{connection.dst->graphical.x, connection.dst->graphical.y};
+        Segment segment{srcCenter, dstCenter};
 
         // Trim the connection, so it doesn't get inside the shape
-        const float parameterStart = calculateSegmentTrimParameter(srcTarget, connection, shapes, true);
-        const float parameterEnd = calculateSegmentTrimParameter(dstTarget, connection, shapes, false);
+        const float parameterStart = calculateSegmentTrimParameter(*connection.src, segment, shapes, true);
+        const float parameterEnd = calculateSegmentTrimParameter(*connection.dst, segment, shapes, false);
         if (parameterStart >= parameterEnd) {
             return;
         }
-        trimSegment(connection, parameterStart, parameterEnd);
+        trimSegment(segment, parameterStart, parameterEnd);
 
         // Add segment to our data
-        outLineData.push_back(connection.start.x);
-        outLineData.push_back(connection.start.y);
-        outLineData.push_back(connection.end.x);
-        outLineData.push_back(connection.end.y);
+        outLineData.push_back(segment.start.x);
+        outLineData.push_back(segment.start.y);
+        outLineData.push_back(segment.end.x);
+        outLineData.push_back(segment.end.y);
 
         // Add arrow
         Vec arrowA{}, arrowB{}, arrowC{};
-        calculateArrowCoordinates(connection, arrowLengthScale, arrowWidthScale, arrowA, arrowB, arrowC);
+        calculateArrowCoordinates(segment, arrowLengthScale, arrowWidthScale, arrowA, arrowB, arrowC);
         outTriangleData.push_back(arrowA.x);
         outTriangleData.push_back(arrowA.y);
         outTriangleData.push_back(arrowB.x);
         outTriangleData.push_back(arrowB.y);
         outTriangleData.push_back(arrowC.x);
         outTriangleData.push_back(arrowC.y);
+
+        // Set hover quad
+        const Vec perpendicularOffset = (segment.end - segment.start)
+                                            .rotated90()
+                                            .normalized()
+                                            .scaled(arrowWidthScale);
+        connection.hoverQuad[0] = segment.start + perpendicularOffset;
+        connection.hoverQuad[1] = segment.start - perpendicularOffset;
+        connection.hoverQuad[2] = segment.end + perpendicularOffset;
+        connection.hoverQuad[3] = segment.end - perpendicularOffset;
     };
 
     struct DrawCallCandiate {
@@ -640,21 +662,21 @@ void TargetGraph::Connections::update(CmakeDependencyType dependencyType, const 
             const bool isSelected = connection.src == selectedTarget || connection.dst == selectedTarget;
             DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, lines, linesFocused, linesSelected);
             DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
-            addSegment(*connection.src, *connection.dst, candidateLines.data, candidateTriangles.data);
+            addSegment(connection, candidateLines.data, candidateTriangles.data);
         }
         if (hasCmakeDependencyTypeBit(connection.type, dependencyType & CmakeDependencyType::Interface)) {
             const bool isFocused = connection.src == focusedTarget || connection.dst == focusedTarget;
             const bool isSelected = connection.src == selectedTarget || connection.dst == selectedTarget;
             DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, linesBigStipple, linesFocusedBigStipple, linesSelectedBigStipple);
             DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
-            addSegment(*connection.src, *connection.dst, candidateLines.data, candidateTriangles.data);
+            addSegment(connection, candidateLines.data, candidateTriangles.data);
         }
         if (hasCmakeDependencyTypeBit(connection.type, dependencyType & CmakeDependencyType::Additional)) {
             const bool isFocused = connection.src == focusedTarget || connection.dst == focusedTarget;
             const bool isSelected = connection.src == selectedTarget || connection.dst == selectedTarget;
             DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, linesSmallStipple, linesFocusedSmallStipple, linesSelectedSmallStipple);
             DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
-            addSegment(*connection.src, *connection.dst, candidateLines.data, candidateTriangles.data);
+            addSegment(connection, candidateLines.data, candidateTriangles.data);
         }
     }
 
