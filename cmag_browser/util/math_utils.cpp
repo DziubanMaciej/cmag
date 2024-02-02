@@ -12,6 +12,7 @@ float crossProduct(const Point &p0, const Point &p1, const Point &p2) {
     return (p1.x - p0.x) * (p2.y - p0.y) - (p2.x - p0.x) * (p1.y - p0.y);
 }
 
+// TODO remove this copy-pasted overload
 bool isPointInsidePolygon(float pointX, float pointY, const float *polygon, size_t length) {
     FATAL_ERROR_IF(length < 6, "Invalid polygon, length=", length);
     FATAL_ERROR_IF(length % 2 == 1, "Invalid polygon, length=", length);
@@ -24,6 +25,34 @@ bool isPointInsidePolygon(float pointX, float pointY, const float *polygon, size
         const size_t nextVertexIndex = (currentVertexIndex + 2) % length;
         Point currentVertex = Point{polygon[currentVertexIndex], polygon[currentVertexIndex + 1]};
         Point nextVertex = Point{polygon[nextVertexIndex], polygon[nextVertexIndex + 1]};
+
+        if (currentVertex.y <= point.y) {
+            if (nextVertex.y > point.y && crossProduct(currentVertex, nextVertex, point) > 0) {
+                ++windingNumber;
+            }
+        } else {
+            if (nextVertex.y <= point.y && crossProduct(currentVertex, nextVertex, point) < 0) {
+                --windingNumber;
+            }
+        }
+    }
+
+    return (windingNumber != 0);
+}
+
+bool isPointInsidePolygon(Vec point, const Vec *polygon, size_t vertexCountInPolygon) {
+    FATAL_ERROR_IF(vertexCountInPolygon < 3, "Invalid polygon, length=", vertexCountInPolygon);
+
+    auto crossProduct = [](const Vec &p0, const Vec &p1, const Vec &p2) {
+        return (p1.x - p0.x) * (p2.y - p0.y) - (p2.x - p0.x) * (p1.y - p0.y);
+    };
+
+    int windingNumber = 0;
+
+    for (size_t currentVertexIndex = 0; currentVertexIndex < vertexCountInPolygon; currentVertexIndex++) {
+        const size_t nextVertexIndex = (currentVertexIndex + 1) % vertexCountInPolygon;
+        Vec currentVertex = polygon[currentVertexIndex];
+        Vec nextVertex = polygon[nextVertexIndex];
 
         if (currentVertex.y <= point.y) {
             if (nextVertex.y > point.y && crossProduct(currentVertex, nextVertex, point) > 0) {
