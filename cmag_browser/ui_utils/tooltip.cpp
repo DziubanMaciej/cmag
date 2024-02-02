@@ -71,6 +71,10 @@ bool TooltipBuilder::Hover::isTooltipVisible() const {
 
 void TooltipBuilder::Texts::render(const CmagBrowserTheme &theme) const {
     for (int i = 0; i < textsCount; i++) {
+        if (texts[i].text[0] == '\0') {
+            continue;
+        }
+
         RaiiImguiStyle oneLineStyle{};
         if (!texts[i].forceOneLine) {
             oneLineStyle.textWrapWidth(theme.maxWidthPopup);
