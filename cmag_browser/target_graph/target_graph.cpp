@@ -109,7 +109,7 @@ void TargetGraph::update(ImGuiIO &io) {
     focusedConnection = nullptr;
     if (mouseInside && !targetDrag.active && focusedTarget == nullptr) {
         for (ConnectionData &connection : connections.connectionsData) {
-            if (isPointInsidePolygon(Vec{mouseWorld.x, mouseWorld.y}, connection.hoverQuad, 4)) {
+            if (Vec{mouseWorld.x, mouseWorld.y}.isInsidePolygon(connection.hoverQuad, 4)) {
                 focusedConnection = &connection;
             }
         }
@@ -742,12 +742,8 @@ float TargetGraph::Connections::calculateSegmentTrimParameter(const CmagTarget &
 }
 void TargetGraph::Connections::calculateArrowCoordinates(const Segment &connectionSegment, float arrowLength, float arrowWidth, Vec &outA, Vec &outB, Vec &outC) {
     // Calculate direction of the segment
-    Vec diff = {
-        connectionSegment.end.x - connectionSegment.start.x,
-        connectionSegment.end.y - connectionSegment.start.y,
-    };
-    const float segmentLength = length(diff);
-    scale(diff, 1 / segmentLength);
+    const float segmentLength = (connectionSegment.end - connectionSegment.start).calculateLength();
+    Vec diff = (connectionSegment.end - connectionSegment.start).scaled(1 / segmentLength);
 
     // Our segment may be too small to insert a triangle. Scale it down to some degree, but make it disappear for very small segments.
     constexpr float scaleDownThreshold = 0.2f;
@@ -766,14 +762,8 @@ void TargetGraph::Connections::calculateArrowCoordinates(const Segment &connecti
     }
 
     // Calculate offsets
-    const Vec lengthwiseOffset{
-        diff.x * arrowLength,
-        diff.y * arrowLength,
-    };
-    const Vec acrossOffset{
-        diff.y * arrowWidth,
-        -diff.x * arrowWidth,
-    };
+    const Vec lengthwiseOffset = diff.scaled(arrowLength);
+    const Vec acrossOffset = diff.scaled(arrowWidth).rotated90();
 
     // Output vertices
     outA = {
