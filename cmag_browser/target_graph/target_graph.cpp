@@ -97,7 +97,9 @@ void TargetGraph::update(ImGuiIO &io) {
 
             // Check if mouse cursor is within the shape.
             const ShapeInfo *shapeInfo = shapes.shapeInfos[static_cast<int>(target->type)];
-            if (isPointInsidePolygon(mouseLocal.x, mouseLocal.y, shapeInfo->floats, shapeInfo->floatsCount)) {
+            const Vec *polygon = reinterpret_cast<const Vec *>(shapeInfo->floats);
+            const size_t verticesCount = shapeInfo->floatsCount / 2;
+            if (Vec{mouseLocal.x, mouseLocal.y}.isInsidePolygon(polygon, verticesCount)) {
                 currentFocusedTarget = target;
             }
         }
