@@ -249,13 +249,15 @@ void TargetGraphTab::renderTargetPopup(const ImGuiIO &io, CmagTarget *target) {
     if (io.MouseClicked[ImGuiMouseButton_Right]) {
         browser.getTabChange().showPopup(TabChange::TargetGraph, target);
     }
-    if (!browser.getTabChange().isPopupShown()) {
-        std::string text = target->name + " (" + cmagTargetTypeToString(target->type) + ")";
-        TooltipBuilder(browser.getTheme())
-            .setHoverAlways()
-            .addText(text.c_str())
-            .execute();
+    if (browser.getTabChange().isPopupShown()) {
+        return;
     }
+
+    std::string text = target->name + " (" + cmagTargetTypeToString(target->type) + ")";
+    TooltipBuilder(browser.getTheme())
+        .setHoverAlways()
+        .addText(text.c_str())
+        .execute();
 }
 void TargetGraphTab::renderConnectionPopup(const TargetGraph::ConnectionData *connection) {
     std::string text = connection->src->name + " -> " + connection->dst->name;
