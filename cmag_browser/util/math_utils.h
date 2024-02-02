@@ -31,18 +31,16 @@ struct Vec {
     float calculateLength() const {
         return sqrtf(x * x + y * y);
     }
+
+    bool isInsidePolygon(const Vec *polygon, size_t vertexCountInPolygon) const;
 };
 
 bool isPointInsidePolygon(float pointX, float pointY, const float *polygon, size_t length);
-bool isPointInsidePolygon(Vec point, const Vec *polygon, size_t vertexCountInPolygon);
 
 struct Segment {
     Vec start;
     Vec end;
 };
-
-float length(Vec vec);
-void scale(Vec &vec, float scale);
 
 bool intersectSegments(
     Segment a,

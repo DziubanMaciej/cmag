@@ -40,7 +40,7 @@ bool isPointInsidePolygon(float pointX, float pointY, const float *polygon, size
     return (windingNumber != 0);
 }
 
-bool isPointInsidePolygon(Vec point, const Vec *polygon, size_t vertexCountInPolygon) {
+bool Vec::isInsidePolygon(const Vec *polygon, size_t vertexCountInPolygon) const {
     FATAL_ERROR_IF(vertexCountInPolygon < 3, "Invalid polygon, length=", vertexCountInPolygon);
 
     auto crossProduct = [](const Vec &p0, const Vec &p1, const Vec &p2) {
@@ -54,12 +54,12 @@ bool isPointInsidePolygon(Vec point, const Vec *polygon, size_t vertexCountInPol
         Vec currentVertex = polygon[currentVertexIndex];
         Vec nextVertex = polygon[nextVertexIndex];
 
-        if (currentVertex.y <= point.y) {
-            if (nextVertex.y > point.y && crossProduct(currentVertex, nextVertex, point) > 0) {
+        if (currentVertex.y <= this->y) {
+            if (nextVertex.y > this->y && crossProduct(currentVertex, nextVertex, *this) > 0) {
                 ++windingNumber;
             }
         } else {
-            if (nextVertex.y <= point.y && crossProduct(currentVertex, nextVertex, point) < 0) {
+            if (nextVertex.y <= this->y && crossProduct(currentVertex, nextVertex, *this) < 0) {
                 --windingNumber;
             }
         }
