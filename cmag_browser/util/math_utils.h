@@ -35,7 +35,8 @@ struct Vec {
     bool isInsidePolygon(const Vec *polygon, size_t vertexCountInPolygon) const;
 };
 
-bool isPointInsidePolygon(float pointX, float pointY, const float *polygon, size_t length);
+static_assert(sizeof(Vec) == sizeof(float) * 2);
+static_assert(sizeof(Vec[20]) == sizeof(float) * 40);
 
 struct Segment {
     Vec start;
