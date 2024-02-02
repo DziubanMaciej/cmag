@@ -43,7 +43,7 @@ void TabChange::renderPopup() {
     if (ImGui::BeginPopup(popupName)) {
         for (TabSelection tabSelection : allTabs) {
             if (tabSelection == popup.currentTab) {
-                continue;
+                ImGui::BeginDisabled();
             }
 
             const char *tabName = tabNames[static_cast<int>(tabSelection)];
@@ -51,6 +51,10 @@ void TabChange::renderPopup() {
                 this->change(tabSelection);
                 browser.getTargetSelection().select(popup.targetToSelect);
                 popup = {};
+            }
+
+            if (tabSelection == popup.currentTab) {
+                ImGui::EndDisabled();
             }
         }
 
