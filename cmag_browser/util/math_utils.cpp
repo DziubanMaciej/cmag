@@ -48,23 +48,14 @@ void scale(Vec &vec, float scale) {
     vec.y *= scale;
 }
 
-bool intersectSegments(
-    Segment a,
-    Segment b,
-    float *outParameterA) {
+bool Segment::calculateIntersection(Segment other, float *outParameterA) const {
 
     auto cross = [](Vec left, Vec right) {
         return left.x * right.y - left.y * right.x;
     };
 
-    const Vec directionA = {
-        a.end.x - a.start.x,
-        a.end.y - a.start.y,
-    };
-    const Vec directionB = {
-        b.end.x - b.start.x,
-        b.end.y - b.start.y,
-    };
+    const Vec directionA = this->end - this->start;
+    const Vec directionB = other.end - other.start;
 
     // Early return if segments are collinear. Actually there are three situations that could occur here:
     // 1. One vertex intersection
@@ -79,7 +70,7 @@ bool intersectSegments(
     }
 
     // Calculate parameters for segments 'a' and 'b'.
-    const Vec originsDiff = {b.start.x - a.start.x, b.start.y - a.start.y};
+    const Vec originsDiff = other.start - this->start;
     const float parameterA = cross(originsDiff, directionB) / directionsCross;
     const float parameterB = cross(originsDiff, directionA) / directionsCross;
 
@@ -92,23 +83,9 @@ bool intersectSegments(
     *outParameterA = parameterA;
     return true;
 }
-
-void trimSegment(
-    Segment &segment,
-    float parameterStart,
-    float parameterEnd) {
-
-    const Vec diff = {
-        segment.end.x - segment.start.x,
-        segment.end.y - segment.start.y,
-    };
-
-    segment.end = Vec{
-        segment.start.x + diff.x * parameterEnd,
-        segment.start.y + diff.y * parameterEnd,
-    };
-    segment.start = Vec{
-        segment.start.x + diff.x * parameterStart,
-        segment.start.y + diff.y * parameterStart,
-    };
+Segment Segment::trimed(float parameterStart, float parameterEnd) const {
+    const Vec diff = end - start;
+    const Vec newEnd = diff * parameterEnd + start;
+    const Vec newStart = diff * parameterStart + start;
+    return Segment{newStart, newEnd};
 }

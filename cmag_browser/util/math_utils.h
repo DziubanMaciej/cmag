@@ -15,6 +15,10 @@ struct Vec {
         return Vec{x + other.x, y + other.y};
     }
 
+    Vec operator*(float scale) const {
+        return Vec{x * scale, y * scale};
+    }
+
     Vec rotated90() const {
         return Vec{y, -x};
     }
@@ -25,7 +29,7 @@ struct Vec {
     }
 
     Vec scaled(float scale) const {
-        return Vec{x * scale, y * scale};
+        return *this * scale;
     }
 
     float calculateLength() const {
@@ -41,17 +45,10 @@ static_assert(sizeof(Vec[20]) == sizeof(float) * 40);
 struct Segment {
     Vec start;
     Vec end;
+
+    bool calculateIntersection(Segment other, float *outParameter) const;
+    Segment trimed(float parameterStart, float parameterEnd) const;
 };
-
-bool intersectSegments(
-    Segment a,
-    Segment b,
-    float *outParameterA);
-
-void trimSegment(
-    Segment &segment,
-    float parameterStart,
-    float parameterEnd);
 
 template <typename DataType>
 inline DataType interpolate(DataType arg,

@@ -579,7 +579,7 @@ void TargetGraph::Connections::update(CmakeDependencyType dependencyType, const 
         if (parameterStart >= parameterEnd) {
             return;
         }
-        trimSegment(segment, parameterStart, parameterEnd);
+        segment = segment.trimed(parameterStart, parameterEnd);
 
         // Add segment to our data
         outLineData.push_back(segment.start.x);
@@ -729,7 +729,7 @@ float TargetGraph::Connections::calculateSegmentTrimParameter(const CmagTarget &
 
         // Check for intersection. If no intersection, then current edge is irrelevant - skip it.
         float currentParameter = 0;
-        if (!intersectSegments(connectionSegment, polygonEdge, &currentParameter)) {
+        if (!connectionSegment.calculateIntersection(polygonEdge, &currentParameter)) {
             continue;
         }
 
