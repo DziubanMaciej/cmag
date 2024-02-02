@@ -251,9 +251,26 @@ void TargetGraphTab::renderGraph(ImGuiIO &io) {
 
         if (TargetGraph::ConnectionData *connection = targetGraph.getFocusedConnection(); connection != nullptr) {
             std::string text = connection->src->name + " -> " + connection->dst->name;
+
+            const char *dependencyTypeText = "Unknown dependency";
+            switch (connection->type) {
+            case CmakeDependencyType::Build:
+                dependencyTypeText = "Build dependency";
+                break;
+            case CmakeDependencyType::Interface:
+                dependencyTypeText = "Interface dependency";
+                break;
+            case CmakeDependencyType::Additional:
+                dependencyTypeText = "Manual dependency";
+                break;
+            default:
+                LOG_WARNING("Unknown dependency type");
+            }
+
             TooltipBuilder(browser.getTheme())
                 .setHoverAlways()
                 .addText(text.c_str())
+                .addText(dependencyTypeText)
                 .execute();
         }
     }
