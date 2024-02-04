@@ -26,7 +26,7 @@ TargetGraph::TargetGraph(BrowserState &browser)
 
     if (browser.getProject().getGlobals().needsLayout) {
         resetGraphLayout();
-        browser.getProject().getGlobals().needsLayout = true;
+        browser.getProject().getGlobals().needsLayout = false;
     }
     showEntireGraph();
 }
@@ -130,6 +130,8 @@ void TargetGraph::update(ImGuiIO &io) {
 
     if (mouseInside && io.MouseClicked[ImGuiMouseButton_Left]) {
         setSelectedTarget(focusedTarget);
+        browser.getProjectSaver().makeDirty(ProjectDirtyFlag::SelectedTarget);
+
         if (focusedTarget) {
             targetDrag.begin(mouseX, mouseY, vpMatrix, focusedTarget);
         } else {
@@ -139,14 +141,17 @@ void TargetGraph::update(ImGuiIO &io) {
     if (io.MouseReleased[ImGuiMouseButton_Left]) {
         if (targetDrag.active) {
             targetDrag.end();
+            browser.getProjectSaver().makeDirty(ProjectDirtyFlag::NodePosition);
         }
         if (camera.dragActive) {
             camera.endDrag();
+            browser.getProjectSaver().makeDirty(ProjectDirtyFlag::CameraPosition);
         }
     }
 
     if (mouseInside && io.MouseWheel != 0) {
         camera.zoom(io.MouseWheel > 0);
+        browser.getProjectSaver().makeDirty(ProjectDirtyFlag::CameraPosition);
     }
 }
 

@@ -108,6 +108,7 @@ void TargetGraphTab::renderSidePaneDependencyTypeSelection(float width) {
         ImGui::SetNextItemWidth(width);
         if (ImGui::Checkbox(labels[typeIndex], &isSelected)) {
             dependencyTypeSelected = dependencyTypeSelected ^ currentType;
+            browser.getProjectSaver().makeDirty(ProjectDirtyFlag::SelectedDependencies);
         }
         TooltipBuilder(browser.getTheme())
             .setHoverLastItem()

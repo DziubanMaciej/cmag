@@ -3,6 +3,6 @@
 BrowserState::BrowserState(const CmagBrowserTheme &theme, CmagProject &project)
     : theme(theme),
       project(project),
-      configSelector(theme, project),
+      configSelector(theme, project, projectSaver),
       tabChange(*this),
-      projectSaver(project, 1000) {}
+      projectSaver(project, 10000) {}

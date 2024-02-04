@@ -1,13 +1,15 @@
 #include "config_selector.h"
 
+#include "cmag_browser/browser_state/project_saver.h"
 #include "cmag_browser/ui_utils/tooltip.h"
 #include "cmag_core/core/cmag_project.h"
 
 #include <imgui.h>
 
-ConfigSelector::ConfigSelector(const CmagBrowserTheme &theme, CmagProject &project)
+ConfigSelector::ConfigSelector(const CmagBrowserTheme &theme, CmagProject &project, ProjectSaver &projectSaver)
     : theme(theme),
       project(project),
+      projectSaver(projectSaver),
       currentSelection(0),
       selectionsCount(static_cast<int>(project.getConfigs().size())),
       configs(std::make_unique<const char *[]>(selectionsCount)) {
@@ -30,7 +32,9 @@ void ConfigSelector::render(float width) {
     if (selectionsCount == 1) {
         ImGui::BeginDisabled();
     }
-    ImGui::Combo("##ConfigSelection", &currentSelection, configs.get(), selectionsCount);
+    if (ImGui::Combo("##ConfigSelection", &currentSelection, configs.get(), selectionsCount)) {
+        projectSaver.makeDirty(ProjectDirtyFlag::SelectedConfig);
+    }
     if (selectionsCount == 1) {
         ImGui::EndDisabled();
     }

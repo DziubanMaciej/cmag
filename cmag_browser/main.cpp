@@ -169,6 +169,7 @@ int main(int argc, const char **argv) {
             }
 
             browserState.getTabChange().renderPopup();
+            browserState.getProjectSaver().tryAutoSave();
         }
         ImGui::EndTabBar();
 
