@@ -85,13 +85,15 @@ void SummaryTab::renderSaveSection() {
     if (disableSaveButton) {
         ImGui::EndDisabled();
     }
-
     TooltipBuilder(browser.getTheme())
         .setHoverLastItem()
         .addText("Ctrl+S")
         .execute();
-    static bool dummy = true; // TODO hook this up to project
-    ImGui::Checkbox("Autosave", &dummy);
+
+    bool &autoSaveEnabled = browser.getProject().getGlobals().browser.autoSaveEnabled;
+    if (ImGui::Checkbox("Autosave", &autoSaveEnabled)) {
+        browser.getProjectSaver().save();
+    }
     TooltipBuilder(browser.getTheme())
         .setHoverLastItem()
         .addText("Shift+Ctrl+S")
