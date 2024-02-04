@@ -31,6 +31,8 @@ void SummaryTab::render() {
 
         ImGui::EndTable();
     }
+
+    renderSaveSection();
 }
 
 void SummaryTab::renderTableRowString(const char *name, const std::string &value, const char *tooltip, const char *tooltipHyperlink) {
@@ -68,4 +70,30 @@ void SummaryTab::renderTableRowSpacer() {
 
 std::string SummaryTab::createCompilerString(const CmagGlobals &globals) {
     return globals.compilerId + " " + globals.compilerVersion;
+}
+
+void SummaryTab::renderSaveSection() {
+    ProjectSaver &saver = browser.getProjectSaver();
+    const bool disableSaveButton = !saver.shouldShowDirtyNotification();
+
+    if (disableSaveButton) {
+        ImGui::BeginDisabled();
+    }
+    if (ImGui::Button("Save")) {
+        browser.getProjectSaver();
+    }
+    if (disableSaveButton) {
+        ImGui::EndDisabled();
+    }
+
+    TooltipBuilder(browser.getTheme())
+        .setHoverLastItem()
+        .addText("Ctrl+S")
+        .execute();
+    static bool dummy = true; // TODO hook this up to project
+    ImGui::Checkbox("Autosave", &dummy);
+    TooltipBuilder(browser.getTheme())
+        .setHoverLastItem()
+        .addText("Shift+Ctrl+S")
+        .execute();
 }
