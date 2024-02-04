@@ -6,10 +6,11 @@
 
 class CmagProject;
 class CmagBrowserTheme;
+class ProjectSaver;
 
 class ConfigSelector {
 public:
-    ConfigSelector(const CmagBrowserTheme &theme, CmagProject &project);
+    ConfigSelector(const CmagBrowserTheme &theme, CmagProject &project, ProjectSaver &projectSaver);
 
     void render(float width);
     void renderTooltipLastItem();
@@ -19,6 +20,7 @@ public:
 private:
     const CmagBrowserTheme &theme;
     CmagProject &project;
+    ProjectSaver &projectSaver;
     int currentSelection;
     int selectionsCount;
     std::unique_ptr<const char *[]> configs;
