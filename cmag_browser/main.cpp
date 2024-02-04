@@ -124,7 +124,7 @@ int main(int argc, const char **argv) {
 
     // Init browser components
     CmagBrowserTheme theme = CmagBrowserTheme::createDarkTheme();
-    BrowserState browserState{theme, cmagProject};
+    BrowserState browserState{theme, argParser.getProjectFilePath(), cmagProject};
 
     TargetGraphTab targetGraphTab{browserState, argParser.getShowDebugWidgets()};
     ListDirTab listFileTab{browserState};
