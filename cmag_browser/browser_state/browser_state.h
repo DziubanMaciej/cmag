@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cmag_browser/browser_state/config_selector.h"
+#include "cmag_browser/browser_state/project_saver.h"
 #include "cmag_browser/browser_state/tab_change.h"
 #include "cmag_browser/browser_state/target_selection.h"
 
@@ -13,6 +14,7 @@ public:
     auto &getConfigSelector() { return configSelector; }
     auto &getTargetSelection() { return targetSelection; }
     auto &getTabChange() { return tabChange; }
+    auto &getProjectSaver() { return projectSaver; }
 
 private:
     const CmagBrowserTheme &theme;
@@ -20,4 +22,5 @@ private:
     ConfigSelector configSelector;
     TargetSelection targetSelection{};
     TabChange tabChange;
+    ProjectSaver projectSaver;
 };

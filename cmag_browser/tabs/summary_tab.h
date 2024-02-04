@@ -16,6 +16,7 @@ private:
     void renderTableRowString(const char *name, const std::string &value, const char *tooltip, const char *tooltipHyperlink = nullptr);
     void renderTableRowSelectedConfig();
     static void renderTableRowSpacer();
+    void renderSaveSection();
     static std::string createCompilerString(const CmagGlobals &globals);
 
     BrowserState &browser;
