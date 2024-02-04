@@ -1,15 +1,10 @@
 #pragma once
 
+#include "cmag_core/core/cmag_project.h"
 #include "cmag_core/utils/filesystem.h"
 
 #include <nlohmann/json.hpp>
 #include <string>
-
-class CmagProject;
-struct CmagTarget;
-struct CmagGlobals;
-struct CmagTargetConfig;
-struct CmagTargetGraphicalData;
 
 enum class ParseResultStatus {
     Success,
@@ -40,6 +35,7 @@ public:
 
 private:
     static ParseResult parseGlobalValues(const nlohmann::json &node, CmagGlobals &outGlobals);
+    static ParseResult parseGlobalValuesBrowser(const nlohmann::json &node, CmagGlobals::BrowserData &outBrowser);
     static ParseResult parseGlobalValueListDirs(const nlohmann::json &node, CmagGlobals &outGlobals);
 
     static ParseResult parseTargets(const nlohmann::json &node, std::vector<CmagTarget> &outTargets, bool isProjectFile);

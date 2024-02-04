@@ -131,7 +131,7 @@ ParseResult CmagJsonParser::parseGlobalValues(const nlohmann::json &node, CmagGl
 
 #define PARSE_GLOBAL_FIELD(name) RETURN_ERROR(parseObjectField(node, #name, outGlobals.name))
     PARSE_GLOBAL_FIELD(darkMode);
-    PARSE_GLOBAL_FIELD(needsLayout);
+
     PARSE_GLOBAL_FIELD(selectedConfig);
     PARSE_GLOBAL_FIELD(cmagVersion);
     PARSE_GLOBAL_FIELD(cmakeVersion);
@@ -146,11 +146,36 @@ ParseResult CmagJsonParser::parseGlobalValues(const nlohmann::json &node, CmagGl
     PARSE_GLOBAL_FIELD(cmagProjectName);
 #undef PARSE_GLOBAL_FIELD
 
+    if (auto browserNodeIt = node.find("browser"); browserNodeIt != node.end()) {
+        RETURN_ERROR(parseGlobalValuesBrowser(*browserNodeIt, outGlobals.browser));
+    } else {
+        return {ParseResultStatus::MissingField, "Missing browser node"};
+    }
+
     if (auto listDirsNodeIt = node.find("listDirs"); listDirsNodeIt != node.end()) {
         RETURN_ERROR(parseGlobalValueListDirs(*listDirsNodeIt, outGlobals));
     } else {
         return {ParseResultStatus::MissingField, "Missing listDirs node"};
     }
+
+    return ParseResult::success;
+}
+
+ParseResult CmagJsonParser::parseGlobalValuesBrowser(const nlohmann::json &node, CmagGlobals::BrowserData &outBrowser) {
+    if (!node.is_object()) {
+        return {ParseResultStatus::InvalidNodeType, "List dirs node should be an object"};
+    }
+
+#define PARSE_BROWSER_FIELD(name) RETURN_ERROR(parseObjectField(node, #name, outBrowser.name))
+    PARSE_BROWSER_FIELD(needsLayout);
+    PARSE_BROWSER_FIELD(autoSaveEnabled);
+    PARSE_BROWSER_FIELD(cameraX);
+    PARSE_BROWSER_FIELD(cameraY);
+    PARSE_BROWSER_FIELD(cameraScale);
+    PARSE_BROWSER_FIELD(displayedDependencyType);
+    PARSE_BROWSER_FIELD(selectedTabIndex);
+    PARSE_BROWSER_FIELD(selectedTargetName);
+#undef PARSE_BROWSER_FIELD
 
     return ParseResult::success;
 }

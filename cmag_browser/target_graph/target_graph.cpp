@@ -24,9 +24,9 @@ TargetGraph::TargetGraph(BrowserState &browser)
 
     setCurrentCmakeConfig(browser.getConfigSelector().getCurrentConfig());
 
-    if (browser.getProject().getGlobals().needsLayout) {
+    if (browser.getProject().getGlobals().browser.needsLayout) {
         resetGraphLayout();
-        browser.getProject().getGlobals().needsLayout = false;
+        browser.getProject().getGlobals().browser.needsLayout = false;
     }
     showEntireGraph();
 }

@@ -15,7 +15,6 @@ nlohmann::json CmagJsonWriter::createGlobalsNode(const CmagGlobals &globals) {
     nlohmann::json node = nlohmann::json::object();
 #define WRITE_GLOBAL_FIELD(name) node[#name] = globals.name
     WRITE_GLOBAL_FIELD(darkMode);
-    WRITE_GLOBAL_FIELD(needsLayout);
     WRITE_GLOBAL_FIELD(selectedConfig);
     WRITE_GLOBAL_FIELD(cmagVersion);
     WRITE_GLOBAL_FIELD(cmakeVersion);
@@ -29,7 +28,23 @@ nlohmann::json CmagJsonWriter::createGlobalsNode(const CmagGlobals &globals) {
     WRITE_GLOBAL_FIELD(os);
     WRITE_GLOBAL_FIELD(cmagProjectName);
 #undef WRITE_GLOBAL_FIELD
+    node["browser"] = createGlobalValueBrowser(globals.browser);
     node["listDirs"] = createGlobalValueListDirs(globals);
+    return node;
+}
+
+nlohmann::json CmagJsonWriter::createGlobalValueBrowser(const CmagGlobals::BrowserData &browser) {
+    nlohmann::json node = nlohmann::json::object();
+#define WRITE_BROWSER_FIELD(name) node[#name] = browser.name
+    WRITE_BROWSER_FIELD(needsLayout);
+    WRITE_BROWSER_FIELD(autoSaveEnabled);
+    WRITE_BROWSER_FIELD(cameraX);
+    WRITE_BROWSER_FIELD(cameraY);
+    WRITE_BROWSER_FIELD(cameraScale);
+    WRITE_BROWSER_FIELD(displayedDependencyType);
+    WRITE_BROWSER_FIELD(selectedTabIndex);
+    WRITE_BROWSER_FIELD(selectedTargetName);
+#undef WRITE_BROWSER_FIELD
     return node;
 }
 

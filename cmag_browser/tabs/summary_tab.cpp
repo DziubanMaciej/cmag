@@ -80,7 +80,7 @@ void SummaryTab::renderSaveSection() {
         ImGui::BeginDisabled();
     }
     if (ImGui::Button("Save")) {
-        browser.getProjectSaver();
+        browser.getProjectSaver().save();
     }
     if (disableSaveButton) {
         ImGui::EndDisabled();

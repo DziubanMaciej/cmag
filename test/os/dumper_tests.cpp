@@ -97,7 +97,6 @@ TEST_P(CmagTest, givenSimpleProjectWithCustomPropertiesThenProcessItCorrectly) {
 
     CmagGlobals &globals = dumper.project.getGlobals();
     EXPECT_TRUE(globals.darkMode);
-    EXPECT_TRUE(globals.needsLayout);
     EXPECT_STREQ(globals.selectedConfig.c_str(), getDefaultConfig());
     EXPECT_EQ(globals.cmagVersion, cmagVersion.toString());
     EXPECT_STREQ(globals.cmakeProjectName.c_str(), "Simple");

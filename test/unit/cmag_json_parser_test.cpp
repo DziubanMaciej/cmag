@@ -9,7 +9,7 @@ struct CmagParseTest : ::testing::Test {
         const char *globals = R"DELIMETER(
             {
                 "darkMode": false,
-                "needsLayout": false,
+
                 "selectedConfig": "",
                 "cmagVersion": "",
                 "cmakeVersion": "",
@@ -22,6 +22,16 @@ struct CmagParseTest : ::testing::Test {
                 "compilerVersion": "",
                 "os": "",
                 "useFolders": "",
+                "browser": {
+                    "needsLayout": true,
+                    "autoSaveEnabled": true,
+                    "cameraX": 0.0,
+                    "cameraY": 0.0,
+                    "cameraScale": 0.0,
+                    "displayedDependencyType": 5,
+                    "selectedTabIndex": 0,
+                    "selectedTargetName": ""
+                },
                 "listDirs": { "a": [] }
             }
         )DELIMETER";
@@ -58,63 +68,6 @@ TEST_F(CmagProjectParseTest, givenProjectWithNoTargetsAndEmptyGlobalsThenParseCo
     ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseProject(json, project).status);
     ASSERT_EQ(0u, project.getTargets().size());
     EXPECT_FALSE(project.getGlobals().darkMode);
-}
-
-TEST_F(CmagProjectParseTest, givenProjectWithGlobalsSetThenParseCorrectly) {
-    const char *json = R"DELIMETER(
-        {
-            "globals": {
-                "darkMode": true,
-                "needsLayout": true,
-                "selectedConfig": "Z",
-                "cmagVersion": "A",
-                "cmakeVersion": "B",
-                "cmakeProjectName": "C",
-                "cmagProjectName": "D",
-                "sourceDir": "E",
-                "buildDir": "F",
-                "generator": "G",
-                "compilerId": "H",
-                "compilerVersion": "I",
-                "os": "J",
-                "useFolders": "K",
-                "listDirs": {
-                    "a": [ "b", "c" ],
-                    "b": [],
-                    "c": [ "d" ],
-                    "d": []
-                }
-            },
-            "targets" : {}
-        }
-        )DELIMETER";
-    CmagProject project{};
-    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseProject(json, project).status);
-    CmagGlobals &globals = project.getGlobals();
-    EXPECT_TRUE(globals.darkMode);
-    EXPECT_TRUE(globals.needsLayout);
-    EXPECT_STREQ(globals.selectedConfig.c_str(), "Z");
-    EXPECT_STREQ(globals.cmagVersion.c_str(), "A");
-    EXPECT_STREQ(globals.cmakeVersion.c_str(), "B");
-    EXPECT_STREQ(globals.cmakeProjectName.c_str(), "C");
-    EXPECT_STREQ(globals.cmagProjectName.c_str(), "D");
-    EXPECT_STREQ(globals.sourceDir.c_str(), "E");
-    EXPECT_STREQ(globals.buildDir.c_str(), "F");
-    EXPECT_STREQ(globals.generator.c_str(), "G");
-    EXPECT_STREQ(globals.compilerId.c_str(), "H");
-    EXPECT_STREQ(globals.compilerVersion.c_str(), "I");
-    EXPECT_STREQ(globals.os.c_str(), "J");
-    EXPECT_STREQ(globals.useFolders.c_str(), "K");
-
-    ASSERT_EQ(4, globals.listDirs.size());
-    EXPECT_STREQ("a", globals.listDirs[0].name.c_str());
-    EXPECT_EQ((std::vector<size_t>{1, 2}), globals.listDirs[0].childIndices);
-    EXPECT_STREQ("b", globals.listDirs[1].name.c_str());
-    EXPECT_EQ((std::vector<size_t>{}), globals.listDirs[1].childIndices);
-    EXPECT_STREQ("c", globals.listDirs[2].name.c_str());
-    EXPECT_EQ((std::vector<size_t>{3}), globals.listDirs[2].childIndices);
-    EXPECT_STREQ("d", globals.listDirs[3].name.c_str());
-    EXPECT_EQ((std::vector<size_t>{}), globals.listDirs[3].childIndices);
 }
 
 TEST_F(CmagProjectParseTest, givenTargetWithNoConfigsThenReturnError) {
@@ -514,7 +467,6 @@ TEST(CmagGlobalsFileParseTest, givenAllFieldsSpecifiedThenParseCorrectly) {
     const char *json = R"DELIMETER(
     {
         "darkMode": true,
-        "needsLayout": true,
         "selectedConfig": "Z",
         "cmagVersion": "A",
         "cmakeVersion": "B",
@@ -527,13 +479,22 @@ TEST(CmagGlobalsFileParseTest, givenAllFieldsSpecifiedThenParseCorrectly) {
         "compilerVersion": "I",
         "os": "J",
         "useFolders": "K",
-        "listDirs": { "K": [ "L" ], "L": [] }
+        "listDirs": { "K": [ "L" ], "L": [] },
+        "browser": {
+            "needsLayout": true,
+            "autoSaveEnabled": true,
+            "cameraX": 888.0,
+            "cameraY": 777.0,
+            "cameraScale": 999.0,
+            "displayedDependencyType": 4,
+            "selectedTabIndex": 3,
+            "selectedTargetName": "ZERO"
+        }
     }
     )DELIMETER";
     CmagGlobals globals{};
     ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseGlobalsFile(json, globals).status);
     EXPECT_TRUE(globals.darkMode);
-    EXPECT_TRUE(globals.needsLayout);
     EXPECT_STREQ(globals.selectedConfig.c_str(), "Z");
     EXPECT_STREQ(globals.cmagVersion.c_str(), "A");
     EXPECT_STREQ(globals.cmakeVersion.c_str(), "B");
@@ -546,6 +507,14 @@ TEST(CmagGlobalsFileParseTest, givenAllFieldsSpecifiedThenParseCorrectly) {
     EXPECT_STREQ(globals.compilerVersion.c_str(), "I");
     EXPECT_STREQ(globals.os.c_str(), "J");
     EXPECT_STREQ(globals.useFolders.c_str(), "K");
+    EXPECT_TRUE(globals.browser.needsLayout);
+    EXPECT_TRUE(globals.browser.needsLayout);
+    EXPECT_EQ(888.0, globals.browser.cameraX);
+    EXPECT_EQ(777.0, globals.browser.cameraY);
+    EXPECT_EQ(999.0, globals.browser.cameraScale);
+    EXPECT_EQ(CmagDependencyType::Additional, globals.browser.displayedDependencyType);
+    EXPECT_EQ(3, globals.browser.selectedTabIndex);
+    EXPECT_STREQ("ZERO", globals.browser.selectedTargetName.c_str());
 
     ASSERT_EQ(2u, globals.listDirs.size());
     EXPECT_STREQ("K", globals.listDirs[0].name.c_str());

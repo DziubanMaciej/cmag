@@ -302,8 +302,17 @@ function (json_append_lists_files OUT_VARIABLE DIR INDENT INDENT_INCREMENT)
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
 endfunction()
 
-function (json_append_global_properties OUT_VARIABLE INDENT INDENT_INCREMENT)
-    get_property()
+function (json_append_globals_browser OUT_VARIABLE SELECTED_CONFIG INDENT INDENT_INCREMENT)
+    json_append_key_value_unquoted(${OUT_VARIABLE} needsLayout true ${INDENT})
+    json_append_key_value_unquoted(${OUT_VARIABLE} autoSaveEnabled true ${INDENT})
+    json_append_key_value_unquoted(${OUT_VARIABLE} cameraX 0 ${INDENT})
+    json_append_key_value_unquoted(${OUT_VARIABLE} cameraY 0 ${INDENT})
+    json_append_key_value_unquoted(${OUT_VARIABLE} cameraScale 0 ${INDENT})
+    json_append_key_value_unquoted(${OUT_VARIABLE} displayedDependencyType 5 ${INDENT}) # TODO quite hardcoded and magical. How to make it cleaner?
+    json_append_key_value_unquoted(${OUT_VARIABLE} selectedTabIndex 0 ${INDENT})
+    json_append_key_value(${OUT_VARIABLE} selectedTargetName "" ${INDENT})
+
+    set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)
 endfunction()
 
 function(json_append_globals OUT_VARIABLE SELECTED_CONFIG INDENT INDENT_INCREMENT)
@@ -312,7 +321,6 @@ function(json_append_globals OUT_VARIABLE SELECTED_CONFIG INDENT INDENT_INCREMEN
 
     json_append_line(${OUT_VARIABLE} "{" ${INDENT})
     json_append_key_value_unquoted(${OUT_VARIABLE} darkMode true ${INNER_INDENT})
-    json_append_key_value_unquoted(${OUT_VARIABLE} needsLayout true ${INNER_INDENT})
     json_append_key_value(${OUT_VARIABLE} selectedConfig "${SELECTED_CONFIG}" ${INNER_INDENT})
     json_append_key_value(${OUT_VARIABLE} cmagVersion "${CMAG_VERSION}" ${INNER_INDENT})
     json_append_key_value(${OUT_VARIABLE} cmakeVersion "${CMAKE_VERSION}" ${INNER_INDENT})
@@ -325,6 +333,10 @@ function(json_append_globals OUT_VARIABLE SELECTED_CONFIG INDENT INDENT_INCREMEN
     json_append_key_value(${OUT_VARIABLE} compilerVersion "${CMAKE_CXX_COMPILER_VERSION}" ${INNER_INDENT})
     json_append_key_value(${OUT_VARIABLE} os "${CMAKE_SYSTEM_NAME}" ${INNER_INDENT})
     json_append_global_property(${OUT_VARIABLE} useFolders USE_FOLDERS ${INNER_INDENT})
+
+    json_append_object_begin(${OUT_VARIABLE} "browser" ${INNER_INDENT})
+    json_append_globals_browser(${OUT_VARIABLE} ${SELECTED_CONFIG} ${INNER_INNER_INDENT} ${INDENT_INCREMENT})
+    json_append_object_end(${OUT_VARIABLE} ${INNER_INDENT})
 
     json_append_object_begin(${OUT_VARIABLE} "listDirs" ${INNER_INDENT})
     json_append_lists_files(${OUT_VARIABLE} ${CMAKE_CURRENT_SOURCE_DIR} ${INNER_INNER_INDENT} ${INDENT_INCREMENT})

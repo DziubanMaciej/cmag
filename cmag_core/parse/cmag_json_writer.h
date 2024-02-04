@@ -6,14 +6,13 @@
 #include <optional>
 #include <ostream>
 
-class CmagProject;
-
 class CmagJsonWriter {
 public:
     static void writeProject(const CmagProject &project, std::ostream &out);
 
 private:
     static nlohmann::json createGlobalsNode(const CmagGlobals &globals);
+    static nlohmann::json createGlobalValueBrowser(const CmagGlobals::BrowserData &browser);
     static nlohmann::json createGlobalValueListDirs(const CmagGlobals &globals);
     static nlohmann::json createListDirsNode(const CmagListDir &listDir, const CmagGlobals &globals);
 

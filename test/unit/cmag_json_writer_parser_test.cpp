@@ -30,7 +30,6 @@ struct CmagWriterParserTest : ::testing::Test {
         const auto &expGlobals = exp.getGlobals();
         const auto &actGlobals = act.getGlobals();
         EXPECT_EQ(expGlobals.darkMode, actGlobals.darkMode);
-        EXPECT_EQ(expGlobals.needsLayout, actGlobals.needsLayout);
         EXPECT_EQ(expGlobals.selectedConfig, actGlobals.selectedConfig);
         EXPECT_EQ(expGlobals.cmagVersion, actGlobals.cmagVersion);
         EXPECT_EQ(expGlobals.cmakeVersion, actGlobals.cmakeVersion);
@@ -43,6 +42,15 @@ struct CmagWriterParserTest : ::testing::Test {
         EXPECT_EQ(expGlobals.compilerVersion, actGlobals.compilerVersion);
         EXPECT_EQ(expGlobals.os, actGlobals.os);
         EXPECT_EQ(expGlobals.useFolders, actGlobals.useFolders);
+
+        EXPECT_EQ(expGlobals.browser.needsLayout, actGlobals.browser.needsLayout);
+        EXPECT_EQ(expGlobals.browser.autoSaveEnabled, actGlobals.browser.autoSaveEnabled);
+        EXPECT_EQ(expGlobals.browser.cameraX, actGlobals.browser.cameraX);
+        EXPECT_EQ(expGlobals.browser.cameraY, actGlobals.browser.cameraY);
+        EXPECT_EQ(expGlobals.browser.cameraScale, actGlobals.browser.cameraScale);
+        EXPECT_EQ(expGlobals.browser.displayedDependencyType, actGlobals.browser.displayedDependencyType);
+        EXPECT_EQ(expGlobals.browser.selectedTabIndex, actGlobals.browser.selectedTabIndex);
+        EXPECT_EQ(expGlobals.browser.selectedTargetName, actGlobals.browser.selectedTargetName);
 
         ASSERT_EQ(expGlobals.listDirs.size(), actGlobals.listDirs.size());
         for (size_t i = 0; i < expGlobals.listDirs.size(); i++) {
@@ -284,7 +292,6 @@ TEST_F(CmagWriterParserTest, givenProjectWithSetGlobalsThenWriteAndReadCorrectly
 
     CmagGlobals &globals = project.getGlobals();
     globals.darkMode = true;
-    globals.needsLayout = true;
     globals.selectedConfig = "Debug",
     globals.cmagVersion = "19.0.0";
     globals.cmakeVersion = "3.5.9";
@@ -297,6 +304,16 @@ TEST_F(CmagWriterParserTest, givenProjectWithSetGlobalsThenWriteAndReadCorrectly
     globals.compilerVersion = "GNU Clang";
     globals.os = "Serenity";
     globals.useFolders = "ON";
+
+    globals.browser.needsLayout = true;
+    globals.browser.autoSaveEnabled = true;
+    globals.browser.cameraX = 123.2;
+    globals.browser.cameraY = 321.2;
+    globals.browser.cameraScale = 0.1;
+    globals.browser.displayedDependencyType = CmagDependencyType::Build | CmagDependencyType::Interface;
+    globals.browser.selectedTabIndex = 3;
+    globals.browser.selectedTargetName = "ALL";
+
     globals.listDirs = {
         CmagListDir{"a", {1, 2}},
         CmagListDir{"b", {}},

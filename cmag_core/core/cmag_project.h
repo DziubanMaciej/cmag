@@ -59,7 +59,6 @@ struct CmagListDir {
 
 struct CmagGlobals {
     bool darkMode = false;
-    bool needsLayout = false;
     std::string selectedConfig = {};
     std::string cmagVersion = {};
     std::string cmakeVersion = {};
@@ -73,6 +72,17 @@ struct CmagGlobals {
     std::string os = {};
     std::string useFolders;
     std::vector<CmagListDir> listDirs = {};
+
+    struct BrowserData {
+        bool needsLayout = {};
+        bool autoSaveEnabled = {};
+        float cameraX = {};
+        float cameraY = {};
+        float cameraScale = {};
+        CmagDependencyType displayedDependencyType = {};
+        int selectedTabIndex = {};
+        std::string selectedTargetName = {};
+    } browser;
 
     struct {
         const CMakeGenerator *generator = {};
