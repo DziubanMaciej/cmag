@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cmag_core/utils/enum_utils.h"
+#include "cmag_core/utils/filesystem.h"
 
 #include <chrono>
 
@@ -20,7 +21,7 @@ BITFIELD_ENUM(ProjectDirtyFlag)
 
 class ProjectSaver {
 public:
-    ProjectSaver(CmagProject &project, size_t autoSaveIntervalMilliseconds);
+    ProjectSaver(CmagProject &project, const fs::path &outputPath, size_t autoSaveIntervalMilliseconds);
 
     void tryAutoSave();
     void makeDirty(ProjectDirtyFlag flag);
@@ -32,6 +33,7 @@ public:
 private:
     using Clock = std::chrono::steady_clock;
     CmagProject &project;
+    const fs::path outputPath;
     Clock::time_point lastSaveTime;
     const Clock::duration autoSaveInterval;
     ProjectDirtyFlag dirtyState = ProjectDirtyFlag::None;

@@ -7,7 +7,7 @@
 
 class BrowserState {
 public:
-    BrowserState(const CmagBrowserTheme &theme, CmagProject &project);
+    BrowserState(const CmagBrowserTheme &theme, const fs::path &projectFilePath, CmagProject &project);
 
     const auto &getTheme() { return theme; }
     auto &getProject() { return project; }

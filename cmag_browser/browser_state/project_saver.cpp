@@ -5,8 +5,9 @@
 
 #include <fstream>
 
-ProjectSaver::ProjectSaver(CmagProject &project, size_t autoSaveIntervalMilliseconds)
+ProjectSaver::ProjectSaver(CmagProject &project, const fs::path &outputPath, size_t autoSaveIntervalMilliseconds)
     : project(project),
+      outputPath(outputPath),
       lastSaveTime(Clock::now()),
       autoSaveInterval(std::chrono::milliseconds(autoSaveIntervalMilliseconds)) {}
 
@@ -35,10 +36,11 @@ void ProjectSaver::save() {
     lastSaveTime = Clock::now();
 
     // Open file
-    const char *filePath = "/home/maciej/a.cmag-project.save";
-    std::ofstream file{filePath};
+    fs::path tmpOutputPath = outputPath;
+    tmpOutputPath.replace_extension(outputPath.extension().string() + ".save");
+    std::ofstream file{tmpOutputPath};
     if (!file) {
-        LOG_WARNING("Failed to open file ", filePath, " for saving the project.");
+        LOG_WARNING("Failed to open file ", tmpOutputPath.string(), " for saving the project.");
         return;
     }
 
@@ -50,7 +52,11 @@ void ProjectSaver::save() {
     }
 
     // Move to actual destination
-    // TODO
+    std::error_code renameError{};
+    fs::rename(tmpOutputPath, outputPath, renameError);
+    if (renameError) {
+        LOG_WARNING("Failed saving the project to original path. Project saved to ", tmpOutputPath, " - a backup path.");
+    }
 
     // Clear dirty flag
     dirtyState = ProjectDirtyFlag::None;
