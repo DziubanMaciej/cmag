@@ -1,6 +1,6 @@
 #pragma once
 
-#include "raii_imgui_style.h"
+#include "cmag_browser/ui_utils/raii_imgui_style.h"
 
 #include <imgui/imgui.h>
 

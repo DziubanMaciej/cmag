@@ -1,10 +1,10 @@
 
-#include "cmag_browser/config_selector.h"
+#include "cmag_browser/browser_state/cmag_browser_theme.h"
+#include "cmag_browser/browser_state/config_selector.h"
 #include "cmag_browser/tabs/list_dir_tab.h"
 #include "cmag_browser/tabs/summary_tab.h"
 #include "cmag_browser/tabs/target_folder_tab.h"
 #include "cmag_browser/tabs/target_graph_tab.h"
-#include "cmag_browser/ui_utils/cmag_browser_theme.h"
 #include "cmag_browser/ui_utils/imgui_font_glyph_inserter.h"
 #include "cmag_core/browser/browser_argument_parser.h"
 #include "cmag_core/core/version.h"

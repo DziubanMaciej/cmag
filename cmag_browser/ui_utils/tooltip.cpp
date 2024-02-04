@@ -1,6 +1,6 @@
 #include "tooltip.h"
 
-#include "cmag_browser/ui_utils/cmag_browser_theme.h"
+#include "cmag_browser/browser_state/cmag_browser_theme.h"
 #include "cmag_core/utils/error.h"
 #include "cmag_core/utils/filesystem.h"
 

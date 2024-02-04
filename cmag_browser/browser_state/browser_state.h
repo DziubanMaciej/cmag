@@ -1,8 +1,8 @@
 #pragma once
 
-#include "cmag_browser/config_selector.h"
-#include "cmag_browser/tab_change.h"
-#include "cmag_browser/target_selection.h"
+#include "cmag_browser/browser_state/config_selector.h"
+#include "cmag_browser/browser_state/tab_change.h"
+#include "cmag_browser/browser_state/target_selection.h"
 
 class BrowserState {
 public:

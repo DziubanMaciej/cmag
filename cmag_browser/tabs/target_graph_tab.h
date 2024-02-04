@@ -1,6 +1,6 @@
 #pragma once
 
-#include "cmag_browser/browser_state.h"
+#include "cmag_browser/browser_state/browser_state.h"
 #include "cmag_browser/target_graph/target_graph.h"
 
 #include <imgui/imgui.h>
