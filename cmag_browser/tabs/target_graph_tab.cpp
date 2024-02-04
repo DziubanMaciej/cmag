@@ -97,14 +97,14 @@ void TargetGraphTab::renderSidePaneDependencyTypeSelection(float width) {
         "Show dependencies derived based on INTERFACE_LINK_LIBRARIES. This property is usually populated with target_link_libraries() with PUBLIC or INTERFACE argument.",
         "Show dependencies derived based on MANUALLY_ADDED_DEPENDENCIES. This property is usually populated with add_dependencies().",
     };
-    constexpr int selectionsCount = static_cast<int>(CmakeDependencyType::COUNT);
+    constexpr int selectionsCount = static_cast<int>(CmagDependencyType::COUNT);
     static_assert(sizeof(labels) / sizeof(labels[0]) == selectionsCount);
     static_assert(sizeof(tooltips) / sizeof(tooltips[0]) == selectionsCount);
 
-    auto renderCheckbox = [&](CmakeDependencyType currentType, int typeIndex) {
+    auto renderCheckbox = [&](CmagDependencyType currentType, int typeIndex) {
         FATAL_ERROR_IF(typeIndex >= selectionsCount, "Incorrect type index");
 
-        bool isSelected = (dependencyTypeSelected & currentType) != CmakeDependencyType::NONE;
+        bool isSelected = (dependencyTypeSelected & currentType) != CmagDependencyType::NONE;
         ImGui::SetNextItemWidth(width);
         if (ImGui::Checkbox(labels[typeIndex], &isSelected)) {
             dependencyTypeSelected = dependencyTypeSelected ^ currentType;
@@ -116,9 +116,9 @@ void TargetGraphTab::renderSidePaneDependencyTypeSelection(float width) {
             .execute();
     };
 
-    renderCheckbox(CmakeDependencyType::Build, 0);
-    renderCheckbox(CmakeDependencyType::Interface, 1);
-    renderCheckbox(CmakeDependencyType::Additional, 2);
+    renderCheckbox(CmagDependencyType::Build, 0);
+    renderCheckbox(CmagDependencyType::Interface, 1);
+    renderCheckbox(CmagDependencyType::Additional, 2);
 }
 
 void TargetGraphTab::renderSidePaneHideConnectionsButton(float) {
@@ -265,13 +265,13 @@ void TargetGraphTab::renderConnectionPopup(const TargetGraph::ConnectionData *co
 
     const char *dependencyTypeText = "Unknown dependency";
     switch (connection->type) {
-    case CmakeDependencyType::Build:
+    case CmagDependencyType::Build:
         dependencyTypeText = "Build dependency";
         break;
-    case CmakeDependencyType::Interface:
+    case CmagDependencyType::Interface:
         dependencyTypeText = "Interface dependency";
         break;
-    case CmakeDependencyType::Additional:
+    case CmagDependencyType::Additional:
         dependencyTypeText = "Manual dependency";
         break;
     default:

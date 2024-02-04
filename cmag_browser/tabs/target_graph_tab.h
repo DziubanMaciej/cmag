@@ -27,7 +27,7 @@ private:
 
     BrowserState &browser;
     TargetGraph targetGraph;
-    CmakeDependencyType dependencyTypeSelected = CmakeDependencyType::DEFAULT;
+    CmagDependencyType dependencyTypeSelected = CmagDependencyType::DEFAULT;
     bool showDebugWidgets;
 
     bool showDemoWindow = false;

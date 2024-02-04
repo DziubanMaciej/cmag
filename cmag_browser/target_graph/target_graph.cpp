@@ -345,7 +345,7 @@ void TargetGraph::setCurrentCmakeConfig(std::string_view newConfig) {
     cmakeConfig = newConfig;
     refreshConnections();
 }
-void TargetGraph::setDisplayedDependencyType(CmakeDependencyType newType) {
+void TargetGraph::setDisplayedDependencyType(CmagDependencyType newType) {
     if (displayedDependencyType == newType) {
         return;
     }
@@ -558,18 +558,18 @@ void TargetGraph::Connections::updateTopology(const std::vector<CmagTarget *> &t
         }
 
         for (const CmagTarget *dstTarget : config->derived.buildDependencies) {
-            connectionsData.push_back(ConnectionData{srcTarget, dstTarget, CmakeDependencyType::Build});
+            connectionsData.push_back(ConnectionData{srcTarget, dstTarget, CmagDependencyType::Build});
         }
         for (const CmagTarget *dstTarget : config->derived.interfaceDependencies) {
-            connectionsData.push_back(ConnectionData{srcTarget, dstTarget, CmakeDependencyType::Interface});
+            connectionsData.push_back(ConnectionData{srcTarget, dstTarget, CmagDependencyType::Interface});
         }
         for (const CmagTarget *dstTarget : config->derived.manualDependencies) {
-            connectionsData.push_back(ConnectionData{srcTarget, dstTarget, CmakeDependencyType::Additional});
+            connectionsData.push_back(ConnectionData{srcTarget, dstTarget, CmagDependencyType::Additional});
         }
     }
 }
 
-void TargetGraph::Connections::update(CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale, float stippleScale, const CmagTarget *focusedTarget, const CmagTarget *selectedTarget) {
+void TargetGraph::Connections::update(CmagDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale, float stippleScale, const CmagTarget *focusedTarget, const CmagTarget *selectedTarget) {
     auto addSegment = [&](ConnectionData &connection, std::vector<float> &outLineData, std::vector<float> &outTriangleData) {
         if (connection.src->graphical.hideConnections || connection.dst->graphical.hideConnections) {
             return;
@@ -664,21 +664,21 @@ void TargetGraph::Connections::update(CmakeDependencyType dependencyType, const 
 
     // Loop through visible connections and add them to the vertex data
     for (ConnectionData &connection : connectionsData) {
-        if (hasCmakeDependencyTypeBit(connection.type, dependencyType & CmakeDependencyType::Build)) {
+        if (hasCmagDependencyTypeBit(connection.type, dependencyType & CmagDependencyType::Build)) {
             const bool isFocused = connection.src == focusedTarget || connection.dst == focusedTarget;
             const bool isSelected = connection.src == selectedTarget || connection.dst == selectedTarget;
             DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, lines, linesFocused, linesSelected);
             DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
             addSegment(connection, candidateLines.data, candidateTriangles.data);
         }
-        if (hasCmakeDependencyTypeBit(connection.type, dependencyType & CmakeDependencyType::Interface)) {
+        if (hasCmagDependencyTypeBit(connection.type, dependencyType & CmagDependencyType::Interface)) {
             const bool isFocused = connection.src == focusedTarget || connection.dst == focusedTarget;
             const bool isSelected = connection.src == selectedTarget || connection.dst == selectedTarget;
             DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, linesBigStipple, linesFocusedBigStipple, linesSelectedBigStipple);
             DrawCallCandiate &candidateTriangles = selectDrawCallCandidate(isFocused, isSelected, triangles, trianglesFocused, trianglesSelected);
             addSegment(connection, candidateLines.data, candidateTriangles.data);
         }
-        if (hasCmakeDependencyTypeBit(connection.type, dependencyType & CmakeDependencyType::Additional)) {
+        if (hasCmagDependencyTypeBit(connection.type, dependencyType & CmagDependencyType::Additional)) {
             const bool isFocused = connection.src == focusedTarget || connection.dst == focusedTarget;
             const bool isSelected = connection.src == selectedTarget || connection.dst == selectedTarget;
             DrawCallCandiate &candidateLines = selectDrawCallCandidate(isFocused, isSelected, linesSmallStipple, linesFocusedSmallStipple, linesSelectedSmallStipple);

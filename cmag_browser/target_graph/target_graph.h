@@ -5,7 +5,6 @@
 #include "cmag_browser/util/gl_extensions.h"
 #include "cmag_browser/util/math_utils.h"
 #include "cmag_core/core/cmag_project.h"
-#include "cmag_core/utils/enum_utils.h"
 
 #include <array>
 #include <glm/matrix.hpp>
@@ -17,24 +16,12 @@ struct ImGuiIO;
 struct ShapeInfo;
 struct Segment;
 
-enum class CmakeDependencyType {
-    Build = 1,
-    Interface = 2,
-    Additional = 4,
-
-    NONE = 0,
-    COUNT = 3,
-    DEFAULT = Build | Additional,
-};
-
-BITFIELD_ENUM(CmakeDependencyType)
-
 class TargetGraph {
 public:
     struct ConnectionData {
         const CmagTarget *src = nullptr;
         const CmagTarget *dst = nullptr;
-        CmakeDependencyType type = CmakeDependencyType::DEFAULT;
+        CmagDependencyType type = CmagDependencyType::DEFAULT;
         Vec hoverQuad[4] = {};
     };
 
@@ -44,7 +31,7 @@ public:
     void setScreenSpaceAvailableSpace(float spaceX, float spaceY);
     void setScreenSpacePosition(size_t x, size_t y);
     void setCurrentCmakeConfig(std::string_view newConfig);
-    void setDisplayedDependencyType(CmakeDependencyType newType);
+    void setDisplayedDependencyType(CmagDependencyType newType);
     void setFocusedTarget(CmagTarget *target);
     void setSelectedTarget(CmagTarget *target);
     void update(ImGuiIO &io);
@@ -82,7 +69,7 @@ private:
     TextRenderer textRenderer = {};
     glm::mat4 projectionMatrix = {};
     std::string_view cmakeConfig = {};
-    CmakeDependencyType displayedDependencyType = CmakeDependencyType::Build;
+    CmagDependencyType displayedDependencyType = CmagDependencyType::Build;
     float nodeScale = 25.f;
     float textScale = 3.f;
     float arrowLengthScale = 9.3f;
@@ -182,7 +169,7 @@ private:
         void allocate(const std::vector<CmagTarget *> &targets);
         void deallocate();
         void updateTopology(const std::vector<CmagTarget *> &targets, std::string_view cmakeConfig);
-        void update(CmakeDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale, float stippleScale, const CmagTarget *focusedTarget, const CmagTarget *selectedTarget);
+        void update(CmagDependencyType dependencyType, const Shapes &shapes, float arrowLengthScale, float arrowWidthScale, float stippleScale, const CmagTarget *focusedTarget, const CmagTarget *selectedTarget);
         static float calculateSegmentTrimParameter(const CmagTarget &target, const Segment &connectionSegment, const Shapes &shapes, bool isSrcTarget);
         static void calculateArrowCoordinates(const Segment &connectionSegment, float arrowLength, float arrowWidth, Vec &outA, Vec &outB, Vec &outC);
     } connections = {};

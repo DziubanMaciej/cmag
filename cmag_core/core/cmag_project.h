@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cmag_core/utils/enum_utils.h"
+
 #include <string>
 #include <utility>
 #include <vector>
@@ -23,6 +25,18 @@ enum class CmagTargetType {
     COUNT,
 };
 const char *cmagTargetTypeToString(CmagTargetType type);
+
+enum class CmagDependencyType {
+    Build = 1,
+    Interface = 2,
+    Additional = 4,
+
+    NONE = 0,
+    COUNT = 3,
+    DEFAULT = Build | Additional,
+};
+
+BITFIELD_ENUM(CmagDependencyType)
 
 struct CmagFolder {
     // These structures are built based on values of FOLDER CMake property of all the target in
