@@ -24,11 +24,13 @@ TargetGraph::TargetGraph(BrowserState &browser)
 
     setCurrentCmakeConfig(browser.getConfigSelector().getCurrentConfig());
 
-    if (browser.getProject().getGlobals().browser.needsLayout) {
+    CmagGlobals::BrowserData &browserData = browser.getProject().getGlobals().browser;
+    if (browserData.needsLayout) {
         resetGraphLayout();
-        browser.getProject().getGlobals().browser.needsLayout = false;
+        browserData.needsLayout = false;
+        showEntireGraph();
     }
-    showEntireGraph();
+    camera.updateMatrix(browserData);
 }
 
 TargetGraph ::~TargetGraph() {
@@ -125,7 +127,7 @@ void TargetGraph::update(ImGuiIO &io) {
             refreshConnections();
         }
 
-        camera.updateDrag(mouseX, mouseY, projectionMatrix);
+        camera.updateDrag(mouseX, mouseY, projectionMatrix, browser.getProject().getGlobals().browser);
     }
 
     if (mouseInside && io.MouseClicked[ImGuiMouseButton_Left]) {
@@ -144,13 +146,13 @@ void TargetGraph::update(ImGuiIO &io) {
             browser.getProjectSaver().makeDirty(ProjectDirtyFlag::NodePosition);
         }
         if (camera.dragActive) {
-            camera.endDrag();
+            camera.endDrag(browser.getProject().getGlobals().browser);
             browser.getProjectSaver().makeDirty(ProjectDirtyFlag::CameraPosition);
         }
     }
 
     if (mouseInside && io.MouseWheel != 0) {
-        camera.zoom(io.MouseWheel > 0);
+        camera.zoom(io.MouseWheel > 0, browser.getProject().getGlobals().browser);
         browser.getProjectSaver().makeDirty(ProjectDirtyFlag::CameraPosition);
     }
 }
@@ -297,6 +299,8 @@ void TargetGraph::refreshConnections() {
 }
 
 void TargetGraph::showEntireGraph() {
+    // TODO move this to Camera class
+
     float minX = std::numeric_limits<float>::max();
     float maxX = std::numeric_limits<float>::min();
     float minY = std::numeric_limits<float>::max();
@@ -315,16 +319,17 @@ void TargetGraph::showEntireGraph() {
         maxY = std::max(maxY, targetMaxY);
     }
 
+    CmagGlobals::BrowserData &browserData = browser.getProject().getGlobals().browser;
+
     const float scaleX = (2 * worldSpaceHalfWidth) / (maxX - minX);
     const float scaleY = (2 * worldSpaceHalfHeight) / (maxY - minY);
     const float scale = std::min(scaleX, scaleY);
-    camera.scale = scale;
+    browserData.cameraScale = scale;
 
-    const float middleX = -scale * (maxX + minX) / 2;
-    const float middleY = -scale * (maxY + minY) / 2;
-    camera.position = {middleX, middleY};
+    browserData.cameraX = -scale * (maxX + minX) / 2;
+    browserData.cameraY = -scale * (maxY + minY) / 2;
 
-    camera.updateMatrix();
+    camera.updateMatrix(browserData);
 }
 
 void TargetGraph::resetGraphLayout() {
@@ -397,11 +402,11 @@ TargetGraph::TargetData::UserData &TargetGraph::TargetData::get(const CmagTarget
     return *static_cast<TargetData::UserData *>(target.userData);
 }
 
-void TargetGraph::Camera::updateMatrix() {
+void TargetGraph::Camera::updateMatrix(CmagGlobals::BrowserData &browserData) {
     viewMatrix = glm::identity<glm::mat4>();
-    viewMatrix = glm::translate(viewMatrix, glm::vec3(position.x, position.y, 0));
+    viewMatrix = glm::translate(viewMatrix, glm::vec3(browserData.cameraX, browserData.cameraY, 0));
     viewMatrix = glm::translate(viewMatrix, glm::vec3(dragOffset.x, dragOffset.y, 0));
-    viewMatrix = glm::scale(viewMatrix, glm::vec3{scale, scale, 1});
+    viewMatrix = glm::scale(viewMatrix, glm::vec3{browserData.cameraScale, browserData.cameraScale, 1});
 }
 
 void TargetGraph::Camera::beginDrag(float mouseX, float mouseY) {
@@ -410,37 +415,37 @@ void TargetGraph::Camera::beginDrag(float mouseX, float mouseY) {
     dragOffset = {};
 }
 
-void TargetGraph::Camera::updateDrag(float mouseX, float mouseY, const glm::mat4 &projectionMatrix) {
+void TargetGraph::Camera::updateDrag(float mouseX, float mouseY, const glm::mat4 &projectionMatrix, CmagGlobals::BrowserData &browserData) {
     if (!dragActive) {
         return;
     }
 
     dragOffset = glm::vec4(mouseX, mouseY, 0, 0) - dragStartPos;
     dragOffset = glm::inverse(projectionMatrix) * dragOffset;
-    updateMatrix();
+    updateMatrix(browserData);
 }
 
-void TargetGraph::Camera::endDrag() {
-    position.x += dragOffset.x;
-    position.y += dragOffset.y;
+void TargetGraph::Camera::endDrag(CmagGlobals::BrowserData &browserData) {
+    browserData.cameraX += dragOffset.x;
+    browserData.cameraY += dragOffset.y;
 
     dragActive = false;
     dragStartPos = {};
     dragOffset = {};
 }
 
-void TargetGraph::Camera::zoom(bool closer) {
+void TargetGraph::Camera::zoom(bool closer, CmagGlobals::BrowserData &browserData) {
     const float interval = 0.1f;
     const float minScale = 0.1f;
     const float maxScale = 2.0f;
 
     if (closer) {
-        scale += interval;
+        browserData.cameraScale += interval;
     } else {
-        scale -= interval;
+        browserData.cameraScale -= interval;
     }
-    scale = clamp(scale, minScale, maxScale);
-    updateMatrix();
+    browserData.cameraScale = clamp(browserData.cameraScale, minScale, maxScale);
+    updateMatrix(browserData);
 }
 
 void TargetGraph::TargetDrag::begin(float mouseX, float mouseY, const glm::mat4 &projectionMatrix, CmagTarget *focusedTarget) {
