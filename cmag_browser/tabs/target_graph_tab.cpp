@@ -101,6 +101,8 @@ void TargetGraphTab::renderSidePaneDependencyTypeSelection(float width) {
     static_assert(sizeof(labels) / sizeof(labels[0]) == selectionsCount);
     static_assert(sizeof(tooltips) / sizeof(tooltips[0]) == selectionsCount);
 
+    CmagDependencyType &dependencyTypeSelected = browser.getProject().getGlobals().browser.displayedDependencyType;
+
     auto renderCheckbox = [&](CmagDependencyType currentType, int typeIndex) {
         FATAL_ERROR_IF(typeIndex >= selectionsCount, "Incorrect type index");
 
@@ -227,7 +229,7 @@ void TargetGraphTab::renderGraph(ImGuiIO &io) {
 
         // Render to an offscreen texture
         targetGraph.setCurrentCmakeConfig(browser.getConfigSelector().getCurrentConfig());
-        targetGraph.setDisplayedDependencyType(dependencyTypeSelected);
+        targetGraph.setDisplayedDependencyType(browser.getProject().getGlobals().browser.displayedDependencyType);
         targetGraph.update(io);
         targetGraph.render();
 
