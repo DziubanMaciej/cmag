@@ -1,8 +1,8 @@
 #include "target_graph.h"
 
+#include "cmag_browser/browser_state/cmag_browser_theme.h"
 #include "cmag_browser/target_graph/coordinate_space.h"
 #include "cmag_browser/target_graph/shapes.h"
-#include "cmag_browser/ui_utils/cmag_browser_theme.h"
 #include "cmag_browser/util/gl_helpers.h"
 
 #include <generated/fragment_shader.glsl.h>

@@ -1,5 +1,5 @@
-#include "cmag_browser/browser_state.h"
-#include "cmag_browser/tab_change.h"
+#include "cmag_browser/browser_state/browser_state.h"
+#include "cmag_browser/browser_state/tab_change.h"
 
 #include <imgui.h>
 
