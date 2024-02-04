@@ -20,7 +20,7 @@ private:
     const CmagBrowserTheme &theme;
     CmagProject &project;
     ConfigSelector configSelector;
-    TargetSelection targetSelection{};
+    TargetSelection targetSelection;
     TabChange tabChange;
     ProjectSaver projectSaver;
 };
