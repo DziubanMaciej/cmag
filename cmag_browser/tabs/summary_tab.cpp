@@ -94,8 +94,4 @@ void SummaryTab::renderSaveSection() {
     if (ImGui::Checkbox("Autosave", &autoSaveEnabled)) {
         browser.getProjectSaver().save();
     }
-    TooltipBuilder(browser.getTheme())
-        .setHoverLastItem()
-        .addText("Shift+Ctrl+S")
-        .execute();
 }

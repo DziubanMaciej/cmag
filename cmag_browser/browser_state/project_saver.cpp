@@ -4,6 +4,7 @@
 #include "cmag_core/utils/error.h"
 
 #include <fstream>
+#include <imgui/imgui.h>
 
 ProjectSaver::ProjectSaver(CmagProject &project, const fs::path &outputPath, size_t autoSaveIntervalMilliseconds)
     : project(project),
@@ -25,6 +26,12 @@ void ProjectSaver::tryAutoSave() {
     }
 
     save();
+}
+
+void ProjectSaver::trySaveFromKeyboardShortcut() {
+    if (ImGui::IsKeyChordPressed(ImGuiMod_Ctrl | ImGuiKey_S)) {
+        save();
+    }
 }
 
 void ProjectSaver::makeDirty(ProjectDirtyFlag flag) {
