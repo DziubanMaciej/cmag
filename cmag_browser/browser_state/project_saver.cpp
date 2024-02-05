@@ -64,6 +64,7 @@ void ProjectSaver::save() {
         LOG_WARNING("Failed saving the project.");
         return;
     }
+    file.close();
 
     // Move to actual destination
     std::error_code renameError{};
