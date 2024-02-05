@@ -150,21 +150,25 @@ int main(int argc, const char **argv) {
 
             if (ImGui::BeginTabItem("Target graph", nullptr, createTabItemFlags(TabChange::TargetGraph))) {
                 targetGraphTab.render(io);
+                browserState.getTabChange().setLastDisplayedTab(TabChange::TargetGraph);
                 ImGui::EndTabItem();
             }
 
             if (ImGui::BeginTabItem("List files", nullptr, createTabItemFlags(TabChange::ListDir))) {
                 listFileTab.render();
+                browserState.getTabChange().setLastDisplayedTab(TabChange::ListDir);
                 ImGui::EndTabItem();
             }
 
             if (ImGui::BeginTabItem("Target folders", nullptr, createTabItemFlags(TabChange::TargetFolder))) {
                 targetFolderTab.render();
+                browserState.getTabChange().setLastDisplayedTab(TabChange::TargetFolder);
                 ImGui::EndTabItem();
             }
 
             if (ImGui::BeginTabItem("Summary", nullptr, createTabItemFlags(TabChange::Summary))) {
                 summaryTab.render();
+                browserState.getTabChange().setLastDisplayedTab(TabChange::Summary);
                 ImGui::EndTabItem();
             }
 

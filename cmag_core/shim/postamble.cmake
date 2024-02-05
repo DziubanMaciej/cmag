@@ -309,7 +309,7 @@ function (json_append_globals_browser OUT_VARIABLE SELECTED_CONFIG INDENT INDENT
     json_append_key_value_unquoted(${OUT_VARIABLE} cameraY 0 ${INDENT})
     json_append_key_value_unquoted(${OUT_VARIABLE} cameraScale 0 ${INDENT})
     json_append_key_value_unquoted(${OUT_VARIABLE} displayedDependencyType 5 ${INDENT}) # TODO quite hardcoded and magical. How to make it cleaner?
-    json_append_key_value_unquoted(${OUT_VARIABLE} selectedTabIndex 0 ${INDENT})
+    json_append_key_value_unquoted(${OUT_VARIABLE} selectedTabIndex 1 ${INDENT})
     json_append_key_value(${OUT_VARIABLE} selectedTargetName "" ${INDENT})
 
     set(${OUT_VARIABLE} ${${OUT_VARIABLE}} PARENT_SCOPE)

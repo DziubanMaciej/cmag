@@ -1,10 +1,14 @@
+#include "tab_change.h"
+
 #include "cmag_browser/browser_state/browser_state.h"
-#include "cmag_browser/browser_state/tab_change.h"
+#include "cmag_core/core/cmag_project.h"
 
 #include <imgui.h>
 
 TabChange::TabChange(BrowserState &browser)
-    : browser(browser) {}
+    : browser(browser) {
+    change(lastDisplayedTab);
+}
 
 void TabChange::change(TabSelection newSelection) {
     if (selection != TabSelection::Auto) {
@@ -68,4 +72,11 @@ void TabChange::showPopup(TabChange::TabSelection currentTab, CmagTarget *target
     popup.isOpen = false;
     popup.currentTab = currentTab;
     popup.targetToSelect = targetToSelect;
+}
+
+void TabChange::setLastDisplayedTab(TabChange::TabSelection tab) {
+    if (lastDisplayedTab != tab) {
+        browser.getProjectSaver().makeDirty(ProjectDirtyFlag::SelectedTab);
+    }
+    lastDisplayedTab = tab;
 }

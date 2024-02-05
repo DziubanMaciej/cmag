@@ -24,8 +24,11 @@ public:
     void showPopup(TabSelection currentTab, CmagTarget *targetToSelect);
     bool isPopupShown() const { return popup.shouldBeOpen || popup.isOpen; }
 
+    void setLastDisplayedTab(TabSelection tab);
+
 private:
     BrowserState &browser;
+    TabSelection lastDisplayedTab = TabSelection::TargetGraph;
     TabSelection selection = TabSelection::Auto;
 
     struct {
