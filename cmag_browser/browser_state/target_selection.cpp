@@ -14,5 +14,9 @@ TargetSelection::TargetSelection(CmagProject &project) : project(project) {
 
 void TargetSelection::select(CmagTarget *target) {
     selection = target;
-    project.getGlobals().browser.selectedTargetName = target->name;
+    if (target == nullptr) {
+        project.getGlobals().browser.selectedTargetName = "";
+    } else {
+        project.getGlobals().browser.selectedTargetName = target->name;
+    }
 }
