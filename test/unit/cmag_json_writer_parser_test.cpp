@@ -307,9 +307,9 @@ TEST_F(CmagWriterParserTest, givenProjectWithSetGlobalsThenWriteAndReadCorrectly
 
     globals.browser.needsLayout = true;
     globals.browser.autoSaveEnabled = true;
-    globals.browser.cameraX = 123.2;
-    globals.browser.cameraY = 321.2;
-    globals.browser.cameraScale = 0.1;
+    globals.browser.cameraX = 123.2f;
+    globals.browser.cameraY = 321.2f;
+    globals.browser.cameraScale = 0.1f;
     globals.browser.displayedDependencyType = CmagDependencyType::Build | CmagDependencyType::Interface;
     globals.browser.selectedTabIndex = 3;
     globals.browser.selectedTargetName = "ALL";
