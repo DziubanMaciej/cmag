@@ -6,4 +6,4 @@ BrowserState::BrowserState(const CmagBrowserTheme &theme, const fs::path &projec
       configSelector(theme, project, projectSaver),
       targetSelection(project),
       tabChange(*this),
-      projectSaver(project, projectFilePath, 10000) {}
+      projectSaver(project, projectFilePath, 2000) {}

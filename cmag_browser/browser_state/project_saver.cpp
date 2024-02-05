@@ -12,10 +12,9 @@ ProjectSaver::ProjectSaver(CmagProject &project, const fs::path &outputPath, siz
       autoSaveInterval(std::chrono::milliseconds(autoSaveIntervalMilliseconds)) {}
 
 void ProjectSaver::tryAutoSave() {
-    // TODO
-    // if (!project.getGlobals().enableAutoSave) {
-    //    return;
-    //}
+    if (!project.getGlobals().browser.autoSaveEnabled) {
+        return;
+    }
     if (!isDirty()) {
         return;
     }
