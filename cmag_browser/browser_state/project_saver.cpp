@@ -12,7 +12,15 @@ ProjectSaver::ProjectSaver(CmagProject &project, const fs::path &outputPath, siz
       lastSaveTime(Clock::now()),
       autoSaveInterval(std::chrono::milliseconds(autoSaveIntervalMilliseconds)) {}
 
-void ProjectSaver::tryAutoSave() {
+void ProjectSaver::tryAutoSave(size_t frameIndex) {
+    if (frameIndex < 3) {
+        // During the first few frames it is possible to set some unneeded dirty flags, because ImGui may have some delays
+        // and cause ping-ponging between states. For example this happens when forcing selected tab in tab bar. The request
+        // is honored only in second frame. With this workaround we hide this and avoid unneeded calls to save().
+        dirtyState = ProjectDirtyFlag::None;
+        return;
+    }
+
     if (!project.getGlobals().browser.autoSaveEnabled) {
         return;
     }
@@ -69,7 +77,7 @@ void ProjectSaver::save() {
 }
 
 bool ProjectSaver::isDirty() const {
-    return hasProjectDirtyFlagBit(dirtyMaskWindowTitleStar, dirtyState);
+    return hasProjectDirtyFlagBit(dirtyMaskAutoSave, dirtyState);
 }
 
 bool ProjectSaver::shouldShowDirtyNotification() const {

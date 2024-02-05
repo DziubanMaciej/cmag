@@ -145,7 +145,7 @@ int main(int argc, const char **argv) {
     SummaryTab summaryTab{browserState};
     theme.setup();
 
-    while (!glfwWindowShouldClose(window)) {
+    for (size_t frameIndex = 0; !glfwWindowShouldClose(window); frameIndex++) {
         glfwPollEvents();
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -187,7 +187,7 @@ int main(int argc, const char **argv) {
 
             browserState.getTabChange().renderPopup();
             browserState.getProjectSaver().trySaveFromKeyboardShortcut();
-            browserState.getProjectSaver().tryAutoSave();
+            browserState.getProjectSaver().tryAutoSave(frameIndex);
             setWindowTitle(window, cmagProject, browserState.getProjectSaver().shouldShowDirtyNotification());
         }
         ImGui::EndTabBar();

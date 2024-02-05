@@ -23,7 +23,7 @@ class ProjectSaver {
 public:
     ProjectSaver(CmagProject &project, const fs::path &outputPath, size_t autoSaveIntervalMilliseconds);
 
-    void tryAutoSave();
+    void tryAutoSave(size_t frameIndex);
     void trySaveFromKeyboardShortcut();
     void makeDirty(ProjectDirtyFlag flag);
     void save();

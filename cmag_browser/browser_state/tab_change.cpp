@@ -7,7 +7,7 @@
 
 TabChange::TabChange(BrowserState &browser)
     : browser(browser) {
-    change(lastDisplayedTab);
+    change(static_cast<TabSelection>(browser.getProject().getGlobals().browser.selectedTabIndex));
 }
 
 void TabChange::change(TabSelection newSelection) {
@@ -79,4 +79,6 @@ void TabChange::setLastDisplayedTab(TabChange::TabSelection tab) {
         browser.getProjectSaver().makeDirty(ProjectDirtyFlag::SelectedTab);
     }
     lastDisplayedTab = tab;
+
+    browser.getProject().getGlobals().browser.selectedTabIndex = static_cast<int>(tab);
 }
