@@ -9,7 +9,6 @@
 #include "cmag_core/browser/browser_argument_parser.h"
 #include "cmag_core/core/version.h"
 #include "cmag_core/parse/cmag_json_parser.h"
-#include "cmag_core/utils/error.h"
 #include "cmag_core/utils/file_utils.h"
 
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
@@ -36,7 +35,7 @@ GLFWwindow *initializeWindow(bool coreProfile, const char **outGlslVersion) {
     const int profileHint = coreProfile ? GLFW_OPENGL_CORE_PROFILE : GLFW_OPENGL_COMPAT_PROFILE;
     glfwWindowHint(GLFW_OPENGL_PROFILE, profileHint);
 
-    GLFWwindow *window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+OpenGL3 example", nullptr, nullptr);
+    GLFWwindow *window = glfwCreateWindow(1280, 720, "cmag", nullptr, nullptr);
     if (window == nullptr) {
         return nullptr;
     }
@@ -45,6 +44,19 @@ GLFWwindow *initializeWindow(bool coreProfile, const char **outGlslVersion) {
 
     *outGlslVersion = "#version 130";
     return window;
+}
+
+void setWindowTitle(GLFWwindow *window, const CmagProject &project, bool isDirty) {
+    static bool showingDirtyMark = true;
+    if (isDirty == showingDirtyMark) {
+        return;
+    }
+    showingDirtyMark = isDirty;
+
+    static char buffer[1024];
+    const char *dirtyMark = isDirty ? "*" : "";
+    snprintf(buffer, sizeof(buffer), "%scmag: %s", dirtyMark, project.getGlobals().cmagProjectName.c_str());
+    glfwSetWindowTitle(window, buffer);
 }
 
 void deinitializeWindow(GLFWwindow *window) {
@@ -97,6 +109,7 @@ int main(int argc, const char **argv) {
         LOG_ERROR("could not initialize OpenGL context");
         return 1;
     }
+    setWindowTitle(window, cmagProject, false);
     glext::GetProcAddressFn getProcAddress = +[](const char *name) { return reinterpret_cast<void *>(::glfwGetProcAddress(name)); };
     if (!glext::initialize(getProcAddress)) {
         LOG_ERROR("could not initialize OpenGL extensions");
@@ -175,6 +188,7 @@ int main(int argc, const char **argv) {
             browserState.getTabChange().renderPopup();
             browserState.getProjectSaver().trySaveFromKeyboardShortcut();
             browserState.getProjectSaver().tryAutoSave();
+            setWindowTitle(window, cmagProject, browserState.getProjectSaver().shouldShowDirtyNotification());
         }
         ImGui::EndTabBar();
 
