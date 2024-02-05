@@ -17,6 +17,22 @@ struct TestWorkspace {
     TestWorkspace(TestWorkspace &&) = default;
     TestWorkspace &operator=(TestWorkspace &&) = default;
 
+    static TestWorkspace prepareEmpty() {
+        const fs::path dstProjectDir = dstProjectsRoot / "genericTestDir";
+
+        // Cleanup dst dir.
+        removeFile(dstProjectsRoot);
+        createDir(dstProjectsRoot);
+        createDir(dstProjectDir);
+
+        // Return workspace description
+        TestWorkspace workspace = {};
+        workspace.valid = !::testing::Test::HasFailure();
+        workspace.sourcePath = dstProjectDir;
+        workspace.buildPath = "";
+        return workspace;
+    }
+
     static TestWorkspace prepare(std::string_view name) {
         const fs::path srcProjectDir = srcProjectsRoot / name;
         const fs::path dstProjectDir = dstProjectsRoot / name;
