@@ -32,7 +32,7 @@ function(target_setup_vs_folders TARGET_NAME)
     source_group(TREE ${SOURCE_DIR} FILES ${NON_GENERATED_SOURCES})
 endfunction()
 
-macro(setup_vs_folders_for_interface_source OTHER_TARGET_NAME GROUP_NAME)
+function(setup_vs_folders_for_interface_source OTHER_TARGET_NAME GROUP_NAME)
     if(CMAKE_VERSION VERSION_LESS "3.19")
         return()
     endif()
@@ -54,7 +54,7 @@ macro(setup_vs_folders_for_interface_source OTHER_TARGET_NAME GROUP_NAME)
             source_group("${GROUP_NAME}" FILES "${DIR}/${SOURCE}")
         endforeach()
     endif()
-endmacro()
+endfunction()
 
 function(target_find_sources_and_add TARGET_NAME)
     file(GLOB SOURCE_FILES
