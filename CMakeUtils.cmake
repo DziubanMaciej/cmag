@@ -33,6 +33,10 @@ function(target_setup_vs_folders TARGET_NAME)
 endfunction()
 
 macro(setup_vs_folders_for_interface_source OTHER_TARGET_NAME GROUP_NAME)
+    if(CMAKE_VERSION VERSION_LESS "3.19")
+        return()
+    endif()
+
     # Parse optional arguments
     set(OPTION_ARGS FROM_PROPERTY)
     set(VALUE_ARGS)
