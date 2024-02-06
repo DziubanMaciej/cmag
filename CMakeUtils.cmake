@@ -32,10 +32,32 @@ function(target_setup_vs_folders TARGET_NAME)
     source_group(TREE ${SOURCE_DIR} FILES ${NON_GENERATED_SOURCES})
 endfunction()
 
+macro(setup_vs_folders_for_interface_source OTHER_TARGET_NAME GROUP_NAME)
+    # Parse optional arguments
+    set(OPTION_ARGS FROM_PROPERTY)
+    set(VALUE_ARGS)
+    set(MULTI_VALUE_ARGS FROM_PATHS)
+    cmake_parse_arguments(ARG "${OPTION_ARGS}" "${VALUE_ARGS}" "${MULTI_VALUE_ARGS}" ${ARGN})
+
+    if (${ARG_FROM_PROPERTY})
+        get_target_property(SOURCES ${OTHER_TARGET_NAME} INTERFACE_SOURCES)
+        source_group("${GROUP_NAME}" FILES "${SOURCES}")
+    endif()
+
+    if (NOT "${ARG_FROM_PATHS}d" STREQUAL "d")
+        get_target_property(DIR ${OTHER_TARGET_NAME} SOURCE_DIR)
+        foreach(SOURCE ${ARG_FROM_PATHS})
+            source_group("${GROUP_NAME}" FILES "${DIR}/${SOURCE}")
+        endforeach()
+    endif()
+endmacro()
+
 function(target_find_sources_and_add TARGET_NAME)
     file(GLOB SOURCE_FILES
+            ${CMAKE_CURRENT_SOURCE_DIR}/*.cmake
             ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/*.h
+            ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt
     )
     target_add_sources(${TARGET_NAME} ${SOURCE_FILES} ${CMAKE_CURRENT_SOURCE_DIR}/CMakeLists.txt)
 endfunction()

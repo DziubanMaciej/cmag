@@ -9,5 +9,6 @@ target_compile_definitions(cmag_os_tests PRIVATE
 set_target_properties(cmag_os_tests PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "--gtest_filter=*")
 add_subdirectories()
 target_setup_vs_folders(cmag_os_tests)
+setup_vs_folders_for_interface_source(nlohmann_json "external" FROM_PATHS nlohmann_json.natvis)
 
 add_test(NAME OsTests COMMAND cmag_os_tests)

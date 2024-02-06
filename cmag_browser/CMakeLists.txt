@@ -5,6 +5,8 @@ target_include_directories(cmag_browser PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
 target_link_libraries(cmag_browser PRIVATE Imgui Stb cmag_core glm)
 add_subdirectories()
 target_setup_vs_folders(cmag_browser)
+setup_vs_folders_for_interface_source(Stb "external" FROM_PROPERTY)
+setup_vs_folders_for_interface_source(nlohmann_json "external" FROM_PATHS nlohmann_json.natvis)
 
 install(TARGETS cmag_browser RUNTIME DESTINATION bin)
 

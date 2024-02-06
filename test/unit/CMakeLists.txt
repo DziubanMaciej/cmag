@@ -5,5 +5,6 @@ target_link_libraries(cmag_unit_tests PRIVATE cmag_core gtest)
 set_target_properties(cmag_unit_tests PROPERTIES VS_DEBUGGER_COMMAND_ARGUMENTS "--gtest_filter=*")
 add_subdirectories()
 target_setup_vs_folders(cmag_unit_tests)
+setup_vs_folders_for_interface_source(nlohmann_json "external" FROM_PATHS nlohmann_json.natvis)
 
 add_test(NAME UnitTests COMMAND cmag_unit_tests)

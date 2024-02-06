@@ -5,6 +5,7 @@ target_include_directories(cmag_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..)
 target_link_libraries(cmag_core PUBLIC nlohmann_json::nlohmann_json)
 add_subdirectories()
 target_setup_vs_folders(cmag_core)
+setup_vs_folders_for_interface_source(nlohmann_json "external" FROM_PATHS nlohmann_json.natvis)
 
 set(CMAG_BROWSER_BINARY_NAME "cmag_browser")
 if (WIN32)
@@ -12,4 +13,4 @@ if (WIN32)
 endif()
 target_compile_definitions(cmag_core PRIVATE -DCMAG_BROWSER_BINARY_NAME="${CMAG_BROWSER_BINARY_NAME}")
 
-header_pack_generate(TEXT cmag_core shim/postamble.cmake postamble.h VARIABLE postamble)
+header_pack_generate(TEXT cmag_core shim/postamble.cmake postamble.h VARIABLE postamble OUTPUT_SOURCE_GROUP generated)
