@@ -137,11 +137,8 @@ TextRenderer::PerStringData::~PerStringData() {
 }
 
 std::vector<float> TextRenderer::PerStringData::prepareVertexData(ImFont *font, std::string_view text, float nodeToTextScaleRatio, GLuint *outVertexCount, float *outXOffset) {
-
-    std::vector<float> result = {};
-    result.reserve(text.length() * verticesInQuad * componentsInVertex);
-
-    // Calculate min and max height of our font. To get an idea in what space it is defined.
+    // Calculate min and max height of our font, to get an idea in what space it is defined.
+    // It is in some custom ImGui space, and we'll map it to another space later.
     float minHeight = std::numeric_limits<float>::max();
     float maxHeight = std::numeric_limits<float>::min();
     for (unsigned char i = 'a'; i < 'z'; i++) {
@@ -154,8 +151,10 @@ std::vector<float> TextRenderer::PerStringData::prepareVertexData(ImFont *font, 
         }
     }
 
-    // Our glyphs are in some custom ImGui space. We need them in predictable model space
-    // which we define as <-1, 1>, so we interpolate them before adding to the vertex buffer.
+    // Define helper functions to transform glyphs values from some custom ImGui space to
+    // our own predictable model space. We define our model space as <-1,1>, which bounds
+    // the largest character (not the whole text). Hence, the whole text will have width
+    // greater than 1.
     auto transformToModelSpaceX = [minHeight, maxHeight](float value, bool isDiff = false) {
         const float srcMin = 0;
         const float srcMax = (maxHeight - minHeight) / 2;
@@ -175,11 +174,12 @@ std::vector<float> TextRenderer::PerStringData::prepareVertexData(ImFont *font, 
         }
     };
 
-    // Calculate width of ellipsis - three dots that are displayed if the text is too long
+    // Calculate width of ellipsis - three dots that are displayed if the text is too long.
     const ImFontGlyph *dotGlyph = font->FindGlyphNoFallback('.');
     const float ellipsisWidth = transformToModelSpaceX(dotGlyph->AdvanceX * 3, true);
 
-    // Calculate width of the text
+    // Iterate through the text and calculate its width. If it exceeds a certain threshold,
+    // remove some characters and insert an ellipsis.
     const float maxTextWidth = 2 * nodeToTextScaleRatio;
     float textWidth = 0;
     size_t charactersCount = 0;
@@ -189,26 +189,25 @@ std::vector<float> TextRenderer::PerStringData::prepareVertexData(ImFont *font, 
         charactersCount++;
         textWidth += transformToModelSpaceX(font->FindGlyphNoFallback(character)->AdvanceX, true);
 
-        // Check if we exceeded maximum width. If yes, then we have to start subtracting characters we've added
-        // until the text + three dots (ellipsis) fits in the maximum width.
+        // Check if we exceeded maximum width.
         if (textWidth > maxTextWidth) {
-            ellipsisNeeded = true;
-
+            // We've just exceeded maximum width. Start subtracting characters we've added until
+            // the text + ellipsis fits in the maximum width.
             while (textWidth + ellipsisWidth > maxTextWidth && charactersCount > 0) {
                 const ImFontGlyph *glyphToRemove = font->FindGlyphNoFallback(text[charactersCount - 1]);
                 textWidth -= transformToModelSpaceX(glyphToRemove->AdvanceX, true);
                 charactersCount--;
             }
 
+            // Insert an ellipsis
+            ellipsisNeeded = true;
             textWidth += ellipsisWidth;
-
             break;
         }
     }
 
-    float currentX = 0;
-
-    const auto appendCharacterVertices = [&](char c) {
+    // Define a helper function to add glyph's geometry to the vertex buffer data for a given character.
+    const auto appendCharacterVertices = [&font, &transformToModelSpaceX, &transformToModelSpaceY](std::vector<float> &result, float &currentX, char c) {
         const ImFontGlyph *glyph = font->FindGlyphNoFallback(c);
 
         const float x0 = transformToModelSpaceX(glyph->X0) + currentX;
@@ -216,7 +215,6 @@ std::vector<float> TextRenderer::PerStringData::prepareVertexData(ImFont *font, 
         const float x1 = transformToModelSpaceX(glyph->X1) + currentX;
         const float y1 = transformToModelSpaceY(glyph->Y1);
         currentX += transformToModelSpaceX(glyph->AdvanceX, true);
-
 #define VERTEX(index_x, index_y)         \
     result.push_back(x##index_x);        \
     result.push_back(y##index_y);        \
@@ -233,22 +231,25 @@ std::vector<float> TextRenderer::PerStringData::prepareVertexData(ImFont *font, 
 #undef VERTEX
     };
 
-    // Iterate over characters and add them as triangles to the vertex buffer.
+    // Fill the vertex buffer data
+    std::vector<float> result = {};
+    result.reserve(text.length() * verticesInQuad * componentsInVertex);
+    float currentX = 0;
     for (size_t characterIndex = 0; characterIndex < charactersCount; characterIndex++) {
-        appendCharacterVertices(text[characterIndex]);
+        appendCharacterVertices(result, currentX, text[characterIndex]);
     }
     if (ellipsisNeeded) {
-        appendCharacterVertices('.');
-        appendCharacterVertices('.');
-        appendCharacterVertices('.');
+        appendCharacterVertices(result, currentX, '.');
+        appendCharacterVertices(result, currentX, '.');
+        appendCharacterVertices(result, currentX, '.');
     }
 
+    // Return output values
     *outVertexCount = charactersCount;
     if (ellipsisNeeded) {
         *outVertexCount += 3;
     }
     *outVertexCount *= verticesInQuad;
     *outXOffset = -textWidth / 2;
-
     return result;
 }
