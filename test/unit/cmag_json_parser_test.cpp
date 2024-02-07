@@ -11,7 +11,7 @@ struct CmagParseTest : ::testing::Test {
                 "darkMode": false,
 
                 "selectedConfig": "",
-                "cmagVersion": "",
+                "cmagVersion": "1.0.0",
                 "cmakeVersion": "",
                 "cmakeProjectName": "",
                 "cmagProjectName": "",
@@ -468,7 +468,7 @@ TEST(CmagGlobalsFileParseTest, givenAllFieldsSpecifiedThenParseCorrectly) {
     {
         "darkMode": true,
         "selectedConfig": "Z",
-        "cmagVersion": "A",
+        "cmagVersion": "0.1.15",
         "cmakeVersion": "B",
         "cmakeProjectName": "C",
         "cmagProjectName": "D",
@@ -496,7 +496,7 @@ TEST(CmagGlobalsFileParseTest, givenAllFieldsSpecifiedThenParseCorrectly) {
     ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseGlobalsFile(json, globals).status);
     EXPECT_TRUE(globals.darkMode);
     EXPECT_STREQ(globals.selectedConfig.c_str(), "Z");
-    EXPECT_STREQ(globals.cmagVersion.c_str(), "A");
+    EXPECT_STREQ(globals.cmagVersion.toString().c_str(), "0.1.15");
     EXPECT_STREQ(globals.cmakeVersion.c_str(), "B");
     EXPECT_STREQ(globals.cmakeProjectName.c_str(), "C");
     EXPECT_STREQ(globals.cmagProjectName.c_str(), "D");

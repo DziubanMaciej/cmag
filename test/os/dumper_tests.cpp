@@ -98,7 +98,7 @@ TEST_P(CmagTest, givenSimpleProjectWithCustomPropertiesThenProcessItCorrectly) {
     CmagGlobals &globals = dumper.project.getGlobals();
     EXPECT_TRUE(globals.darkMode);
     EXPECT_STREQ(globals.selectedConfig.c_str(), getDefaultConfig());
-    EXPECT_EQ(globals.cmagVersion, cmagVersion.toString());
+    EXPECT_EQ(globals.cmagVersion, cmagVersion);
     EXPECT_STREQ(globals.cmakeProjectName.c_str(), "Simple");
     EXPECT_EQ(globals.cmagProjectName, dumper.projectName);
     EXPECT_EQ(fs::path{globals.sourceDir}, workspace.sourcePath);
