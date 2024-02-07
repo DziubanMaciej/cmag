@@ -4,6 +4,16 @@
 #include <gtest/gtest.h>
 
 struct CmagWriterParserTest : ::testing::Test {
+    CmagProject project = {};
+
+    void SetUp() override {
+        initProject(project);
+    }
+
+    static void initProject(CmagProject &project) {
+        project.getGlobals().cmagVersion = ::cmagVersion;
+    }
+
     static void verify(const CmagProject &initialProject) {
         std::ostringstream jsonStream;
         CmagJsonWriter::writeProject(initialProject, jsonStream);
@@ -109,12 +119,10 @@ struct CmagWriterParserTest : ::testing::Test {
 };
 
 TEST_F(CmagWriterParserTest, givenProjectWithNoTargetsThenWriteAndReadCorrectly) {
-    CmagProject project;
     verify(project);
 }
 
 TEST_F(CmagWriterParserTest, givenProjectWithTargetWithoutPropertiesThenWriteAndReadCorrectly) {
-    CmagProject project;
     project.addTarget(CmagTarget{
         "myTarget",
         CmagTargetType::Executable,
@@ -127,8 +135,6 @@ TEST_F(CmagWriterParserTest, givenProjectWithTargetWithoutPropertiesThenWriteAnd
 }
 
 TEST_F(CmagWriterParserTest, givenProjectWithTargetAliasesThenWriteAndReadCorrectly) {
-    CmagProject project;
-
     auto addTarget = [&](const std::string &targetName, const std::vector<std::string> &aliases) {
         CmagTarget target{
             targetName,
@@ -149,7 +155,6 @@ TEST_F(CmagWriterParserTest, givenProjectWithTargetAliasesThenWriteAndReadCorrec
 }
 
 TEST_F(CmagWriterParserTest, givenProjectWithTargetWithGraphicalDataThenWriteAndReadCorrectly) {
-    CmagProject project;
     project.addTarget(CmagTarget{
         "myTarget",
         CmagTargetType::Executable,
@@ -166,7 +171,6 @@ TEST_F(CmagWriterParserTest, givenProjectWithTargetWithGraphicalDataThenWriteAnd
 }
 
 TEST_F(CmagWriterParserTest, givenProjectWithTargetWithPropertiesThenWriteAndReadCorrectly) {
-    CmagProject project;
     project.addTarget(CmagTarget{
         "myTarget",
         CmagTargetType::Executable,
@@ -185,7 +189,6 @@ TEST_F(CmagWriterParserTest, givenProjectWithTargetWithPropertiesThenWriteAndRea
 }
 
 TEST_F(CmagWriterParserTest, givenProjectWithTargetWithMultipleConfigsThenWriteAndReadCorrectly) {
-    CmagProject project;
     project.addTarget(CmagTarget{
         "myTarget",
         CmagTargetType::Executable,
@@ -211,7 +214,6 @@ TEST_F(CmagWriterParserTest, givenProjectWithTargetWithMultipleConfigsThenWriteA
 }
 
 TEST_F(CmagWriterParserTest, givenProjectWithTargetWithMultipleConfigsAndDifferingPropertiesThenWriteAndReadCorrectly) {
-    CmagProject project;
     project.addTarget(CmagTarget{
         "myTarget",
         CmagTargetType::Executable,
@@ -238,8 +240,6 @@ TEST_F(CmagWriterParserTest, givenProjectWithTargetWithMultipleConfigsAndDifferi
 }
 
 TEST_F(CmagWriterParserTest, givenProjectWithImportedTargetWithoutPropertiesThenWriteAndReadCorrectly) {
-    CmagProject project;
-
     auto addTarget = [&](const char *targetName, bool isImported) {
         CmagTarget target{
             targetName,
@@ -268,8 +268,9 @@ TEST_F(CmagWriterParserTest, givenProjectWithVariousTargetTypesThenWriteAndReadC
         CmagTargetType::Executable,
     };
     for (CmagTargetType type : types) {
-        CmagProject project;
-        project.addTarget(CmagTarget{
+        CmagProject cmagProject;
+        initProject(cmagProject);
+        cmagProject.addTarget(CmagTarget{
             "myTarget",
             type,
             {
@@ -283,17 +284,15 @@ TEST_F(CmagWriterParserTest, givenProjectWithVariousTargetTypesThenWriteAndReadC
             },
             {},
         });
-        verify(project);
+        verify(cmagProject);
     }
 }
 
 TEST_F(CmagWriterParserTest, givenProjectWithSetGlobalsThenWriteAndReadCorrectly) {
-    CmagProject project;
-
     CmagGlobals &globals = project.getGlobals();
     globals.darkMode = true;
     globals.selectedConfig = "Debug",
-    globals.cmagVersion = CmagVersion::fromComponents<19, 0, 0>();
+    globals.cmagVersion = ::cmagVersion;
     globals.cmakeVersion = "3.5.9";
     globals.cmakeProjectName = "myProject";
     globals.cmagProjectName = "myCmagProject";

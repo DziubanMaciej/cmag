@@ -99,6 +99,30 @@ TEST(VersionTest, givenIncorrectArgumentsWhenFromStringTimeConstructorIsUsedThen
         std::optional<CmagVersion> version = CmagVersion::fromString("0.0.256");
         EXPECT_FALSE(version.has_value());
     }
+    {
+        std::optional<CmagVersion> version = CmagVersion::fromString("0.0");
+        EXPECT_FALSE(version.has_value());
+    }
+    {
+        std::optional<CmagVersion> version = CmagVersion::fromString("hello");
+        EXPECT_FALSE(version.has_value());
+    }
+    {
+        std::optional<CmagVersion> version = CmagVersion::fromString("1.1.1.");
+        EXPECT_FALSE(version.has_value());
+    }
+    {
+        std::optional<CmagVersion> version = CmagVersion::fromString("1.1.1hello");
+        EXPECT_FALSE(version.has_value());
+    }
+    {
+        std::optional<CmagVersion> version = CmagVersion::fromString("1.1.1 ");
+        EXPECT_FALSE(version.has_value());
+    }
+    {
+        std::optional<CmagVersion> version = CmagVersion::fromString("1.1,1");
+        EXPECT_FALSE(version.has_value());
+    }
 }
 
 TEST(VersionTest, givenVersionWhenCallingToStringThenProduceCorrectString) {
@@ -114,6 +138,18 @@ TEST(VersionTest, givenVersionWhenCallingToStringThenProduceCorrectString) {
         CmagVersion version = CmagVersion::fromComponents<255, 65535, 255>();
         EXPECT_STREQ("255.65535.255", version.toString().c_str());
     }
+}
+
+TEST(VersionTest, givenTwoVersionsWhenCheckingCompatibilityThenItWorksCorrectly) {
+    EXPECT_TRUE((CmagVersion::fromComponents<100, 100, 100>().isProjectCompatible(CmagVersion::fromComponents<100, 100, 100>())));
+
+    EXPECT_FALSE((CmagVersion::fromComponents<99, 100, 100>().isProjectCompatible(CmagVersion::fromComponents<100, 100, 100>())));
+    EXPECT_FALSE((CmagVersion::fromComponents<100, 99, 100>().isProjectCompatible(CmagVersion::fromComponents<100, 100, 100>())));
+    EXPECT_TRUE((CmagVersion::fromComponents<100, 100, 99>().isProjectCompatible(CmagVersion::fromComponents<100, 100, 100>())));
+
+    EXPECT_FALSE((CmagVersion::fromComponents<100, 100, 100>().isProjectCompatible(CmagVersion::fromComponents<99, 100, 100>())));
+    EXPECT_FALSE((CmagVersion::fromComponents<100, 100, 100>().isProjectCompatible(CmagVersion::fromComponents<100, 99, 100>())));
+    EXPECT_TRUE((CmagVersion::fromComponents<100, 100, 100>().isProjectCompatible(CmagVersion::fromComponents<100, 100, 99>())));
 }
 
 TEST(VersionTest, givenTwoVersionsWhenCallingEqualsOperatorThenItWorksCorrectly) {

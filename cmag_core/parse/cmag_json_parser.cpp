@@ -28,7 +28,7 @@ ParseResult CmagJsonParser::parseObjectField<CmagVersion>(const nlohmann::json &
             dst = version.value();
             return ParseResult::success;
         } else {
-            return {ParseResultStatus::InvalidValue, "Invalid cmag version format"};
+            return {ParseResultStatus::InvalidValue, LOG_TO_STRING("Invalid ", name, " format")};
         }
     } else {
         return {ParseResultStatus::MissingField, LOG_TO_STRING("Missing ", name, " field")};
@@ -121,6 +121,8 @@ ParseResult CmagJsonParser::parseProject(std::string_view json, CmagProject &out
         return {ParseResultStatus::InvalidNodeType, "Root node should be an object"};
     }
 
+    RETURN_ERROR(validateVersion(node));
+
     if (auto globalsNodeIt = node.find("globals"); globalsNodeIt != node.end()) {
         RETURN_ERROR(parseGlobalValues(*globalsNodeIt, outProject.getGlobals()));
     } else {
@@ -145,6 +147,24 @@ ParseResult CmagJsonParser::parseProject(std::string_view json, CmagProject &out
         // TODO return some meaningful string from data derivation
         return {ParseResultStatus::DataDerivationFailed, "Data derivation failed"};
     }
+    return ParseResult::success;
+}
+
+ParseResult CmagJsonParser::validateVersion(const nlohmann::json &node) {
+    auto globalsNodeIt = node.find("globals");
+    if (globalsNodeIt == node.end()) {
+        return {ParseResultStatus::MissingField, "Could not find cmag version"};
+    }
+
+    CmagVersion projectVersion = {};
+    RETURN_ERROR(parseObjectField(*globalsNodeIt, "cmagVersion", projectVersion));
+
+    if (!cmagVersion.isProjectCompatible(projectVersion)) {
+        return {
+            ParseResultStatus::VersionMismatch,
+            LOG_TO_STRING("Incompatible cmag version. Current version is ", cmagVersion.toString(), " and project file version is ", projectVersion.toString(), ".")};
+    }
+
     return ParseResult::success;
 }
 
