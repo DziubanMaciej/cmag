@@ -3,8 +3,8 @@
 #include "cmag_browser/browser_state/browser_state.h"
 #include "cmag_browser/target_graph/text_renderer.h"
 #include "cmag_browser/util/gl_extensions.h"
-#include "cmag_browser/util/math_utils.h"
 #include "cmag_core/core/cmag_project.h"
+#include "cmag_core/utils/math_utils.h"
 
 #include <array>
 #include <glm/matrix.hpp>
