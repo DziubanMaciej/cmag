@@ -2,7 +2,7 @@
 
 #include "cmag_browser/util/gl_extensions.h"
 #include "cmag_browser/util/gl_helpers.h"
-#include "cmag_browser/util/math_utils.h"
+#include "cmag_core/utils/math_utils.h"
 
 #include <algorithm>
 #include <cstdint>

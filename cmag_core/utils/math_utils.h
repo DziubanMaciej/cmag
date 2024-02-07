@@ -74,3 +74,17 @@ inline DataType clamp(DataType arg, DataType min, DataType max) {
     }
     return arg;
 }
+
+constexpr static size_t maxValue(size_t bits) {
+    return (1 << bits) - 1;
+}
+
+constexpr static size_t maxDecimalLength(size_t bits) {
+    size_t val = maxValue(bits);
+    size_t decimalLength = 1;
+    while (val >= 10) {
+        decimalLength++;
+        val /= 10;
+    }
+    return decimalLength;
+}
