@@ -61,20 +61,22 @@ private:
     float calculateDepthValueForTarget(const CmagTarget &target, bool forText) const;
     static void calculateWorldSpaceVerticesForTarget(const CmagTarget &target, const Shapes &shapes, float *outVertices, size_t *outVerticesCount);
 
-    // General data and subobjects
-    BrowserState &browser;
-    std::vector<CmagTarget *> targets = {};
-    CmagTarget *focusedTarget = nullptr;
-    ConnectionData *focusedConnection = nullptr;
-    TextRenderer textRenderer = {};
-    glm::mat4 projectionMatrix = {};
-    std::string_view cmakeConfig = {};
-    CmagDependencyType displayedDependencyType = CmagDependencyType::Build;
+    // Numeric parameters
     float nodeScale = 25.f;
     float textScale = 3.f;
     float arrowLengthScale = 9.3f;
     float arrowWidthScale = 3.15f;
     float lineStippleScale = 0.01f;
+
+    // General data and subobjects
+    BrowserState &browser;
+    std::vector<CmagTarget *> targets = {};
+    CmagTarget *focusedTarget = nullptr;
+    ConnectionData *focusedConnection = nullptr;
+    TextRenderer textRenderer;
+    glm::mat4 projectionMatrix = {};
+    std::string_view cmakeConfig = {};
+    CmagDependencyType displayedDependencyType = CmagDependencyType::Build;
 
     // Every target has a void* userData field to track custom, gui-specific data. We allocate a vector of our data structs
     // and bind them to each target.

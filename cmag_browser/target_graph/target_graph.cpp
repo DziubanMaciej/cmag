@@ -12,7 +12,8 @@
 #include <memory>
 
 TargetGraph::TargetGraph(BrowserState &browser)
-    : browser(browser) {
+    : browser(browser),
+      textRenderer(nodeScale, textScale) {
     fillTargetsVector(browser.getProject().getTargets());
 
     shapes.allocate();
@@ -245,6 +246,7 @@ void TargetGraph::refreshModelMatrices() {
     for (const CmagTarget *target : targets) {
         TargetData::initializeModelMatrix(*target, nodeScale, textScale);
     }
+    textRenderer.setScalesAndInvalidate(nodeScale, textScale);
 }
 
 void TargetGraph::fillTargetsVector(std::vector<CmagTarget> &allTargets) {

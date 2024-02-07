@@ -12,14 +12,28 @@
 constexpr GLuint verticesInQuad = 6;
 constexpr GLuint componentsInVertex = 4; // x,y,u,v
 
-TextRenderer::TextRenderer() {
+TextRenderer::TextRenderer(float nodeScale, float textScale) {
     allocateProgram();
+    setScalesAndInvalidate(nodeScale, textScale);
 }
 
 TextRenderer::~TextRenderer() {
     if (gl.program) {
         glDeleteProgram(gl.program);
     }
+}
+
+void TextRenderer::setScalesAndInvalidate(float nodeScale, float textScale) {
+    FATAL_ERROR_IF(nodeScale == 0, "Zero nodeScale is not valid");
+    FATAL_ERROR_IF(textScale == 0, "Zero textScale is not valid");
+
+    const float newRatio = nodeScale / textScale;
+    if (newRatio == nodeToTextScaleRatio) {
+        return;
+    }
+
+    nodeToTextScaleRatio = newRatio;
+    strings.clear();
 }
 
 void TextRenderer::render(glm::mat4 transform, float depthValue, std::string_view text, ImFont *font) {
@@ -34,7 +48,7 @@ void TextRenderer::render(glm::mat4 transform, float depthValue, std::string_vie
     SAFE_GL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
     SAFE_GL(glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
 
-    SAFE_GL(glUniform1f(gl.programUniform.depthValue, depthValue));
+    SAFE_GL(glUniform2f(gl.programUniform.miscValues, depthValue, data.xOffset));
     SAFE_GL(glUniformMatrix4fv(gl.programUniform.transform, 1, GL_FALSE, glm::value_ptr(transform)));
     SAFE_GL(glDrawArrays(GL_TRIANGLES, 0, data.vertexCount));
 
@@ -54,7 +68,7 @@ TextRenderer::PerStringData &TextRenderer::getStringData(std::string_view text, 
         return *it;
     }
 
-    strings.emplace_back(font, text);
+    strings.emplace_back(font, text, nodeToTextScaleRatio);
     return strings.back();
 }
 
@@ -71,14 +85,17 @@ void TextRenderer::allocateProgram() {
     #version 330 core
     #extension GL_ARB_separate_shader_objects : enable
 
-    uniform float depthValue;
+    uniform vec2 miscValues;
     uniform mat4 transform;
     in vec2 inPos;
     in vec2 inTexCoord;
 
     layout(location = 0) out vec2 outTexCoord;
     void main() {
-        gl_Position = vec4(inPos, depthValue, 1);
+        float depthValue = miscValues.x;
+        float xOffset = miscValues.y;
+
+        gl_Position = vec4(inPos.x + xOffset, inPos.y, depthValue, 1);
         gl_Position = transform * gl_Position;
 
         outTexCoord = inTexCoord;
@@ -98,14 +115,16 @@ void TextRenderer::allocateProgram() {
 
 )";
     gl.program = createProgram(vertexShaderSource, fragmentShaderSource);
-    gl.programUniform.depthValue = getUniformLocation(gl.program, "depthValue");
+    gl.programUniform.miscValues = getUniformLocation(gl.program, "miscValues");
     gl.programUniform.transform = getUniformLocation(gl.program, "transform");
 }
 
-TextRenderer::PerStringData::PerStringData(ImFont *font, std::string_view text) {
+TextRenderer::PerStringData::PerStringData(ImFont *font, std::string_view text, float nodeToTextScaleRatio) {
     string = std::string{text};
-    vertexCount = static_cast<GLuint>(text.length()) * verticesInQuad;
-    allocateVertexBuffer(font, text);
+
+    const std::vector<float> vertexData = prepareVertexData(font, text, nodeToTextScaleRatio, &vertexCount, &xOffset);
+    GLint attribSizes[] = {2, 2};
+    createVertexBuffer(&gl.vao, &gl.vbo, vertexData.data(), vertexData.size() * sizeof(float), attribSizes, 2u);
 }
 
 TextRenderer::PerStringData::~PerStringData() {
@@ -117,13 +136,7 @@ TextRenderer::PerStringData::~PerStringData() {
     }
 }
 
-void TextRenderer::PerStringData::allocateVertexBuffer(ImFont *font, std::string_view text) {
-    const std::vector<float> vertexData = prepareVertexData(font, text);
-    GLint attribSizes[] = {2, 2};
-    createVertexBuffer(&gl.vao, &gl.vbo, vertexData.data(), vertexData.size() * sizeof(float), attribSizes, 2u);
-}
-
-std::vector<float> TextRenderer::PerStringData::prepareVertexData(ImFont *font, std::string_view text) {
+std::vector<float> TextRenderer::PerStringData::prepareVertexData(ImFont *font, std::string_view text, float nodeToTextScaleRatio, GLuint *outVertexCount, float *outXOffset) {
 
     std::vector<float> result = {};
     result.reserve(text.length() * verticesInQuad * componentsInVertex);
@@ -162,19 +175,41 @@ std::vector<float> TextRenderer::PerStringData::prepareVertexData(ImFont *font, 
         }
     };
 
+    // Calculate width of ellipsis - three dots that are displayed if the text is too long
+    const ImFontGlyph *dotGlyph = font->FindGlyphNoFallback('.');
+    const float ellipsisWidth = transformToModelSpaceX(dotGlyph->AdvanceX * 3, true);
+
     // Calculate width of the text
+    const float maxTextWidth = 2 * nodeToTextScaleRatio;
     float textWidth = 0;
+    size_t charactersCount = 0;
+    bool ellipsisNeeded = false;
     for (char character : text) {
-        textWidth += font->FindGlyphNoFallback(character)->AdvanceX;
+        // Add current character to the text
+        charactersCount++;
+        textWidth += transformToModelSpaceX(font->FindGlyphNoFallback(character)->AdvanceX, true);
+
+        // Check if we exceeded maximum width. If yes, then we have to start subtracting characters we've added
+        // until the text + three dots (ellipsis) fits in the maximum width.
+        if (textWidth > maxTextWidth) {
+            ellipsisNeeded = true;
+
+            while (textWidth + ellipsisWidth > maxTextWidth && charactersCount > 0) {
+                const ImFontGlyph *glyphToRemove = font->FindGlyphNoFallback(text[charactersCount - 1]);
+                textWidth -= transformToModelSpaceX(glyphToRemove->AdvanceX, true);
+                charactersCount--;
+            }
+
+            textWidth += ellipsisWidth;
+
+            break;
+        }
     }
-    textWidth = transformToModelSpaceX(textWidth, true);
 
-    // Center the text by making starting x position negative
-    float currentX = textWidth * -0.5f;
+    float currentX = 0;
 
-    // Iterate over characters and add them as triangles to the vertex buffer.
-    for (char character : text) {
-        const ImFontGlyph *glyph = font->FindGlyphNoFallback(character);
+    const auto appendCharacterVertices = [&](char c) {
+        const ImFontGlyph *glyph = font->FindGlyphNoFallback(c);
 
         const float x0 = transformToModelSpaceX(glyph->X0) + currentX;
         const float y0 = transformToModelSpaceY(glyph->Y0);
@@ -196,7 +231,24 @@ std::vector<float> TextRenderer::PerStringData::prepareVertexData(ImFont *font, 
         VERTEX(1, 1);
 
 #undef VERTEX
+    };
+
+    // Iterate over characters and add them as triangles to the vertex buffer.
+    for (size_t characterIndex = 0; characterIndex < charactersCount; characterIndex++) {
+        appendCharacterVertices(text[characterIndex]);
     }
+    if (ellipsisNeeded) {
+        appendCharacterVertices('.');
+        appendCharacterVertices('.');
+        appendCharacterVertices('.');
+    }
+
+    *outVertexCount = charactersCount;
+    if (ellipsisNeeded) {
+        *outVertexCount += 3;
+    }
+    *outVertexCount *= verticesInQuad;
+    *outXOffset = -textWidth / 2;
 
     return result;
 }
