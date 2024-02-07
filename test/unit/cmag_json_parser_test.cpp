@@ -4,14 +4,13 @@
 #include <gtest/gtest.h>
 
 struct CmagParseTest : ::testing::Test {
-    template <typename... Args>
-    const char *insertGlobals(const char *jsonFormat, Args... args) {
-        const char *globals = R"DELIMETER(
+    static std::string constructGlobals(CmagVersion &version) {
+        const char format[] = R"DELIMETER(
             {
                 "darkMode": false,
 
                 "selectedConfig": "",
-                "cmagVersion": "1.0.0",
+                "cmagVersion": "%s",
                 "cmakeVersion": "",
                 "cmakeProjectName": "",
                 "cmagProjectName": "",
@@ -36,7 +35,17 @@ struct CmagParseTest : ::testing::Test {
             }
         )DELIMETER";
 
-        sprintf(jsonBuffer, jsonFormat, globals, args...);
+        char buffer[sizeof(format) + CmagVersion::maxStringLength];
+        int r = snprintf(buffer, sizeof(buffer), format, version.toString().c_str());
+        EXPECT_LE(0, r);
+        return std::string{buffer};
+    }
+
+    template <typename... Args>
+    const char *insertGlobals(const char *jsonFormat, CmagVersion version = cmagVersion, Args... args) {
+        std::string globals = constructGlobals(version);
+        int r = snprintf(jsonBuffer, sizeof(jsonBuffer), jsonFormat, globals.c_str(), args...);
+        EXPECT_LE(0, r);
         return jsonBuffer;
     }
 
@@ -68,6 +77,56 @@ TEST_F(CmagProjectParseTest, givenProjectWithNoTargetsAndEmptyGlobalsThenParseCo
     ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseProject(json, project).status);
     ASSERT_EQ(0u, project.getTargets().size());
     EXPECT_FALSE(project.getGlobals().darkMode);
+}
+
+TEST_F(CmagProjectParseTest, givenProjectWithIncompatibleVersionThenFailParsing) {
+    CmagVersion version = ::cmagVersion;
+    version.comp1++;
+    const char *json = insertGlobals(
+        R"DELIMETER(
+    {
+        "globals": %s,
+        "targets" : {}
+    }
+    )DELIMETER",
+        version);
+    CmagProject project{};
+    ASSERT_EQ(ParseResultStatus::VersionMismatch, CmagJsonParser::parseProject(json, project).status);
+}
+
+TEST_F(CmagProjectParseTest, givenProjectWithDifferentButCompatibleVersionThenSucceed) {
+    CmagVersion version = ::cmagVersion;
+    version.comp2++;
+    const char *json = insertGlobals(
+        R"DELIMETER(
+    {
+        "globals": %s,
+        "targets" : {}
+    }
+    )DELIMETER",
+        version);
+    CmagProject project{};
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseProject(json, project).status);
+}
+
+TEST_F(CmagProjectParseTest, givenProjectWithInvalidStructureButIncompatibleCmagVersionPresentThenParseTheVersionAndFailParsing) {
+    CmagVersion version = ::cmagVersion;
+    version.comp0++;
+
+    const char jsonFormat[] = R"DELIMETER(
+    {
+        "globals": {
+            "cmagVersion": "%s"
+        }
+    }
+    )DELIMETER";
+
+    char json[sizeof(jsonFormat) + CmagVersion::maxStringLength];
+    int r = snprintf(json, sizeof(json), jsonFormat, version.toString().c_str());
+    ASSERT_LE(0, r);
+
+    CmagProject project{};
+    ASSERT_EQ(ParseResultStatus::VersionMismatch, CmagJsonParser::parseProject(json, project).status);
 }
 
 TEST_F(CmagProjectParseTest, givenTargetWithNoConfigsThenReturnError) {
@@ -335,7 +394,7 @@ TEST_F(CmagProjectParseTest, givenVariousTargetTypesTheParseThemCorrectly) {
             }
         }
         )DELIMETER",
-                                         typeString);
+                                         cmagVersion, typeString);
 
         CmagProject project{};
         ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseProject(json, project).status);

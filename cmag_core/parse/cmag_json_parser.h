@@ -13,6 +13,7 @@ enum class ParseResultStatus {
     InvalidValue,
     MissingField,
     DataDerivationFailed,
+    VersionMismatch,
 };
 
 struct ParseResult {
@@ -34,6 +35,8 @@ public:
     static ParseResult parseAliasesFile(std::string_view json, std::vector<std::pair<std::string, std::string>> &outAliases);
 
 private:
+    static ParseResult validateVersion(const nlohmann::json &node);
+
     static ParseResult parseGlobalValues(const nlohmann::json &node, CmagGlobals &outGlobals);
     static ParseResult parseGlobalValuesBrowser(const nlohmann::json &node, CmagGlobals::BrowserData &outBrowser);
     static ParseResult parseGlobalValueListDirs(const nlohmann::json &node, CmagGlobals &outGlobals);
