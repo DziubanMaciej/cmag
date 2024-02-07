@@ -245,7 +245,7 @@ std::vector<float> TextRenderer::PerStringData::prepareVertexData(ImFont *font, 
     }
 
     // Return output values
-    *outVertexCount = charactersCount;
+    *outVertexCount = static_cast<GLuint>(charactersCount);
     if (ellipsisNeeded) {
         *outVertexCount += 3;
     }
