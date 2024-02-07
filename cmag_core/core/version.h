@@ -43,15 +43,15 @@ struct CmagVersion {
     }
 
     static std::optional<CmagVersion> fromString(const std::string &arg) {
-        uint32_t comp0{};
-        uint32_t comp1{};
-        uint32_t comp2{};
+        uint32_t compValue0{};
+        uint32_t compValue1{};
+        uint32_t compValue2{};
 
-        const int result = sscanf(arg.c_str(), "%u.%u.%u", &comp0, &comp1, &comp2);
+        const int result = sscanf(arg.c_str(), "%u.%u.%u", &compValue0, &compValue1, &compValue2);
         if (result != 3) {
             return {};
         }
-        return fromComponents(comp0, comp1, comp2);
+        return fromComponents(compValue0, compValue1, compValue2);
     }
 
     std::string toString() const {
