@@ -82,7 +82,7 @@ constexpr static size_t maxValue(size_t bits) {
 constexpr static size_t maxDecimalLength(size_t bits) {
     size_t val = maxValue(bits);
     size_t decimalLength = 1;
-    while(val >= 10) {
+    while (val >= 10) {
         decimalLength++;
         val /= 10;
     }
