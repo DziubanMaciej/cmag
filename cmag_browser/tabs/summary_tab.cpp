@@ -20,7 +20,7 @@ void SummaryTab::render() {
         renderTableRowString("CMake generator", globals.generator, "CMake generation used to generate this project. Generators can be thought of as a compiler/build system selectors. More info at:", "https://cmake.org/cmake/help/latest/manual/cmake-generators.7.html");
         renderTableRowSpacer();
 
-        renderTableRowString("Cmag version", globals.cmagVersion, "Version of cmag that was used to generate this project.");
+        renderTableRowString("Cmag version", globals.cmagVersion.toString(), "Version of cmag that was used to generate this project.");
         renderTableRowString("Cmag project name", globals.cmagProjectName, "Name of the cmag project set with -p argument to cmag. This name doesn't have any real implications, though it can be used to differentiate between cmag project files.");
         renderTableRowSpacer();
 

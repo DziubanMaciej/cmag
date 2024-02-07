@@ -1,8 +1,6 @@
 #include "cmag_json_parser.h"
 
-#include "cmag_core/core/cmag_project.h"
 #include "cmag_core/parse/enum_serialization.h"
-#include "cmag_core/utils/error.h"
 
 #define RETURN_ERROR(expr)                              \
     do {                                                \
@@ -20,6 +18,32 @@ ParseResult::ParseResult(ParseResultStatus status, const std::string &errorMessa
 }
 
 const ParseResult ParseResult::success(ParseResultStatus::Success, "");
+
+template <>
+ParseResult CmagJsonParser::parseObjectField<CmagVersion>(const nlohmann::json &node, const char *name, CmagVersion &dst) {
+    if (auto it = node.find(name); it != node.end()) {
+        std::string dstString = it->get<std::string>();
+        std::optional<CmagVersion> version = CmagVersion::fromString(dstString);
+        if (version.has_value()) {
+            dst = version.value();
+            return ParseResult::success;
+        } else {
+            return {ParseResultStatus::InvalidValue, "Invalid cmag version format"};
+        }
+    } else {
+        return {ParseResultStatus::MissingField, LOG_TO_STRING("Missing ", name, " field")};
+    }
+}
+
+template <typename DstT>
+ParseResult CmagJsonParser::parseObjectField(const nlohmann::json &node, const char *name, DstT &dst) {
+    if (auto it = node.find(name); it != node.end()) {
+        dst = it->get<DstT>();
+        return ParseResult::success;
+    } else {
+        return {ParseResultStatus::MissingField, LOG_TO_STRING("Missing ", name, " field")};
+    }
+}
 
 ParseResult CmagJsonParser::parseTargetsFilesListFile(std::string_view json, std::vector<fs::path> &outFiles) {
     const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);
@@ -376,14 +400,4 @@ ParseResult CmagJsonParser::parseTargetAliases(const nlohmann::json &node, CmagT
     }
 
     return ParseResult::success;
-}
-
-template <typename DstT>
-ParseResult CmagJsonParser::parseObjectField(const nlohmann::json &node, const char *name, DstT &dst) {
-    if (auto it = node.find(name); it != node.end()) {
-        dst = it->get<DstT>();
-        return ParseResult::success;
-    } else {
-        return {ParseResultStatus::MissingField, LOG_TO_STRING("Missing ", name, " field")};
-    }
 }

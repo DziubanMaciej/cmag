@@ -1,5 +1,6 @@
 #pragma once
 
+#include "cmag_core/core/version.h"
 #include "cmag_core/utils/enum_utils.h"
 
 #include <string>
@@ -60,7 +61,7 @@ struct CmagListDir {
 struct CmagGlobals {
     bool darkMode = false;
     std::string selectedConfig = {};
-    std::string cmagVersion = {};
+    CmagVersion cmagVersion = {};
     std::string cmakeVersion = {};
     std::string cmakeProjectName = {};
     std::string cmagProjectName = {};

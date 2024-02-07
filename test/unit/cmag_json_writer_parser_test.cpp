@@ -293,7 +293,7 @@ TEST_F(CmagWriterParserTest, givenProjectWithSetGlobalsThenWriteAndReadCorrectly
     CmagGlobals &globals = project.getGlobals();
     globals.darkMode = true;
     globals.selectedConfig = "Debug",
-    globals.cmagVersion = "19.0.0";
+    globals.cmagVersion = CmagVersion::fromComponents<19, 0, 0>();
     globals.cmakeVersion = "3.5.9";
     globals.cmakeProjectName = "myProject";
     globals.cmagProjectName = "myCmagProject";
