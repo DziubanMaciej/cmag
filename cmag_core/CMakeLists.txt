@@ -14,3 +14,5 @@ endif()
 target_compile_definitions(cmag_core PRIVATE -DCMAG_BROWSER_BINARY_NAME="${CMAG_BROWSER_BINARY_NAME}")
 
 header_pack_generate(TEXT cmag_core shim/postamble.cmake postamble.h VARIABLE postamble OUTPUT_SOURCE_GROUP generated)
+header_pack_generate(TEXT cmag_core ../doc/cmag_cli.txt cmag_cli.h VARIABLE cmagCli OUTPUT_SOURCE_GROUP generated)
+header_pack_generate(TEXT cmag_core ../doc/cmag_browser_cli.txt cmag_browser_cli.h VARIABLE cmagBrowserCli OUTPUT_SOURCE_GROUP generated)
