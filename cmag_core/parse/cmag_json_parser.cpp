@@ -45,7 +45,7 @@ ParseResult CmagJsonParser::parseObjectField(const nlohmann::json &node, const c
     }
 }
 
-ParseResult CmagJsonParser::parseTargetsFilesListFile(std::string_view json, std::vector<fs::path> &outFiles) {
+ParseResult CmagJsonParser::parseTargetsFilesListFile(std::string_view json, std::vector<std::string> &outFileNames) {
     const nlohmann::json node = nlohmann::json::parse(json, nullptr, false);
     if (node.is_discarded()) {
         return {ParseResultStatus::Malformed, "File is malformed"};
@@ -59,7 +59,7 @@ ParseResult CmagJsonParser::parseTargetsFilesListFile(std::string_view json, std
         if (!configNode.is_string()) {
             return {ParseResultStatus::InvalidNodeType, "Target should be a string value"};
         }
-        outFiles.push_back(configNode.get<fs::path>());
+        outFileNames.push_back(configNode.get<std::string>());
     }
 
     return ParseResult::success;
