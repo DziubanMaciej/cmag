@@ -59,6 +59,7 @@ CmagResult CmagDumper::dump() {
     }
 
     RETURN_ERROR(cmakeMainPass());
+    RETURN_ERROR(readCmagProjectName());
     RETURN_ERROR(readCmakeAfterMainPass());
     RETURN_ERROR(cmakeSecondPass());
     RETURN_ERROR(readCmakeAfterSecondPass());
@@ -76,6 +77,23 @@ CmagResult CmagDumper::cmakeMainPass() {
     cmakeArgs.push_back(std::string{"-DCMAG_JSON_DEBUG="} + std::to_string(generationDebug));
     cmakeArgs.push_back(std::string{"-DCMAKE_FIND_PACKAGE_TARGETS_GLOBAL="} + std::to_string(makeFindPackagesGlobal));
     return callSubprocess("CMake", cmakeArgs);
+}
+
+CmagResult CmagDumper::readCmagProjectName() {
+    std::string fileName = ".cmag-project-name";
+    fs::path file = buildPath / fileName;
+    temporaryFiles.push_back(file);
+    auto fileContent = readFile(file);
+    if (!fileContent.has_value()) {
+        LOG_ERROR("failed to read ", fileName);
+        return CmagResult::FileAccessError;
+    }
+    if (fileContent.value().empty()) {
+        LOG_ERROR("file ", fileName, " is empty");
+        return CmagResult::ProjectCreationError;
+    }
+    this->projectName = fileContent.value();
+    return CmagResult::Success;
 }
 
 CmagResult CmagDumper::readCmakeAfterMainPass() {

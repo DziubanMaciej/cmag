@@ -88,7 +88,7 @@ TEST_P(CmagTest, givenSimpleProjectWithCustomPropertiesThenProcessItCorrectly) {
     TestWorkspace workspace = TestWorkspace::prepare("simple");
     ASSERT_TRUE(workspace.valid);
 
-    WhiteboxCmagDumper dumper{"project", false, false, workspace.sourcePath, workspace.buildPath, constructCmakeArgs(workspace), "MY_CUSTOM_PROP1;MY_CUSTOM_PROP2"};
+    WhiteboxCmagDumper dumper{"", false, false, workspace.sourcePath, workspace.buildPath, constructCmakeArgs(workspace), "MY_CUSTOM_PROP1;MY_CUSTOM_PROP2"};
 
     {
         RaiiStdoutCapture capture{};
@@ -100,7 +100,7 @@ TEST_P(CmagTest, givenSimpleProjectWithCustomPropertiesThenProcessItCorrectly) {
     EXPECT_STREQ(globals.selectedConfig.c_str(), getDefaultConfig());
     EXPECT_EQ(globals.cmagVersion, cmagVersion);
     EXPECT_STREQ(globals.cmakeProjectName.c_str(), "Simple");
-    EXPECT_EQ(globals.cmagProjectName, dumper.projectName);
+    EXPECT_EQ(globals.cmagProjectName, "Simple"); // derived from CMake project name, if not specified explicitly
     EXPECT_EQ(fs::path{globals.sourceDir}, workspace.sourcePath);
     EXPECT_EQ(fs::path{globals.buildDir}, workspace.buildPath);
     EXPECT_EQ(globals.generator, GetParam().name);
