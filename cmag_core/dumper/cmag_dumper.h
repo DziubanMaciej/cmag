@@ -32,6 +32,7 @@ public:
 
 protected:
     CmagResult cmakeMainPass();
+    CmagResult readCmagProjectName();
     CmagResult readCmakeAfterMainPass();
     CmagResult cmakeSecondPass();
     CmagResult readCmakeAfterSecondPass();
@@ -39,7 +40,7 @@ protected:
 
     static CmagResult callSubprocess(const char *binaryNameForLogging, const std::vector<std::string> &args);
 
-    const std::string projectName;
+    std::string projectName;
     const bool generationDebug;
     const bool makeFindPackagesGlobal;
     const fs::path sourcePath;

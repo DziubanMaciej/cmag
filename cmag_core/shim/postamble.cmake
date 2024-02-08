@@ -413,6 +413,13 @@ function(cmag_postamble_main)
         set(CMAG_CONFIG_DEFAULT "${CMAG_CONFIG}")
     endif()
 
+    # Write project name file
+    set(PROJECT_NAME_FILE "${CMAKE_BINARY_DIR}/.cmag-project-name")
+    if (CMAG_JSON_DEBUG)
+        message(STATUS "cmag: generating file ${PROJECT_NAME_FILE}")
+    endif()
+    file(WRITE "${PROJECT_NAME_FILE}" "${CMAG_PROJECT_NAME}")
+
     # Write configs list
     set(TARGETS_LIST_FILE "${CMAKE_BINARY_DIR}/${CMAG_PROJECT_NAME}.cmag-targets-list")
     if (CMAG_JSON_DEBUG)
@@ -453,9 +460,9 @@ function(cmag_postamble_aliases)
     file(WRITE "${ALIASES_FILE}" "${ALIASES_JSON}")
 endfunction()
 
-# Verify project name is set.
+# Set cmag project name, if not set explicitly
 if ("${CMAG_PROJECT_NAME}d" STREQUAL "d")
-    message(FATAL_ERROR "cmag: CMAG_PROJECT_NAME should be set by cmag")
+    set(CMAG_PROJECT_NAME "${CMAKE_PROJECT_NAME}")
 endif()
 
 # Execute main function

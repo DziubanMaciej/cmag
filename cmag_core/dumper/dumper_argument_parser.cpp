@@ -106,9 +106,6 @@ DumperArgumentParser::DumperArgumentParser(int argc, const char **argv) : argc(a
     }
 
     // Handle arguments that were not passed by user
-    if (projectName.empty()) {
-        projectName = "project";
-    }
     if (sourcePath.empty() && buildPath.empty()) {
         valid = false;
     }

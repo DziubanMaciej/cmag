@@ -199,7 +199,7 @@ TEST(DumperArgumentParserTest, givenProjectNameIsNotPassedThenDefaultNameIsUsed)
     const int argc = sizeof(argv) / sizeof(argv[0]);
     DumperArgumentParser parser{argc, argv};
     EXPECT_TRUE(parser.isValid());
-    EXPECT_STREQ("project", parser.getProjectName().c_str());
+    EXPECT_STREQ("", parser.getProjectName().c_str());
 }
 
 TEST(DumperArgumentParserTest, givenProjectNameIsPassedThenItIsUsed) {
