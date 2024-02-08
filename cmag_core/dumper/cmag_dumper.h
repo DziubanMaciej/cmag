@@ -38,6 +38,7 @@ protected:
     CmagResult readCmakeAfterSecondPass();
     void verifyWarnings();
 
+    fs::path addTemporaryFile(std::string_view fileName);
     static CmagResult callSubprocess(const char *binaryNameForLogging, const std::vector<std::string> &args);
 
     std::string projectName;

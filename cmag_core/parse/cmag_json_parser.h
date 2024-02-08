@@ -29,7 +29,7 @@ class CmagJsonParser {
 public:
     static ParseResult parseProject(std::string_view json, CmagProject &outProject);
 
-    static ParseResult parseTargetsFilesListFile(std::string_view json, std::vector<fs::path> &outFiles);
+    static ParseResult parseTargetsFilesListFile(std::string_view json, std::vector<std::string> &outFileNames);
     static ParseResult parseGlobalsFile(std::string_view json, CmagGlobals &outGlobals);
     static ParseResult parseTargetsFile(std::string_view json, std::vector<CmagTarget> &outTargets);
     static ParseResult parseAliasesFile(std::string_view json, std::vector<std::pair<std::string, std::string>> &outAliases);

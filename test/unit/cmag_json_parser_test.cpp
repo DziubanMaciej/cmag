@@ -482,19 +482,19 @@ TEST(CmagTargetsFilesListFileParseTest, givenEmptyConfigsListThenParseCorrectly)
     const char *json = R"DELIMETER(
     []
     )DELIMETER";
-    std::vector<fs::path> files{};
-    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseTargetsFilesListFile(json, files).status);
-    ASSERT_EQ(0u, files.size());
+    std::vector<std::string> fileNames{};
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseTargetsFilesListFile(json, fileNames).status);
+    ASSERT_EQ(0u, fileNames.size());
 }
 
 TEST(CmagTargetsFilesListFileParseTest, givenOneConfigThenParseCorrectly) {
     const char *json = R"DELIMETER(
     [ "project_Debug.cmag-targets-list" ]
     )DELIMETER";
-    std::vector<fs::path> files{};
-    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseTargetsFilesListFile(json, files).status);
-    ASSERT_EQ(1u, files.size());
-    EXPECT_EQ("project_Debug.cmag-targets-list", files[0]);
+    std::vector<std::string> fileNames{};
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseTargetsFilesListFile(json, fileNames).status);
+    ASSERT_EQ(1u, fileNames.size());
+    EXPECT_EQ("project_Debug.cmag-targets-list", fileNames[0]);
 }
 
 TEST(CmagTargetsFilesListFileParseTest, givenMultipleConfigsThenParseCorrectly) {
@@ -505,12 +505,12 @@ TEST(CmagTargetsFilesListFileParseTest, givenMultipleConfigsThenParseCorrectly) 
         "project_CustomConf.cmag-targets-list"
     ]
     )DELIMETER";
-    std::vector<fs::path> files{};
-    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseTargetsFilesListFile(json, files).status);
-    ASSERT_EQ(3u, files.size());
-    EXPECT_EQ("project_Debug.cmag-targets-list", files[0]);
-    EXPECT_EQ("project_Release.cmag-targets-list", files[1]);
-    EXPECT_EQ("project_CustomConf.cmag-targets-list", files[2]);
+    std::vector<std::string> fileNames{};
+    ASSERT_EQ(ParseResultStatus::Success, CmagJsonParser::parseTargetsFilesListFile(json, fileNames).status);
+    ASSERT_EQ(3u, fileNames.size());
+    EXPECT_EQ("project_Debug.cmag-targets-list", fileNames[0]);
+    EXPECT_EQ("project_Release.cmag-targets-list", fileNames[1]);
+    EXPECT_EQ("project_CustomConf.cmag-targets-list", fileNames[2]);
 }
 
 TEST(CmagGlobalsFileParseTest, givenEmptyGlobalsThenReturnError) {

@@ -80,10 +80,9 @@ CmagResult CmagDumper::cmakeMainPass() {
 }
 
 CmagResult CmagDumper::readCmagProjectName() {
-    std::string fileName = ".cmag-project-name";
-    fs::path file = buildPath / fileName;
-    temporaryFiles.push_back(file);
-    auto fileContent = readFile(file);
+    const char *fileName = ".cmag-project-name";
+    const fs::path file = addTemporaryFile(fileName);
+    const auto fileContent = readFile(file);
     if (!fileContent.has_value()) {
         LOG_ERROR("failed to read ", fileName);
         return CmagResult::FileAccessError;
@@ -100,32 +99,34 @@ CmagResult CmagDumper::readCmakeAfterMainPass() {
     // Read targets list
     std::vector<fs::path> targetsFiles = {};
     {
-        std::string fileName = projectName + ".cmag-targets-list";
-        fs::path file = buildPath / fileName;
-        auto fileContent = readFile(file);
+        const std::string fileName = projectName + ".cmag-targets-list";
+        const fs::path file = addTemporaryFile(fileName);
+        const auto fileContent = readFile(file);
         if (!fileContent.has_value()) {
             LOG_ERROR("failed to read ", fileName);
             return CmagResult::FileAccessError;
         }
-        temporaryFiles.push_back(file);
-        const ParseResult parseResult = CmagJsonParser::parseTargetsFilesListFile(fileContent.value(), targetsFiles);
+        std::vector<std::string> targetFilesNames = {};
+        const ParseResult parseResult = CmagJsonParser::parseTargetsFilesListFile(fileContent.value(), targetFilesNames);
         if (parseResult.status != ParseResultStatus::Success) {
             LOG_ERROR("failed to parse ", fileName, ". ", parseResult.errorMessage);
             return CmagResult::JsonParseError;
+        }
+        for (const std::string &targetFileName : targetFilesNames) {
+            targetsFiles.push_back(addTemporaryFile(targetFileName));
         }
     }
 
     // Read globals
     CmagGlobals globals = {};
     {
-        std::string fileName = std::string(projectName) + ".cmag-globals";
-        fs::path file = buildPath / fileName;
-        auto fileContent = readFile(file);
+        const std::string fileName = std::string(projectName) + ".cmag-globals";
+        const fs::path file = addTemporaryFile(fileName);
+        const auto fileContent = readFile(file);
         if (!fileContent.has_value()) {
             LOG_ERROR("failed to read ", fileName);
             return CmagResult::FileAccessError;
         }
-        temporaryFiles.push_back(file);
         const ParseResult parseResult = CmagJsonParser::parseGlobalsFile(fileContent.value(), globals);
         if (parseResult.status != ParseResultStatus::Success) {
             LOG_ERROR("failed to parse ", fileName, ". ", parseResult.errorMessage);
@@ -136,17 +137,15 @@ CmagResult CmagDumper::readCmakeAfterMainPass() {
     // Read targets
     std::vector<CmagTarget> targets = {};
     {
-        for (const fs::path &fileName : targetsFiles) {
-            fs::path file = buildPath / fileName;
-            auto fileContent = readFile(file);
+        for (const fs::path &file : targetsFiles) {
+            const auto fileContent = readFile(file);
             if (!fileContent.has_value()) {
-                LOG_ERROR("failed to read ", fileName);
+                LOG_ERROR("failed to read ", file.filename().string());
                 return CmagResult::FileAccessError;
             }
-            temporaryFiles.push_back(file);
             const ParseResult parseResult = CmagJsonParser::parseTargetsFile(fileContent.value(), targets);
             if (parseResult.status != ParseResultStatus::Success) {
-                LOG_ERROR("failed to parse ", fileName, ". ", parseResult.errorMessage);
+                LOG_ERROR("failed to parse ", file.filename().string(), ". ", parseResult.errorMessage);
                 return CmagResult::JsonParseError;
             }
         }
@@ -184,9 +183,9 @@ CmagResult CmagDumper::readCmakeAfterSecondPass() {
     // Read aliases file
     std::vector<std::pair<std::string, std::string>> aliases = {};
     {
-        std::string fileName = projectName + ".cmag-aliases";
-        fs::path file = buildPath / fileName;
-        auto fileContent = readFile(file);
+        const std::string fileName = projectName + ".cmag-aliases";
+        const fs::path file = addTemporaryFile(fileName);
+        const auto fileContent = readFile(file);
         if (!fileContent.has_value()) {
             LOG_ERROR("failed to read ", fileName);
             return CmagResult::FileAccessError;
@@ -257,6 +256,12 @@ void CmagDumper::verifyWarnings() {
             LOG_WARNING("CMAKE_FIND_PACKAGE_TARGETS_GLOBAL is set to true, but your CMake version is too old. This option is supported starting with ", minimumVersion, ".");
         }
     }
+}
+
+fs::path CmagDumper::addTemporaryFile(std::string_view fileName) {
+    fs::path file = buildPath / fileName;
+    temporaryFiles.push_back(file);
+    return file;
 }
 
 CmagResult CmagDumper::callSubprocess(const char *binaryNameForLogging, const std::vector<std::string> &args) {
