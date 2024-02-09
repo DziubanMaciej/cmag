@@ -142,12 +142,16 @@ void TargetGraphTab::renderPropertyPopup() {
         popup.isOpen = true;
     }
 
+    ImGui::SetNextWindowSizeConstraints(
+        ImVec2(0, 0),
+        ImVec2(ImGui::GetWindowSize().x / 2, ImGui::GetWindowSize().y / 2));
     if (ImGui::BeginPopup(popupName)) {
         ImGui::Text("Property %s", popup.property->name.c_str());
-        ImGui::Text("%s\n", popup.property->value.c_str());
 
+        char buffer[1024];
         for (const auto &entry : popup.propertyValueList) {
-            ImGui::BulletText("%.*s\n", static_cast<int>(entry.length()), entry.data());
+            snprintf(buffer, sizeof(buffer), "  %.*s\n", static_cast<int>(entry.length()), entry.data());
+            ImGui::Selectable(buffer, false);
         }
 
         ImGui::EndPopup();
@@ -293,5 +297,8 @@ void TargetGraphTab::scheduleOpenPropertyPopupOnClick(const CmagTargetProperty &
         popup.isOpen = false;
         popup.property = &property;
         popup.propertyValueList = splitCmakeListString(property.value, true);
+        if (popup.propertyValueList.empty() && !popup.property->value.empty()) {
+            popup.propertyValueList.push_back(popup.property->value);
+        }
     }
 }
