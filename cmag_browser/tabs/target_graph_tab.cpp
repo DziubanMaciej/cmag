@@ -54,9 +54,6 @@ void TargetGraphTab::renderSidePaneSectionDebug() {
     renderSidePaneSlider("arrow length", 1, 15, targetGraph.getArrowLengthScalePtr());
     renderSidePaneSlider("arrow width", 1, 15, targetGraph.getArrowWidthScalePtr());
     renderSidePaneSlider("stipple", 0.005f, 0.1f, targetGraph.getLineStippleScalePtr());
-
-    browser.getConfigSelector().render(ImGui::GetContentRegionAvail().x);
-    browser.getConfigSelector().renderTooltipLastItem();
 }
 
 void TargetGraphTab::renderSidePaneSectionView() {
@@ -81,6 +78,9 @@ void TargetGraphTab::renderSidePaneSectionView() {
         .setHoverLastItem()
         .addText("Recalculate positions of targets on the graph.")
         .execute();
+
+    browser.getConfigSelector().render(ImGui::GetContentRegionAvail().x);
+    browser.getConfigSelector().renderTooltipLastItem();
 }
 
 void TargetGraphTab::renderSidePaneSectionTarget() {
