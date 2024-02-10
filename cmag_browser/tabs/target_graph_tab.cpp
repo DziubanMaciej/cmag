@@ -173,39 +173,40 @@ void TargetGraphTab::renderPropertyTable(float width) {
 
     auto tableStyle = theme.setupPropertyTable();
     if (ImGui::BeginTable("Table populating", 2, tableFlags, propertyTableSize)) {
-
         const CmagTargetConfig *config = selectedTarget->tryGetConfig(browser.getConfigSelector().getCurrentConfig());
+
         for (const CmagTargetProperty &property : config->properties) {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             {
-                renderPropertyTablePopup(property, false);
+                const ImVec2 cellMin = ImGui::GetCursorPos();
+                const ImVec2 cellMax = {cellMin.x + ImGui::GetContentRegionAvail().x, cellMin.y + ImGui::CalcTextSize("").y};
+
+                renderPropertyTablePopup(property, cellMin, cellMax, false);
+                scheduleOpenPropertyPopupOnClick(property, cellMin, cellMax);
 
                 auto nameStyle = theme.setupPropertyName(property.value.empty(), property.isConsistent);
                 ImGui::Text("%s", property.name.c_str());
-
-                scheduleOpenPropertyPopupOnClick(property);
             }
 
             ImGui::TableNextColumn();
             {
-                renderPropertyTablePopup(property, true);
+                const ImVec2 cellMin = ImGui::GetCursorPos();
+                const ImVec2 cellMax = {cellMin.x + ImGui::GetContentRegionAvail().x, cellMin.y + ImGui::CalcTextSize("").y};
+
+                renderPropertyTablePopup(property, cellMin, cellMax, true);
+                scheduleOpenPropertyPopupOnClick(property, cellMin, cellMax);
 
                 auto valueStyle = theme.setupPropertyValue();
                 ImGui::Text("%s", property.value.c_str());
-
-                scheduleOpenPropertyPopupOnClick(property);
             }
         }
+
+        ImGui::EndTable();
     }
-    ImGui::EndTable();
 }
-void TargetGraphTab::renderPropertyTablePopup(const CmagTargetProperty &property, bool showValue) const {
+void TargetGraphTab::renderPropertyTablePopup(const CmagTargetProperty &property, ImVec2 cellMin, ImVec2 cellMax, bool showValue) const {
     const CmagBrowserTheme &theme = browser.getTheme();
-
-    const ImVec2 cellMin = ImGui::GetCursorPos();
-    const ImVec2 cellMax = {cellMin.x + ImGui::GetContentRegionAvail().x, cellMin.y + ImGui::CalcTextSize("").y};
-
     TooltipBuilder(theme)
         .setHoverRect(cellMin, cellMax)
         .addTextOneLine(showValue ? property.value.c_str() : property.name.c_str())
@@ -291,8 +292,8 @@ void TargetGraphTab::renderConnectionPopup(const TargetGraph::ConnectionData *co
         .execute();
 }
 
-void TargetGraphTab::scheduleOpenPropertyPopupOnClick(const CmagTargetProperty &property) {
-    if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
+void TargetGraphTab::scheduleOpenPropertyPopupOnClick(const CmagTargetProperty &property, ImVec2 cellMin, ImVec2 cellMax) {
+    if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && ImGui::IsMouseHoveringRect(cellMin, cellMax)) {
         popup.shouldBeOpen = true;
         popup.isOpen = false;
         popup.property = &property;

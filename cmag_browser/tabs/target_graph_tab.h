@@ -18,12 +18,12 @@ private:
     void renderSidePaneHideConnectionsButton(float width);
     void renderPropertyPopup();
     void renderPropertyTable(float width);
-    void renderPropertyTablePopup(const CmagTargetProperty &property, bool showValue) const;
+    void renderPropertyTablePopup(const CmagTargetProperty &property, ImVec2 cellMin, ImVec2 cellMax, bool showValue) const;
     void renderGraph(ImGuiIO &io);
     void renderConnectionPopup(const TargetGraph::ConnectionData *connection);
     void renderTargetPopup(const ImGuiIO &io, CmagTarget *target);
 
-    void scheduleOpenPropertyPopupOnClick(const CmagTargetProperty &property);
+    void scheduleOpenPropertyPopupOnClick(const CmagTargetProperty &property, ImVec2 cellMin, ImVec2 cellMax);
 
     BrowserState &browser;
     TargetGraph targetGraph;
