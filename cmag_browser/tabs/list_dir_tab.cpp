@@ -13,6 +13,10 @@ void ListDirTab::render() {
 
 void ListDirTab::renderOptions() {
     ImGui::Checkbox("Show ignored targets", &showIgnoredTargets);
+    TooltipBuilder(browser.getTheme())
+        .setHoverLastItem()
+        .addText("Some targets are automatically ignored by cmag due to their lack of use.")
+        .execute();
 }
 
 void ListDirTab::renderListDir(const char *parentName, const CmagListDir &listDir) {

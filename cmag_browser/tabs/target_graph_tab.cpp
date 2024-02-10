@@ -68,10 +68,19 @@ void TargetGraphTab::renderSidePaneSectionView() {
     if (ImGui::Button("Fit camera", buttonSize)) {
         targetGraph.showEntireGraph();
     }
+    TooltipBuilder(browser.getTheme())
+        .setHoverLastItem()
+        .addText("Set camera position and zoom automatically, so that all targets are visible.")
+        .execute();
+
     if (ImGui::Button("Reset layout", buttonSize)) {
         targetGraph.resetGraphLayout();
         targetGraph.showEntireGraph();
     }
+    TooltipBuilder(browser.getTheme())
+        .setHoverLastItem()
+        .addText("Recalculate positions of targets on the graph.")
+        .execute();
 }
 
 void TargetGraphTab::renderSidePaneSectionTarget() {
@@ -86,6 +95,10 @@ void TargetGraphTab::renderSidePaneSectionTarget() {
     if (ImGui::Checkbox("Hide dependencies", &target->graphical.hideConnections)) {
         targetGraph.refreshConnections();
     }
+    TooltipBuilder(browser.getTheme())
+        .setHoverLastItem()
+        .addText("Hide all connections between this target and other targets on graph. Useful to avoid clutter.")
+        .execute();
 
     renderPropertyPopup();
     renderPropertyTable(target);

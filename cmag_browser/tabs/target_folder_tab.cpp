@@ -17,6 +17,10 @@ void TargetFolderTab::render() {
 void TargetFolderTab::renderHeaders() {
     renderHeadersWarnings();
     ImGui::Checkbox("Show ignored targets", &showIgnoredTargets);
+    TooltipBuilder(browser.getTheme())
+        .setHoverLastItem()
+        .addText("Some targets are automatically ignored by cmag due to their lack of use.")
+        .execute();
 }
 
 void TargetFolderTab::renderHeadersWarnings() {
