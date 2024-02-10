@@ -7,13 +7,15 @@
 
 struct CmagGlobals;
 
+struct Section;
+
 class SummaryTab {
 public:
     explicit SummaryTab(BrowserState &browser);
     void render();
 
 private:
-    void renderSectionHeader(const char *name, const char *tooltip);
+    Section renderSectionHeader(const char *name, const char *tooltip);
 
     void renderRowLabel(const char *name);
     void renderRowString(const char *name, const std::string &value, const char *tooltip, const char *tooltipHyperlink = nullptr);
@@ -23,6 +25,8 @@ private:
 
     static std::string createCompilerString(const CmagGlobals &globals);
 
+    const float sectionIndentSize = 8.f;
+    const float marginBetweenSections = 15.f;
     BrowserState &browser;
     std::string compiler;
     float firstColumnWidth = 0;
