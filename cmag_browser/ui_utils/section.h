@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cmag_browser/util/movable_primitive.h"
+
 #include <imgui/imgui.h>
 
 struct Section {
@@ -16,9 +18,14 @@ struct Section {
         if (indent != 0) {
             ImGui::Unindent(indent);
         }
-        ImGui::Dummy(ImVec2(0, verticalMargin));
+        if (verticalMargin != 0) {
+            ImGui::Dummy(ImVec2(0, verticalMargin));
+        }
     }
 
-    float indent;
-    float verticalMargin;
+    Section(Section &&) noexcept = default;
+    Section &operator=(Section &&) noexcept = default;
+
+    MovablePrimitive<float> indent;
+    MovablePrimitive<float> verticalMargin;
 };
