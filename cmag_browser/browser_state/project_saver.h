@@ -30,6 +30,7 @@ public:
 
     bool isDirty() const;
     bool shouldShowDirtyNotification() const;
+    const auto &getOutputPath() const { return outputPath; }
 
 private:
     using Clock = std::chrono::steady_clock;
