@@ -1,6 +1,7 @@
 #include "target_graph_tab.h"
 
 #include "cmag_browser/browser_state/cmag_browser_theme.h"
+#include "cmag_browser/ui_utils/section.h"
 #include "cmag_browser/ui_utils/tooltip.h"
 #include "cmag_core/utils/string_utils.h"
 
@@ -13,67 +14,100 @@ void TargetGraphTab::render(ImGuiIO &io) {
     const float windowWidth = ImGui::GetContentRegionAvail().x;
     const float sidePaneWidth = windowWidth * 0.2f;
 
-    ImGui::BeginGroup();
     renderSidePane(sidePaneWidth);
-    ImGui::EndGroup();
     ImGui::SameLine();
-
     renderGraph(io);
 }
 
 void TargetGraphTab::renderSidePane(float width) {
-    if (showDebugWidgets) {
-        ImGui::Checkbox("Demo Window", &showDemoWindow);
-        if (showDemoWindow) {
-            ImGui::ShowDemoWindow(&showDemoWindow);
-        }
+    const ImVec2 sidePaneSize = {width, ImGui::GetContentRegionAvail().y};
+    if (ImGui::BeginChild("TargetGraphTabSidePane", sidePaneSize)) {
+        renderSidePaneSectionDebug();
+        renderSidePaneSectionView();
+        renderSidePaneSectionTarget();
+    }
+    ImGui::EndChild();
+}
 
-        ImGui::Checkbox("Style selector", &showStyleSelector);
-        if (showStyleSelector) {
-            if (ImGui::Begin("StyleSelectorWindow")) {
-                ImGui::ShowStyleEditor(&ImGui::GetStyle());
-                ImGui::End();
-            }
-        }
-
-        renderSidePaneSlider("node size", width, 5, 40, targetGraph.getNodeScalePtr());
-        renderSidePaneSlider("text size", width, 3, 12, targetGraph.getTextScalePtr());
-        renderSidePaneSlider("arrow length", width, 1, 15, targetGraph.getArrowLengthScalePtr());
-        renderSidePaneSlider("arrow width", width, 1, 15, targetGraph.getArrowWidthScalePtr());
-        renderSidePaneSlider("stipple", width, 0.005f, 0.1f, targetGraph.getLineStippleScalePtr());
+void TargetGraphTab::renderSidePaneSectionDebug() {
+    if (!showDebugWidgets) {
+        return;
     }
 
-    browser.getConfigSelector().render(width);
+    Section section{"Debug", sectionIndentSize, marginBetweenSections};
+
+    ImGui::Checkbox("Demo Window", &showDemoWindow);
+    if (showDemoWindow) {
+        ImGui::ShowDemoWindow(&showDemoWindow);
+    }
+
+    ImGui::Checkbox("Style selector", &showStyleSelector);
+    if (showStyleSelector) {
+        if (ImGui::Begin("StyleSelectorWindow")) {
+            ImGui::ShowStyleEditor(&ImGui::GetStyle());
+            ImGui::End();
+        }
+    }
+
+    renderSidePaneSlider("node size", 5, 40, targetGraph.getNodeScalePtr());
+    renderSidePaneSlider("text size", 3, 12, targetGraph.getTextScalePtr());
+    renderSidePaneSlider("arrow length", 1, 15, targetGraph.getArrowLengthScalePtr());
+    renderSidePaneSlider("arrow width", 1, 15, targetGraph.getArrowWidthScalePtr());
+    renderSidePaneSlider("stipple", 0.005f, 0.1f, targetGraph.getLineStippleScalePtr());
+
+    browser.getConfigSelector().render(ImGui::GetContentRegionAvail().x);
     browser.getConfigSelector().renderTooltipLastItem();
-    renderSidePaneDependencyTypeSelection(width);
-    if (ImGui::Button("Fit camera")) {
+}
+
+void TargetGraphTab::renderSidePaneSectionView() {
+    Section section{"View", sectionIndentSize, marginBetweenSections};
+
+    renderSidePaneDependencyTypeSelection();
+
+    const ImVec2 buttonSize = ImVec2{ImGui::GetContentRegionAvail().x, 0};
+    if (ImGui::Button("Fit camera", buttonSize)) {
         targetGraph.showEntireGraph();
     }
-    if (ImGui::Button("Reset layout")) {
+    if (ImGui::Button("Reset layout", buttonSize)) {
         targetGraph.resetGraphLayout();
         targetGraph.showEntireGraph();
     }
-    renderSidePaneHideConnectionsButton(width);
-    renderPropertyPopup();
-    renderPropertyTable(width);
 }
 
-void TargetGraphTab::renderSidePaneSlider(const char *label, float width, float min, float max, float *value) {
-    const float textWidth = ImGui::CalcTextSize(label).x;
+void TargetGraphTab::renderSidePaneSectionTarget() {
+    CmagTarget *target = browser.getTargetSelection().getMutableSelection();
+    if (target == nullptr) {
+        return;
+    }
+
+    const std::string label = "Target " + target->name;
+    Section section{label.c_str(), sectionIndentSize, marginBetweenSections};
+
+    if (ImGui::Checkbox("Hide dependencies", &target->graphical.hideConnections)) {
+        targetGraph.refreshConnections();
+    }
+
+    renderPropertyPopup();
+    renderPropertyTable(target);
+}
+
+void TargetGraphTab::renderSidePaneSlider(const char *label, float min, float max, float *value) {
+    const float textWidth = ImGui::GetStyle().ItemInnerSpacing.x + ImGui::CalcTextSize(label).x;
     std::string labelHidden = std::string("##");
 
-    float sliderWidth = width - textWidth;
+    const float sidePaneWidth = ImGui::GetContentRegionAvail().x;
+    float sliderWidth = sidePaneWidth - textWidth;
     const char *sliderLabel = label;
     bool tooltipNeeded = false;
     const float minimumSliderWidth = 50.f;
-    if (textWidth + minimumSliderWidth > width) {
-        sliderWidth = width;
+    if (textWidth + minimumSliderWidth > sidePaneWidth) {
+        sliderWidth = sidePaneWidth;
         labelHidden.append(label);
         sliderLabel = labelHidden.c_str();
         tooltipNeeded = true;
     }
 
-    ImGui::PushItemWidth(sliderWidth);
+    ImGui::PushItemWidth(sliderWidth); // TODO integrate this in RaiiImguiStyle
     if (ImGui::SliderFloat(sliderLabel, value, min, max, "%.2f", ImGuiSliderFlags_AlwaysClamp)) {
         targetGraph.refreshModelMatrices();
         targetGraph.refreshConnections();
@@ -84,9 +118,10 @@ void TargetGraphTab::renderSidePaneSlider(const char *label, float width, float 
             .addText(label)
             .execute();
     }
+    ImGui::PopItemWidth();
 }
 
-void TargetGraphTab::renderSidePaneDependencyTypeSelection(float width) {
+void TargetGraphTab::renderSidePaneDependencyTypeSelection() {
     const char *labels[] = {
         "Build dependencies",
         "Interface dependencies",
@@ -107,7 +142,6 @@ void TargetGraphTab::renderSidePaneDependencyTypeSelection(float width) {
         FATAL_ERROR_IF(typeIndex >= selectionsCount, "Incorrect type index");
 
         bool isSelected = (dependencyTypeSelected & currentType) != CmagDependencyType::NONE;
-        ImGui::SetNextItemWidth(width);
         if (ImGui::Checkbox(labels[typeIndex], &isSelected)) {
             dependencyTypeSelected = dependencyTypeSelected ^ currentType;
             browser.getProjectSaver().makeDirty(ProjectDirtyFlag::SelectedDependencies);
@@ -123,17 +157,6 @@ void TargetGraphTab::renderSidePaneDependencyTypeSelection(float width) {
     renderCheckbox(CmagDependencyType::Additional, 2);
 }
 
-void TargetGraphTab::renderSidePaneHideConnectionsButton(float) {
-    CmagTarget *target = browser.getTargetSelection().getMutableSelection();
-    if (target == nullptr) {
-        return;
-    }
-
-    if (ImGui::Checkbox("Hide dependencies", &target->graphical.hideConnections)) {
-        targetGraph.refreshConnections();
-    }
-}
-
 void TargetGraphTab::renderPropertyPopup() {
     constexpr const char *popupName = "propertyPopup";
 
@@ -142,9 +165,10 @@ void TargetGraphTab::renderPropertyPopup() {
         popup.isOpen = true;
     }
 
+    const ImVec2 displaySize = ImGui::GetIO().DisplaySize;
     ImGui::SetNextWindowSizeConstraints(
         ImVec2(0, 0),
-        ImVec2(ImGui::GetWindowSize().x / 2, ImGui::GetWindowSize().y / 2));
+        ImVec2(displaySize.x / 2, displaySize.y / 2));
     if (ImGui::BeginPopup(popupName)) {
         ImGui::Text("Property %s", popup.property->name.c_str());
 
@@ -160,15 +184,10 @@ void TargetGraphTab::renderPropertyPopup() {
     }
 }
 
-void TargetGraphTab::renderPropertyTable(float width) {
+void TargetGraphTab::renderPropertyTable(const CmagTarget *selectedTarget) {
     const CmagBrowserTheme &theme = browser.getTheme();
 
-    const CmagTarget *selectedTarget = browser.getTargetSelection().getSelection();
-    if (selectedTarget == nullptr) {
-        return;
-    }
-
-    const ImVec2 propertyTableSize{width, 0};
+    const ImVec2 propertyTableSize{ImGui::GetContentRegionAvail().x - 1.0f, 0}; // Not sure why -1 is needed, but without it the right border is clipped...
     const ImGuiTableFlags tableFlags = ImGuiTableFlags_Resizable | ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg;
 
     auto tableStyle = theme.setupPropertyTable();
@@ -179,7 +198,7 @@ void TargetGraphTab::renderPropertyTable(float width) {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             {
-                const ImVec2 cellMin = ImGui::GetCursorPos();
+                const ImVec2 cellMin = ImGui::GetCursorScreenPos();
                 const ImVec2 cellMax = {cellMin.x + ImGui::GetContentRegionAvail().x, cellMin.y + ImGui::CalcTextSize("").y};
 
                 renderPropertyTablePopup(property, cellMin, cellMax, false);
@@ -191,7 +210,7 @@ void TargetGraphTab::renderPropertyTable(float width) {
 
             ImGui::TableNextColumn();
             {
-                const ImVec2 cellMin = ImGui::GetCursorPos();
+                const ImVec2 cellMin = ImGui::GetCursorScreenPos();
                 const ImVec2 cellMax = {cellMin.x + ImGui::GetContentRegionAvail().x, cellMin.y + ImGui::CalcTextSize("").y};
 
                 renderPropertyTablePopup(property, cellMin, cellMax, true);
@@ -205,6 +224,7 @@ void TargetGraphTab::renderPropertyTable(float width) {
         ImGui::EndTable();
     }
 }
+
 void TargetGraphTab::renderPropertyTablePopup(const CmagTargetProperty &property, ImVec2 cellMin, ImVec2 cellMax, bool showValue) const {
     const CmagBrowserTheme &theme = browser.getTheme();
     TooltipBuilder(theme)
@@ -254,6 +274,7 @@ void TargetGraphTab::renderGraph(ImGuiIO &io) {
         }
     }
 }
+
 void TargetGraphTab::renderTargetPopup(const ImGuiIO &io, CmagTarget *target) {
     if (io.MouseClicked[ImGuiMouseButton_Right]) {
         browser.getTabChange().showPopup(TabChange::TargetGraph, target);
@@ -268,6 +289,7 @@ void TargetGraphTab::renderTargetPopup(const ImGuiIO &io, CmagTarget *target) {
         .addText(text.c_str())
         .execute();
 }
+
 void TargetGraphTab::renderConnectionPopup(const TargetGraph::ConnectionData *connection) {
     std::string text = connection->src->name + " -> " + connection->dst->name;
 
