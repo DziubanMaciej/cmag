@@ -65,9 +65,10 @@ inline void TooltipBuilder::execute(BodyFunc body) {
         return;
     }
 
+    const ImVec2 displaySize = ImGui::GetIO().DisplaySize;
     ImGui::SetNextWindowSizeConstraints(
         ImVec2(0, 0),
-        ImVec2(ImGui::GetWindowWidth() / 2, ImGui::GetWindowHeight() / 2));
+        ImVec2(displaySize.x / 2, displaySize.y / 2));
     if (ImGui::BeginTooltip()) {
         texts.render(theme);
         body();

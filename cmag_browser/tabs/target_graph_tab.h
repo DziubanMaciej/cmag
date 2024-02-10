@@ -13,11 +13,15 @@ public:
 
 private:
     void renderSidePane(float width);
-    void renderSidePaneSlider(const char *label, float width, float min, float max, float *value);
-    void renderSidePaneDependencyTypeSelection(float width);
-    void renderSidePaneHideConnectionsButton(float width);
+    void renderSidePaneSectionDebug();
+    void renderSidePaneSectionView();
+    void renderSidePaneSectionTarget();
+
+    void renderSidePaneSlider(const char *label, float min, float max, float *value);
+    void renderSidePaneDependencyTypeSelection();
+
     void renderPropertyPopup();
-    void renderPropertyTable(float width);
+    void renderPropertyTable(const CmagTarget *selectedTarget);
     void renderPropertyTablePopup(const CmagTargetProperty &property, ImVec2 cellMin, ImVec2 cellMax, bool showValue) const;
     void renderGraph(ImGuiIO &io);
     void renderConnectionPopup(const TargetGraph::ConnectionData *connection);
@@ -25,6 +29,8 @@ private:
 
     void scheduleOpenPropertyPopupOnClick(const CmagTargetProperty &property, ImVec2 cellMin, ImVec2 cellMax);
 
+    const float sectionIndentSize = 8.f;
+    const float marginBetweenSections = 15.f;
     BrowserState &browser;
     TargetGraph targetGraph;
     bool showDebugWidgets;
