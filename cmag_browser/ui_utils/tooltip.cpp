@@ -24,6 +24,11 @@ TooltipBuilder &TooltipBuilder::setHoverAlways() {
     return *this;
 }
 
+TooltipBuilder &TooltipBuilder::hideWhenPopupsAreVisible() {
+    hover.hideWhenPopupsAreVisible = true;
+    return *this;
+}
+
 TooltipBuilder &TooltipBuilder::addHyperlink(const char *newHyperlink) {
     hyperlink.hyperlink = newHyperlink;
     return *this;
@@ -55,6 +60,10 @@ void TooltipBuilder::execute() {
 }
 
 bool TooltipBuilder::Hover::isTooltipVisible() const {
+    if (hideWhenPopupsAreVisible && ImGui::IsPopupOpen(nullptr, ImGuiPopupFlags_AnyPopupId)) {
+        return false;
+    }
+
     switch (type) {
     case Hover::Type::Rect: {
         const ImVec2 mousePos = ImGui::GetMousePos();

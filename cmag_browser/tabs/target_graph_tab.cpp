@@ -210,6 +210,7 @@ void TargetGraphTab::renderPropertyTablePopup(const CmagTargetProperty &property
     TooltipBuilder(theme)
         .setHoverRect(cellMin, cellMax)
         .addTextOneLine(showValue ? property.value.c_str() : property.name.c_str())
+        .hideWhenPopupsAreVisible()
         .execute([&]() {
             auto popupStyle = theme.setupPopup();
             auto textStyle = theme.setupPropertyName(false, property.isConsistent);

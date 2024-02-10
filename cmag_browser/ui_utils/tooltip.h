@@ -11,6 +11,7 @@ public:
     TooltipBuilder &setHoverRect(ImVec2 rectMin, ImVec2 rectMax);
     TooltipBuilder &setHoverLastItem();
     TooltipBuilder &setHoverAlways();
+    TooltipBuilder &hideWhenPopupsAreVisible();
 
     TooltipBuilder &addText(const char *text);
     TooltipBuilder &addTextOneLine(const char *text);
@@ -33,6 +34,7 @@ private:
         Type type = Type::Always;
         ImVec2 rectMin = {};
         ImVec2 rectMax = {};
+        bool hideWhenPopupsAreVisible = false;
 
         bool isTooltipVisible() const;
     } hover = {};
