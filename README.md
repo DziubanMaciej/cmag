@@ -30,11 +30,15 @@ cmag -g cmake -DCMAKE_BUILD_TYPE=Release
 
 
 # Browser
+An example screenshot of `cmag` analysis performed on `cmag` project itself. Main view is an interactive graph visualizing the connections between *CMake* targets. You can control, which connection types you want to be visible and move the nodes around for better logical understanding of the build-system. You can also select targets and inspect their properties.
+![browser screenshot](doc/browser_graph.png)
 
 
 
 # Installation
 Currently, *cmag* is not distributed in any open repositories.
+
+
 
 # From source
 Compilation requirements: `git`, `cmake` (minimum 3.15.0) and a C++ compiler (C++17 required). Run the commands below. Note that the `install` command must be run with administrative privileges. To install to a custom location without administrative privileges, pass `-DCMAKE_INSTALL_PREFIX=<path>` to the first `cmake` command.
