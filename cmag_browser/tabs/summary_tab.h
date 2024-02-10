@@ -9,16 +9,21 @@ struct CmagGlobals;
 
 class SummaryTab {
 public:
-    SummaryTab(BrowserState &browser);
+    explicit SummaryTab(BrowserState &browser);
     void render();
 
 private:
-    void renderTableRowString(const char *name, const std::string &value, const char *tooltip, const char *tooltipHyperlink = nullptr);
-    void renderTableRowSelectedConfig();
-    static void renderTableRowSpacer();
-    void renderSaveSection();
+    void renderSectionHeader(const char *name, const char *tooltip);
+
+    void renderRowLabel(const char *name);
+    void renderRowString(const char *name, const std::string &value, const char *tooltip, const char *tooltipHyperlink = nullptr);
+    void renderRowConfigSelector();
+    void renderRowSave();
+    void renderRowAutoSave();
+
     static std::string createCompilerString(const CmagGlobals &globals);
 
     BrowserState &browser;
     std::string compiler;
+    float firstColumnWidth = 0;
 };
