@@ -20,6 +20,7 @@ void ListDirTab::renderOptions() {
 }
 
 void ListDirTab::renderListDir(const char *parentName, const CmagListDir &listDir) {
+    const bool isRoot = parentName == nullptr;
     const char *relativeName = deriveRelativeName(parentName, listDir.name);
 
     ImGuiTreeNodeFlags treeNodeFlags = ImGuiTreeNodeFlags_DefaultOpen;
@@ -27,9 +28,16 @@ void ListDirTab::renderListDir(const char *parentName, const CmagListDir &listDi
         treeNodeFlags |= ImGuiTreeNodeFlags_Leaf;
     }
 
-    const bool treeNodeOpen = ImGui::TreeNodeEx(listDir.name.c_str(), treeNodeFlags, u8"\u01A4 %s", relativeName);
-    renderTooltip(listDir.name);
-    if (treeNodeOpen) {
+    bool popTreeNeeded = false;
+    bool renderChildren = isRoot;
+    if (!isRoot) {
+        popTreeNeeded = ImGui::TreeNodeEx(listDir.name.c_str(), treeNodeFlags, u8"\u01A4 %s", relativeName);
+        renderChildren = popTreeNeeded;
+
+        renderTooltip(listDir.name);
+    }
+
+    if (renderChildren) {
         for (const size_t listDirIndex : listDir.childIndices) {
             const CmagListDir &childListDir = browser.getProject().getGlobals().listDirs[listDirIndex];
             renderListDir(listDir.name.c_str(), childListDir);
@@ -41,7 +49,9 @@ void ListDirTab::renderListDir(const char *parentName, const CmagListDir &listDi
                 renderTarget(target);
             }
         }
+    }
 
+    if (popTreeNeeded) {
         ImGui::TreePop();
     }
 }
@@ -73,7 +83,7 @@ void ListDirTab::renderTooltip(const std::string &currentName) {
 
 const char *ListDirTab::deriveRelativeName(const char *parentName, const std::string &currentName) {
     if (parentName == nullptr) {
-        return "root";
+        return nullptr;
     }
 
     const size_t pos = currentName.find(parentName);
