@@ -1,0 +1,23 @@
+Source: cmag
+Section: devel
+Priority: optional
+Maintainer: Maciej Dziuban <dziuban.maciej@gmail.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.6.0
+Homepage: https://github.com/DziubanMaciej/cmag
+Description: Interactive analyzer and browser for CMake build systems
+ It analyzes a CMake project, extracts information about it into a custom
+ file with .cmag-project extension and then displays it in a GUI application.
+ It doesn't require any integration - any project can be viewed in cmag,
+ although projects using very niche CMake features may still experience
+ problems.
+
+Package: cmag
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Interactive analyzer and browser for CMake build systems
+ It analyzes a CMake project, extracts information about it into a custom
+ file with .cmag-project extension and then displays it in a GUI application.
+ It doesn't require any integration - any project can be viewed in cmag,
+ although projects using very niche CMake features may still experience
+ problems.

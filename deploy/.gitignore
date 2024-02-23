@@ -3,4 +3,7 @@ __pycache__/
 *$py.class
 
 .vagrant
-workspace*/
+workspace*/**
+!workspace_ubuntu2204/package/
+!workspace_ubuntu2204/package/debian
+!workspace_ubuntu2204/package/debian/*

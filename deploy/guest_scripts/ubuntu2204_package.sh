@@ -1,36 +1,29 @@
 #!/bin/sh
 
-cmag_commit="$1"
-cmag_version="$2"
-
 fail() {
     echo "ERROR: failed to $@" >&2
     exit 1
 }
 
-# Prepare package directory
-cd ~/workspace
-mkdir -p package || fail "create package directory"
-cd package
+cmag_version="$1"
+if [ -z "$cmag_version" ]; then
+    fail "validate version"
+fi
 
-# Create control file
-mkdir -p DEBIAN || fail "create DEBIAN directory"
-cat <<EOT > DEBIAN/control
-Package: cmag
-Version: $cmag_version
-Architecture: amd64
-Maintainer: Maciej Dziuban <dziuban.maciej@gmail.com>
-Installed-Size: 6
-Section: devel
-Priority: optional
-Homepage: https://github.com/DziubanMaciej/cmag
-Description: Interactive analyzer and browser for CMake build systems
-EOT
+# Enter package directory
+mkdir package
+cd ~/workspace/package || fail "enter package directory"
 
-# Copy binaries
-mkdir -p bin || fail "create bin directory"
-cp ~/workspace/cmag/build/bin/cmag bin/cmag || fail "copy cmag binary"
-cp ~/workspace/cmag/build/bin/cmag bin/cmag_browser || fail "copy cmag_browser binary"
+# Prepare the source
+archive_name="cmag_$cmag_version.orig.tar.gz"
+source_dir_name="cmag-$cmag_version"
+~/workspace/unix_prepare_source_tarball.sh "$cmag_version" "$archive_name" || fail "create source tarball"
+tar -xzf "$archive_name" || fail "untar source tarball"
+mv "source" "$source_dir_name" || fail "rename source directory"
+cd "$source_dir_name" || fail "enter source directory"
 
-# Build .deb file
-dpkg-deb --build . ~/workspace || fail "create .deb file"
+# Copy package metadata
+cp -R ~/workspace/debian . || fail "copy package metadata to source directory"
+
+# Build .deb
+debuild || fail "execute debuild"
