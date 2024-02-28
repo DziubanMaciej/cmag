@@ -7,8 +7,8 @@ fail() {
 
 cmag_version="$1"
 distros="$2"
-clean_run=0
-do_upload=0
+clean_run=1
+do_upload=1
 if [ -z "$cmag_version" ]; then
     fail "validate version"
 fi
