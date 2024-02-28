@@ -15,9 +15,9 @@ class Vm:
         self._vm_name = vm_name
         self._archive_name_suffix = archive_name_suffix
 
-    def _upload_script(self, script_name):
-        src = Path("guest_scripts") / script_name
-        dst = self._workspace_path / script_name
+    def _upload_file(self, file_name):
+        src = Path("guest_scripts") / file_name
+        dst = self._workspace_path / file_name
         shutil.copy(src, dst)
 
     def start_vm(self):
@@ -35,9 +35,6 @@ class Vm:
     def compile(self):
         raise NotImplementedError()
 
-    def get_binaries_paths(self):
-        raise NotImplementedError()
-
     def upload_release(self):
         raise NotImplementedError()
 
@@ -47,42 +44,39 @@ class WindowsVm(Vm):
         super().__init__(cmag_commit, cmag_version, workspace_name, "windows10", "win64")
         self._chocolatey_key_path = chocolatey_key_path
 
-    def compile(self):
-        self._upload_script("windows_build.ps1")
-        self._upload_script("windows_provision.ps1")
-        run_command(f'vagrant winrm {self._vm_name} --shell powershell --command "cd //VBOXSVR/workspace; ./windows_build.ps1 {self._cmag_commit} {self._cmag_version}"')
-        pass
+        # Copy scripts to the VM
+        self._upload_file("windows_build.ps1")
+        self._upload_file("windows_provision.ps1")
 
-    def get_binaries_paths(self):
-        binary_dir = self._workspace_path / "cmag/build/bin/Release"
-        return [
-            binary_dir / "cmag.exe",
-            binary_dir / "cmag_browser.exe",
-        ]
+    def compile(self):
+        run_command(f'vagrant winrm {self._vm_name} --shell powershell --command "cd //VBOXSVR/workspace; ./windows_build.ps1 {self._cmag_commit} {self._cmag_version}"')
 
     def upload_release(self):
-        pass
+        raise NotImplementedError()
 
 
 class UbuntuVm(Vm):
-    def __init__(self, cmag_commit, cmag_version, workspace_name):
+    def __init__(self, cmag_commit, cmag_version, workspace_name, gpg_key_id):
         super().__init__(cmag_commit, cmag_version, workspace_name, "ubuntu2204", "ubuntu2204")
 
-    def compile(self):
-        self._upload_script("ubuntu2204_build.sh")
-        self._upload_script("ubuntu2204_provision.sh")
-        run_command(f'vagrant ssh {self._vm_name} --command "cd ~/workspace; ./ubuntu2204_build.sh {self._cmag_commit} {self._cmag_version}"')
-        pass
+        # Setup GPG key inside VM
+        key_file_name = "key.gpg"
+        run_command(f"gpg --output {self._workspace_path}/{key_file_name} --export-secret-key --armor '{gpg_key_id}'")
+        run_command(f'vagrant ssh {self._vm_name} --command "gpg --import ~/workspace/{key_file_name}"')
 
-    def get_binaries_paths(self):
-        binary_dir = self._workspace_path / "cmag/build/bin"
-        return [
-            binary_dir / "cmag",
-            binary_dir / "cmag_browser",
-            ]
+        # Copy scripts and debian package metadata to the VM
+        self._upload_file("ubuntu2204_provision.sh")
+        self._upload_file("ubuntu2204_build.sh")
+        self._upload_file("ubuntu_package.sh")
+        self._upload_file("ubuntu_prepare_source_tarball.sh")
+        self._upload_file("debian")
+
+    def compile(self):
+        run_command(f'vagrant ssh {self._vm_name} --command "cd ~/workspace; ./ubuntu2204_build.sh {self._cmag_commit} {self._cmag_version}"')
 
     def upload_release(self):
-        pass
+        distros = "focal jammy"
+        run_command(f'vagrant ssh {self._vm_name} --command "cd ~/workspace; ./ubuntu2204_package.sh {self._cmag_version} \"{distros}\""')
 
 
 try:
@@ -95,22 +89,22 @@ except IndexError:
 
 vms = [
     WindowsVm(commit_hash, version, "workspace_windows10", "/home/choco.key"),
-    UbuntuVm(commit_hash, version, "workspace_ubuntu2204"),
+    UbuntuVm(commit_hash, version, "workspace_ubuntu2204", 'dziuban.maciej@gmail.com'),
 ]
 
 for vm in vms:
     try:
-        print(f"Compiling {vm.get_vm_name()}")
+        print(f"Starting VM {vm.get_vm_name()}")
         vm.start_vm()
+
+        print(f"Building in VM {vm.get_vm_name()}")
         vm.compile()
+
+        print(f"Packaging and deploing in VM {vm.get_vm_name()}")
+        vm.upload_release()
+
+        print(f"Stopping VM {vm.get_vm_name()}")
         vm.stop_vm()
     except:
-        print(f"Failed compiling {vm.get_vm_name()}")
+        print(f"Failed in {vm.get_vm_name()}")
         sys.exit(1)
-
-
-for vm in vms:
-    binaries = vm.get_binaries_paths()
-    binaries = ' '.join([str(x) for x in binaries])
-    zip_command = f"zip -j artifacts/{vm.get_archive_name()} {binaries}"
-    run_command(zip_command)
