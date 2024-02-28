@@ -8,12 +8,11 @@ import shutil
 
 
 class Vm:
-    def __init__(self, cmag_commit, cmag_version, workspace_name, vm_name, archive_name_suffix):
+    def __init__(self, cmag_commit, cmag_version, workspace_name, vm_name):
         self._cmag_commit = cmag_commit
         self._cmag_version = cmag_version
         self._workspace_path = Path(workspace_name)
         self._vm_name = vm_name
-        self._archive_name_suffix = archive_name_suffix
 
     def _upload_file(self, file_name):
         src = Path("guest_scripts") / file_name
@@ -29,19 +28,19 @@ class Vm:
     def get_vm_name(self):
         return self._vm_name
 
-    def get_archive_name(self):
-        return f"cmag-{self._cmag_version}-{self._archive_name_suffix}.zip"
-
     def compile(self):
         raise NotImplementedError()
 
     def upload_release(self):
         raise NotImplementedError()
 
+    def get_release_asset(self):
+        return None
+
 
 class WindowsVm(Vm):
     def __init__(self, cmag_commit, cmag_version, workspace_name, chocolatey_key_path):
-        super().__init__(cmag_commit, cmag_version, workspace_name, "windows10", "win64")
+        super().__init__(cmag_commit, cmag_version, workspace_name, "windows10")
         self._chocolatey_key_path = chocolatey_key_path
 
         # Copy scripts to the VM
@@ -54,10 +53,20 @@ class WindowsVm(Vm):
     def upload_release(self):
         raise NotImplementedError()
 
+    def get_release_asset(self):
+        binary_dir = self._workspace_path / "cmag/build/bin/Release"
+        return {
+            "name": f"cmag-{self._cmag_version}-win64.zip",
+            "files": [
+                binary_dir / "cmag.exe",
+                binary_dir / "cmag_browser.exe",
+            ]
+        }
+
 
 class UbuntuVm(Vm):
     def __init__(self, cmag_commit, cmag_version, workspace_name, gpg_key_id):
-        super().__init__(cmag_commit, cmag_version, workspace_name, "ubuntu2204", "ubuntu2204")
+        super().__init__(cmag_commit, cmag_version, workspace_name, "ubuntu2204")
 
         # Setup GPG key inside VM
         key_file_name = "key.gpg"
@@ -92,6 +101,7 @@ vms = [
     UbuntuVm(commit_hash, version, "workspace_ubuntu2204", 'dziuban.maciej@gmail.com'),
 ]
 
+# Compile on all systems and upload to package repositories.
 for vm in vms:
     try:
         print(f"Starting VM {vm.get_vm_name()}")
@@ -108,3 +118,12 @@ for vm in vms:
     except:
         print(f"Failed in {vm.get_vm_name()}")
         sys.exit(1)
+
+# Gather files to upload to the GitHub release
+for vm in vms:
+    asset = vm.get_release_asset()
+    if asset is None:
+        continue
+    binaries = ' '.join([str(x) for x in asset['files']])
+    zip_command = f"zip -j artifacts/{asset['name']} {binaries}"  # TODO won't work on Windows
+    run_command(zip_command)

@@ -9,20 +9,6 @@ Vagrant.configure("2") do |config|
         machine.vm.synced_folder "workspace_ubuntu2204", "/home/vagrant/workspace"
     end
 
-    config.vm.define "ubuntu2004" do |machine|
-        machine.vm.box = "ubuntu/focal64"
-        # machine.vm.box_version = "1.0.0"
-        #machine.vm.box_architecture = "amd64"
-        # machine.vm.synced_folder "workspace_ubuntu2204", "/home/vagrant/workspace"
-    end
-
-    config.vm.define "ubuntu_jammy" do |machine|
-        machine.vm.box = "ubuntu/jammy64"
-        # machine.vm.box_version = "1.0.0"
-        #machine.vm.box_architecture = "amd64"
-        # machine.vm.synced_folder "workspace_ubuntu2204", "/home/vagrant/workspace"
-    end
-
     config.vm.define "windows10" do |machine|
         machine.vm.box = "gusztavvargadr/visual-studio-2022-community-windows-11"
         machine.vm.box_version = "2022.2302.2401"
