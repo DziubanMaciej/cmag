@@ -36,12 +36,34 @@ An example screenshot of `cmag` analysis performed on `cmag` project itself. Mai
 
 
 # Installation
-Currently, *cmag* is not distributed in any open repositories.
+## Windows
+Binaries are available for download as assets attached to this release.
+Cmag is also hosted on Chocolatey. To install run the following command:
+```
+choco install cmag
+```
+
+## Ubuntu 20.04, 22.04
+Cmag is hosted on [Launchpad](https://launchpad.net/~mdziuban/+archive/ubuntu/cmag). To install run the following commands:
+```
+sudo add-apt-repository ppa:mdziuban/cmag
+sudo apt update
+sudo apt install cmag
+```
+
+## Arch Linux
+Cmag has a source package in AUR. To install run the following commands (may be different depending on your AUR helper):
+```
+yay -Syu cmag
+```
+
+## Other Linux distros
+Currently, no support. Cmag has to be built from source.
 
 
 
-# From source
-Compilation requirements: `git`, `cmake` (minimum 3.15.0) and a C++ compiler (C++17 required). Run the commands below. Note that the `install` command must be run with administrative privileges. To install to a custom location without administrative privileges, pass `-DCMAKE_INSTALL_PREFIX=<path>` to the first `cmake` command.
+# Building from source
+Compilation requirements: `git`, `cmake` (minimum 3.15.0) and a C++ compiler (C++17 required). Clone the repository and run the commands below. Note that the `install` command must be run with administrative privileges. To install to a custom location without administrative privileges, pass `-DCMAKE_INSTALL_PREFIX=<path>` to the first `cmake` command.
 ```
 git submodule update --init --recursive
 mkdir build
