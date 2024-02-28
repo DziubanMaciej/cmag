@@ -37,7 +37,7 @@ An example screenshot of `cmag` analysis performed on `cmag` project itself. Mai
 
 # Installation
 ## Windows
-Binaries are available for download as assets attached to [releases](https://github.com/DziubanMaciej/cmag/releases). Cmag is also hosted on Chocolatey. To install run the following command:
+Binaries are available for download as assets attached to [releases](https://github.com/DziubanMaciej/cmag/releases). Cmag is also hosted on [Chocolatey](https://community.chocolatey.org/packages/cmag). To install run the following command:
 ```
 choco install cmag
 ```
