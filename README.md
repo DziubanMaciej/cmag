@@ -51,7 +51,7 @@ sudo apt install cmag
 ```
 
 ## Arch Linux
-Cmag has a source package in AUR. To install run the following commands (may be different depending on your AUR helper):
+Cmag has a source package in [AUR](https://aur.archlinux.org/packages/cmag). To install run the following commands (may be different depending on your AUR helper):
 ```
 yay -Syu cmag
 ```
