@@ -2,7 +2,7 @@
 import os
 import sys
 
-from deploy_utils import run_command
+from deploy_utils import run_command, Stdout, CommandError
 from pathlib import Path
 import shutil
 
@@ -89,11 +89,14 @@ class UbuntuVm(Vm):
 
 
 try:
-    commit_hash = sys.argv[1]
-    version = sys.argv[2]
+    version = sys.argv[1]
+    commit_hash = run_command(f"git rev-parse v{version}", stdout=Stdout.return_back(), stderr=Stdout.ignore())
 except IndexError:
     print("ERROR: Too few arguments!")
-    print("Usage: deploy.py <COMMIT_HASH> <CMAG_VERSION>")
+    print("Usage: deploy.py <CMAG_VERSION>")
+    sys.exit(1)
+except CommandError:
+    print(f"ERROR: Failed to get git revision for version {version}")
     sys.exit(1)
 
 vms = [
