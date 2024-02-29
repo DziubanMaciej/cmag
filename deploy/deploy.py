@@ -104,7 +104,8 @@ except IndexError:
     print("Usage: deploy.py <CMAG_VERSION>")
     sys.exit(1)
 try:
-    commit_hash = run_command(f"git rev-parse v{version}", stdout=Stdout.return_back(), stderr=Stdout.ignore())
+    commit_tag = f'v{version}'
+    commit_hash = run_command(f"git rev-parse {commit_tag}", stdout=Stdout.return_back(), stderr=Stdout.ignore())
     commit_hash = commit_hash.strip()
 except CommandError:
     print(f"ERROR: Failed to get git revision for version {version}")
@@ -131,10 +132,21 @@ for vm in vms:
         print(f"Stopping VM {vm.get_vm_name()}")
         vm.stop_vm()
         vm.set_success()
-    except:
+    except CommandError:
         print(f"Failed in {vm.get_vm_name()}")
 
-# Gather files to upload to the GitHub release
+# Generate assets
+with open("assets/description.md", 'w') as file:
+    file.write(f"""
+This release has been uploaded to public repositories listed below. Please consult the [README](https://github.com/DziubanMaciej/cmag/blob/{commit_tag}/README.md) for detailed instructions on how to install.
+- [Launchpad](https://launchpad.net/~mdziuban/+archive/ubuntu/cmag)
+- [AUR](https://aur.archlinux.org/packages/cmag)
+- [Chocolatey](https://community.chocolatey.org/packages/cmag)
+
+This release also contains prebuilt Windows binaries for convenience. Linux binaries are not attached due to ABI incompatibility between different distributions. For Linux distributions other than Ubuntu or Arch based, *cmag* has to be built from source.
+
+WARNING: do **not** use source code archives attached to this release. GitHub creates them automatically, but they are incomplete - they lack submodules. Please refer to [README](https://github.com/DziubanMaciej/cmag/blob/{commit_tag}/README.md) for building instructions.
+""")
 for vm in vms:
     asset = vm.get_release_asset()
     if asset is None:
