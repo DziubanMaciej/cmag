@@ -17,7 +17,7 @@ if [ -z "$distros" ]; then
 fi
 
 # Enter package directory
-if [ "clean_run" = "1" ]; then
+if [ "$clean_run" = "1" ]; then
     rm -rf package || fail "cleanup package directory"
 fi
 mkdir -p package
@@ -25,7 +25,7 @@ cd ~/workspace/package || fail "enter package directory"
 
 # Prepare the source directory
 source_dir_name="cmag-$cmag_version"
-if [ "clean_run" = "1" ]; then
+if [ "$clean_run" = "1" ]; then
     archive_name="cmag_$cmag_version.orig.tar.gz"
     ~/workspace/ubuntu_prepare_source_tarball.sh "$cmag_version" "$archive_name" || fail "create source tarball"
     tar -xzf "$archive_name" || fail "untar source tarball"
@@ -55,9 +55,6 @@ for distro in $distros; do
 
     # Restore changelog
     cp ~/workspace/debian/changelog debian/changelog
-
-
-    dput ppa:mdziuban/cmag "$package_file" || fail "upload $package_file"
 done
 
 # Upload all packages to Launchpad
