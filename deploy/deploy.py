@@ -52,16 +52,19 @@ class Vm:
 class WindowsVm(Vm):
     def __init__(self, cmag_commit, cmag_version, workspace_name, chocolatey_key_path):
         super().__init__(cmag_commit, cmag_version, workspace_name, "windows10")
-        self._chocolatey_key_path = chocolatey_key_path
+        self._chocolatey_key_name = Path(chocolatey_key_path).name
 
-        self._upload_file("windows_build.ps1")
+        shutil.copy(chocolatey_key_path, self._workspace_path / self._chocolatey_key_name)
         self._upload_file("windows_provision.ps1")
+        self._upload_file("windows_build.ps1")
+        self._upload_file("windows_package.ps1")
+        self._upload_file("chocolatey")
 
     def compile(self):
         run_command(f'vagrant winrm {self._vm_name} --shell powershell --command "cd //VBOXSVR/workspace; ./windows_build.ps1 {self._cmag_commit} {self._cmag_version}"')
 
     def upload_release(self):
-        raise NotImplementedError()
+        run_command(f'vagrant winrm {self._vm_name} --shell powershell --command "//VBOXSVR/workspace/windows_package.ps1 {self._cmag_version} {self._chocolatey_key_name}"')
 
     def get_release_asset(self):
         binary_dir = self._workspace_path / "cmag/build/bin/Release"
@@ -113,7 +116,7 @@ except CommandError:
 
 # Prepare VMs
 vms = [
-    WindowsVm(commit_hash, version, "workspace_windows10", "/home/choco.key"),
+    WindowsVm(commit_hash, version, "workspace_windows10", "/home/maciej/mdziuban.chocokey"),
     UbuntuVm(commit_hash, version, "workspace_ubuntu2204", 'dziuban.maciej@gmail.com'),
 ]
 
