@@ -4,6 +4,3 @@ __pycache__/
 
 .vagrant
 workspace*/**
-!workspace_ubuntu2204/package/
-!workspace_ubuntu2204/package/debian
-!workspace_ubuntu2204/package/debian/*

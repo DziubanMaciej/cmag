@@ -99,6 +99,23 @@ class UbuntuVm(Vm):
         run_command(f'vagrant ssh {self._vm_name} --command "cd ~/workspace; ./ubuntu_package.sh {self._cmag_version} \'{distros}\'"')
 
 
+class ArchlinuxVm(Vm):
+    def __init__(self, cmag_commit, cmag_version, workspace_name, ssh_key_path_host):
+        super().__init__(cmag_commit, cmag_version, workspace_name, "archlinux")
+        self._ssh_key_name = Path(ssh_key_path_host).name
+
+        shutil.copy(ssh_key_path_host, self._workspace_path / self._ssh_key_name)
+        self._upload_file("archlinux_provision.sh")
+        self._upload_file("archlinux_build.sh")
+        self._upload_file("archlinux_package.sh")
+        self._upload_file("PKGBUILD")
+
+    def compile(self):
+        run_command(f'vagrant ssh {self._vm_name} --command "cd ~/workspace; ./archlinux_build.sh {self._cmag_commit} {self._cmag_version}"')
+
+    def upload_release(self):
+        run_command(f'vagrant ssh {self._vm_name} --command "cd ~/workspace; ./archlinux_package.sh {self._cmag_version} {self._ssh_key_name}"')
+
 # Parse arguments
 try:
     version = sys.argv[1]
@@ -116,24 +133,25 @@ except CommandError:
 
 # Prepare VMs
 vms = [
-    WindowsVm(commit_hash, version, "workspace_windows10", "/home/maciej/mdziuban.chocokey"),
-    UbuntuVm(commit_hash, version, "workspace_ubuntu2204", 'dziuban.maciej@gmail.com'),
+    #WindowsVm(commit_hash, version, "workspace_windows10", "/home/maciej/mdziuban.chocokey"),
+    #UbuntuVm(commit_hash, version, "workspace_ubuntu2204", 'dziuban.maciej@gmail.com'),
+    ArchlinuxVm(commit_hash, version, "workspace_archlinux", "/home/maciej/mdziuban_cmag.rsa"),
 ]
 
 # Compile on all VMs and upload to package repositories.
 for vm in vms:
     try:
         print(f"Starting VM {vm.get_vm_name()}")
-        vm.start_vm()
+        #vm.start_vm()
 
         print(f"Building in VM {vm.get_vm_name()}")
-        vm.compile()
+        #vm.compile()
 
         print(f"Packaging and deploying in VM {vm.get_vm_name()}")
         vm.upload_release()
 
         print(f"Stopping VM {vm.get_vm_name()}")
-        vm.stop_vm()
+        # vm.stop_vm()
         vm.set_success()
     except CommandError:
         print(f"Failed in {vm.get_vm_name()}")
