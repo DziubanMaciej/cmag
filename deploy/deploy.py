@@ -133,8 +133,8 @@ except CommandError:
 
 # Prepare VMs
 vms = [
-    #WindowsVm(commit_hash, version, "workspace_windows10", "/home/maciej/mdziuban.chocokey"),
-    #UbuntuVm(commit_hash, version, "workspace_ubuntu2204", 'dziuban.maciej@gmail.com'),
+    WindowsVm(commit_hash, version, "workspace_windows10", "/home/maciej/mdziuban.chocokey"),
+    UbuntuVm(commit_hash, version, "workspace_ubuntu2204", 'dziuban.maciej@gmail.com'),
     ArchlinuxVm(commit_hash, version, "workspace_archlinux", "/home/maciej/mdziuban_cmag.rsa"),
 ]
 

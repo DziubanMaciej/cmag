@@ -6,11 +6,13 @@
     <title>cmag</title>
     <authors>Maciej Dziuban</authors>
     <projectUrl>https://github.com/DziubanMaciej/cmag</projectUrl>
+    <licenseUrl>https://github.com/DziubanMaciej/cmag/blob/master/LICENSE</licenseUrl>
     <summary>Interactive analyzer and browser for CMake build systems</summary>
     <description><![CDATA[
 Project cmag is an interactive browser for the CMake build system. It analyzes a CMake project, extracts information about it into a custom .cmag-project file and then displays it in a GUI application. It doesn't require any integration - any project can be viewed in cmag, although projects using very niche CMake features may still experience problems. Currently supported systems are Windows and Linux.
 ]]>
     </description>
+    <tags>cmake development visualization graph</tags>
   </metadata>
   <files>
     <file src="tools\**" target="tools" />

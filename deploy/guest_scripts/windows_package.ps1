@@ -50,6 +50,22 @@ $nuspecXmlContent.package.metadata.version = $cmagVersion
 $nuspecXmlContent.Save($nuspecPath)
 CheckFailure "write .nuspec file"
 
+# Insert hashes to VERIFICATION.txt file
+function insert_hash_to_verification() {
+    param ([string]$fileName)
+
+    $hash = (Get-FileHash "$cmagBinariesPath\$fileName" -Algorithm SHA256).Hash
+    CheckFailure "calculate hash for $fileName"
+
+    $oldLine = "^" + [regex]::Escape($fileName) + ":.*"
+    $newLine = "$fileName`: $hash"
+    $verificationPath = "$packagePath\tools\VERIFICATION.txt"
+    (Get-Content -Path $verificationPath) -replace $oldLine, $newLine | Set-Content -Path $verificationPath
+    CheckFailure "insert hash for $fileName"
+}
+insert_hash_to_verification "cmag.exe"
+insert_hash_to_verification "cmag_browser.exe"
+
 # Build package
 rm *.nupkg
 CheckFailure "cleanup before building .nupkg package"
