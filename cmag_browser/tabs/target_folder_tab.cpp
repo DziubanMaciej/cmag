@@ -83,11 +83,9 @@ void TargetFolderTab::renderTarget(CmagTarget &target) {
     const char *targetName = target.name.c_str();
     const char *targetType = cmagTargetTypeToString(target.type);
 
-    // TODO make this more robust
-    char buffer[1024];
-    snprintf(buffer, sizeof(buffer), u8"\u01A5 %s (%s)", targetName, targetType);
+    FORMAT_STRING(entryText, u8"\u01A5 %s (%s)", targetName, targetType)
 
-    ImGui::Selectable(buffer, browser.getTargetSelection().isSelected(target));
+    ImGui::Selectable(entryText, browser.getTargetSelection().isSelected(target));
 
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
         browser.getTargetSelection().select(&target);

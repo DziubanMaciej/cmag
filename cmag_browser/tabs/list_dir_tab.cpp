@@ -2,6 +2,7 @@
 
 #include "cmag_browser/tabs/target_graph_tab.h"
 #include "cmag_browser/ui_utils/tooltip.h"
+#include "cmag_core/utils/string_utils.h"
 
 ListDirTab::ListDirTab(BrowserState &browser)
     : browser(browser) {}
@@ -60,11 +61,9 @@ void ListDirTab::renderTarget(CmagTarget &target) {
     const char *targetName = target.name.c_str();
     const char *targetType = cmagTargetTypeToString(target.type);
 
-    // TODO make this more robust
-    char buffer[1024];
-    snprintf(buffer, sizeof(buffer), u8"\u01A5 %s (%s)", targetName, targetType);
+    FORMAT_STRING(entryText, u8"\u01A5 %s (%s)", targetName, targetType)
 
-    ImGui::Selectable(buffer, browser.getTargetSelection().isSelected(target));
+    ImGui::Selectable(entryText, browser.getTargetSelection().isSelected(target));
 
     if (ImGui::IsItemClicked(ImGuiMouseButton_Left)) {
         browser.getTargetSelection().select(&target);

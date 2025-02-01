@@ -10,6 +10,7 @@
 #include "cmag_core/core/version.h"
 #include "cmag_core/parse/cmag_json_parser.h"
 #include "cmag_core/utils/file_utils.h"
+#include "cmag_core/utils/string_utils.h"
 
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 #include <cstdio>
@@ -53,10 +54,10 @@ void setWindowTitle(GLFWwindow *window, const CmagProject &project, bool isDirty
     }
     showingDirtyMark = isDirty;
 
-    static char buffer[1024];
     const char *dirtyMark = isDirty ? "*" : "";
-    snprintf(buffer, sizeof(buffer), "%scmag: %s", dirtyMark, project.getGlobals().cmagProjectName.c_str());
-    glfwSetWindowTitle(window, buffer);
+
+    FORMAT_STRING(windowTitle, "%scmag: %s", dirtyMark, project.getGlobals().cmagProjectName.c_str())
+    glfwSetWindowTitle(window, windowTitle);
 }
 
 void deinitializeWindow(GLFWwindow *window) {

@@ -5,6 +5,10 @@
 #include <string_view>
 #include <vector>
 
+#define FORMAT_STRING(name, format, ...) \
+    char name[4096];                     \
+    snprintf(name, sizeof(name), format, __VA_ARGS__);
+
 inline std::vector<std::string_view> splitStringByChar(std::string_view value, bool ignoreSingleEntry, char separator) {
     if (value.empty()) {
         return {};

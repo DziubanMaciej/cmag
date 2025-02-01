@@ -1,5 +1,6 @@
 #include "cmag_core/utils/filesystem.h"
 #include "cmag_core/utils/linux/error.h"
+#include "cmag_core/utils/string_utils.h"
 
 #include <unistd.h>
 
@@ -16,7 +17,6 @@ fs::path getExeLocation() {
 }
 
 bool openHyperlink(const char *path) {
-    char command[4096];
-    snprintf(command, sizeof(command), "xdg-open \"%s\"", path);
+    FORMAT_STRING(command, "xdg-open \"%s\"", path);
     return system(command) == 0;
 }

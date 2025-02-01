@@ -2,6 +2,7 @@
 
 #include "cmag_core/utils/error.h"
 #include "cmag_core/utils/math_utils.h"
+#include "cmag_core/utils/string_utils.h"
 
 #include <cstdint>
 #include <optional>
@@ -64,9 +65,7 @@ struct CmagVersion {
     }
 
     std::string toString() const {
-        char buffer[maxStringLength];
-        snprintf(buffer, maxStringLength, "%u.%u.%u", comp0, comp1, comp2);
-
+        FORMAT_STRING(buffer, "%u.%u.%u", comp0, comp1, comp2);
         return std::string{buffer};
     }
 

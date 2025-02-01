@@ -41,7 +41,7 @@ void TargetGraphTab::renderSidePaneSectionDebug() {
         ImGui::ShowDemoWindow(&showDemoWindow);
     }
 
-    ImGui::Checkbox("Style selector", &showStyleSelector);
+    ImGui::Checkbox("Style selecor", &showStyleSelector);
     if (showStyleSelector) {
         if (ImGui::Begin("StyleSelectorWindow")) {
             ImGui::ShowStyleEditor(&ImGui::GetStyle());
@@ -185,9 +185,8 @@ void TargetGraphTab::renderPropertyPopup() {
     if (ImGui::BeginPopup(popupName)) {
         ImGui::Text("Property %s", popup.property->name.c_str());
 
-        char buffer[1024];
         for (const auto &entry : popup.propertyValueList) {
-            snprintf(buffer, sizeof(buffer), "  %.*s\n", static_cast<int>(entry.length()), entry.data());
+            FORMAT_STRING(buffer, "  %.*s\n", static_cast<int>(entry.length()), entry.data());
             ImGui::Selectable(buffer, false);
         }
 
